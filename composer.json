@@ -1,0 +1,23 @@
+{
+	"name": "naonaox1126/vizualizer_twitter",
+	"description": "Visual Framework in PHP",
+	"keywords": ["PHP", "Framework", "MySQL"],
+	"type": "framework",
+	"license": "Apache-2.0",
+	"homepage": "https://github.com/NAONAOx1126/VizualizerTwitter",
+	"authors": [
+		{
+			"name": "NAONAOx1126",
+			"email": "info@sweetberry.jp"
+		}
+	],
+    "require": {
+    	"php": ">=5.3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "autoload": {
+    	"psr-0": { "VizualizerTwitter": "classes" }
+    }
+}
