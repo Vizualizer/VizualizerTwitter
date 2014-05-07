@@ -70,6 +70,8 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                         continue;
                     }
 
+                    $setting = $account->followSetting();
+
                     // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
                     $history = $loader->loadModel("FollowHistory");
                     $today = date("Y-m-d");
@@ -83,7 +85,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                             $account->follow_count = 0;
                             $account->save();
                             Vizualizer_Database_Factory::commit($connection);
-                            echo "Over daily follows in ".$account->account_id."\r\n";
+                            echo "Over daily follows for ".$history->follow_count." to ".$setting->daily_follows." in ".$account->account_id."\r\n";
                             continue;
                         } catch (Exception $e) {
                             Vizualizer_Database_Factory::rollback($connection);
@@ -93,6 +95,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
                     // リストを取得する。
                     $follow = $loader->loadModel("Follow");
+                    $follow->limit(1, 0);
                     $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null), "follow_date", true);
 
                     // 結果が0件の場合はリスト無しにしてスキップ
