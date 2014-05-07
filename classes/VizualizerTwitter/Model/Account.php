@@ -30,6 +30,9 @@
  */
 class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 {
+    const FOLLOW_MODE_NORMAL = "2";
+    const FOLLOW_MODE_SAFE = "1";
+
 
     /**
      * コンストラクタ
@@ -86,11 +89,45 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * フォローキーワードのリストを取得する。
+     *
+     * @return フォローキーワード
+     */
+    public function followKeywords()
+    {
+        $data = explode("\r\n", $this->follow_keywords);
+        $result = array();
+        foreach($data as $item){
+            if(!empty($item)){
+                $result[] = $item;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 拒否キーワードのリストを取得する。
+     *
+     * @return 拒否キーワード
+     */
+    public function ignoreKeywords()
+    {
+        $data = explode("\r\n", $this->ignore_keywords);
+        $result = array();
+        foreach($data as $item){
+            if(!empty($item)){
+                $result[] = $item;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * アカウントに紐づいたグループを取得する
      *
      * @return グループ
      */
-    public function application()
+    public function group()
     {
         $loader = new Vizualizer_Plugin("twitter");
         $group = $loader->loadModel("Group");
@@ -129,11 +166,25 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function followSettings()
+    public function followSetting()
     {
         $loader = new Vizualizer_Plugin("twitter");
         $followSetting = $loader->loadModel("FollowSetting");
-        return $followSetting->findAllByAccountId($this->account_id);
+        $followSetting->findByAccountFollowers($this->account_id, $this->follower_count);
+        return $followSetting;
+    }
+
+    /**
+     * アカウントに紐づいたフォロー詳細設定を取得する
+     *
+     * @return 詳細設定のリスト
+     */
+    public function followSettings($sort = "setting_index", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $followSetting = $loader->loadModel("FollowSetting");
+        $followSettings = $followSetting->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $followSettings;
     }
 
     /**
@@ -146,5 +197,17 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $follow = $loader->loadModel("Follow");
         return $follow->findAllByAccountId($this->account_id);
+    }
+
+    /**
+     * アカウントに紐づいたフォローを取得する
+     *
+     * @return フォローのリスト
+     */
+    public function followHistorys($days = 0)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $follow = $loader->loadModel("FollowHistory");
+        return $follow->findAllByAccountId($this->account_id, $days);
     }
 }
