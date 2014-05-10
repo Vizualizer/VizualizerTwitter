@@ -210,4 +210,45 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $follow = $loader->loadModel("FollowHistory");
         return $follow->findAllByAccountId($this->account_id, $days);
     }
+
+    /**
+     * アカウントに紐づいたツイート詳細設定を取得する
+     *
+     * @return 詳細設定のリスト
+     */
+    public function tweetSettings($sort = "tweet_group_id", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetSetting = $loader->loadModel("TweetSetting");
+        $tweetSettings = $tweetSetting->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetSettings;
+    }
+
+
+    /**
+     * アカウントに紐づいたツイート広告を取得する
+     *
+     * @return ツイート広告のリスト
+     */
+    public function tweetAdvertises($sort = "", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetAdvertise = $loader->loadModel("TweetAdvertise");
+        $tweetAdvertises = $tweetAdvertise->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetAdvertises;
+    }
+
+
+    /**
+     * アカウントに紐づいたツイートログを取得する
+     *
+     * @return ツイートログのリスト
+     */
+    public function tweetLogs($sort = "tweet_time", $reverse = true)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetLogs;
+    }
 }

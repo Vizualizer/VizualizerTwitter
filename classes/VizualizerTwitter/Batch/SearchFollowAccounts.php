@@ -65,8 +65,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             $application = $account->application();
             $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
             \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
 
             // 検索キーワードを取得する。
             $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
@@ -89,11 +87,22 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
 
             // ユーザー情報を検索
             for ($i = 0; $i < 3; $i ++) {
-                $users = (array) $twitter->users_search(array("q" => implode(" ", $keywords), "page" => mt_rand(0, 20), "count" => 20));
-                foreach ($users as $user) {
+                $twitter = \Codebird\Codebird::getInstance();
+                $twitter->setToken($account->access_token, $account->access_token_secret);
+
+                if($i < 2){
+                    $page = $i + 1;
+                }else{
+                    $page = mt_rand(3, 50);
+                }
+                $users = (array) $twitter->users_search(array("q" => implode(" ", $keywords), "page" => $page, "per_page" => 20));
+                unset($users["httpstatus"]);
+                echo "Search Users（".count($users)."） in page ".$page."\r\n";
+                foreach ($users as $index => $user) {
                     // ユーザーのIDが取得できない場合はスキップ
                     if(!($user->id > 0)){
-                        echo "Skipped invalid ID : ".$user->id."\r\n";
+                        echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
+                        print_r($user);
                         continue;
                     }
 
@@ -119,6 +128,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     $follow = $loader->loadModel("Follow");
                     $follow->findBy(array("account_id" => $account->account_id, "user_id" => $user->id));
                     if ($follow->follow_id > 0) {
+                        echo "Skipped targeted : ".$user->id."\r\n";
                         continue;
                     }
 
@@ -133,6 +143,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                             $follow->friend_date = date("Y-m-d H:i:s");
                         }
                         $follow->save();
+                        echo "Add follow target : ".$user->id."\r\n";
 
                         // フォロー履歴に追加
                         $history = $loader->loadModel("FollowHistory");

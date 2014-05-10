@@ -23,12 +23,12 @@
  */
 
 /**
- * twitter_groupsテーブルの定義クラスです。
+ * twitter_tweet_settingsテーブルの定義クラスです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Table_Groups extends Vizualizer_Plugin_Table
+class VizualizerTwitter_Table_TweetSettings extends Vizualizer_Plugin_Table
 {
 
     /**
@@ -36,7 +36,7 @@ class VizualizerTwitter_Table_Groups extends Vizualizer_Plugin_Table
      */
     public function __construct()
     {
-        parent::__construct("twitter_groups", "twitter");
+        parent::__construct("twitter_tweet_settings", "twitter");
     }
 
     /**
@@ -47,7 +47,7 @@ class VizualizerTwitter_Table_Groups extends Vizualizer_Plugin_Table
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
             // テーブルのインストール
-            $connection->query(file_get_contents(dirname(__FILE__) . "/../../../sqls/groups.sql"));
+            $connection->query(file_get_contents(dirname(__FILE__) . "/../../../sqls/tweet_settings.sql"));
             Vizualizer_Database_Factory::commit($connection);
         } catch (Exception $e) {
             Vizualizer_Database_Factory::rollback($connection);

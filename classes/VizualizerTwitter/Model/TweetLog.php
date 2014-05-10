@@ -23,12 +23,12 @@
  */
 
 /**
- * フォローのモデルです。
+ * ツイートログのモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,24 +39,24 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("Follows"), $values);
+        parent::__construct($loader->loadTable("TweetLogs"), $values);
     }
 
     /**
      * 主キーでデータを取得する。
      *
-     * @param $follow_id フォローID
+     * @param $tweet_log_id ツイートログID
      */
-    public function findByPrimaryKey($follow_id)
+    public function findByPrimaryKey($tweet_log_id)
     {
-        $this->findBy(array("follow_id" => $follow_id));
+        $this->findBy(array("tweet_log_id" => $tweet_log_id));
     }
 
     /**
      * アカウントIDでデータを取得する。
      *
      * @param $account_id アカウントID
-     * @return フォローのリスト
+     * @return 設定のリスト
      */
     public function findAllByAccountId($account_id)
     {
@@ -64,18 +64,18 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
     }
 
     /**
-     * ユーザーIDでデータを取得する。
+     * ツイートIDでデータを取得する。
      *
-     * @param $user_id ユーザーID
-     * @return フォローのリスト
+     * @param $tweet_id ツイートID
+     * @return 設定のリスト
      */
-    public function findAllByUserId($user_id)
+    public function findAllByTweetId($tweet_id)
     {
-        return $this->findAllBy(array("user_id" => $user_id));
+        return $this->findAllBy(array("tweet_id" => $tweet_id));
     }
 
     /**
-     * フォローに紐づいたアカウントを取得する
+     * 設定に紐づいたアカウントを取得する
      *
      * @return アカウント
      */
@@ -85,5 +85,18 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
         $account = $loader->loadModel("Account");
         $account->findByPrimaryKey($this->account_id);
         return $account;
+    }
+
+    /**
+     * 設定に紐づいたツイートを取得する
+     *
+     * @return ツイート
+     */
+    public function tweet()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $group = $loader->loadModel("Tweet");
+        $group->findByPrimaryKey($this->tweet_id);
+        return $group;
     }
 }

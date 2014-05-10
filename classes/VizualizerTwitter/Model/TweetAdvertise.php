@@ -23,12 +23,12 @@
  */
 
 /**
- * アカウントグループのモデルです。
+ * ツイート広告のモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_Group extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,28 +39,40 @@ class VizualizerTwitter_Model_Group extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("Groups"), $values);
+        parent::__construct($loader->loadTable("TweetAdvertises"), $values);
     }
 
     /**
      * 主キーでデータを取得する。
      *
-     * @param $group_id グループID
+     * @param $tweet_advertise_id ツイート広告ID
      */
-    public function findByPrimaryKey($group_id)
+    public function findByPrimaryKey($tweet_advertise_id)
     {
-        $this->findBy(array("group_id" => $group_id));
+        $this->findBy(array("tweet_advertise_id" => $tweet_advertise_id));
     }
 
     /**
-     * グループに紐づいたアカウントを取得する
+     * アカウントIDでデータを取得する。
      *
-     * @return アカウントリスト
+     * @param $account_id アカウントID
+     * @return 設定のリスト
      */
-    public function accounts()
+    public function findAllByAccountId($account_id)
+    {
+        return $this->findAllBy(array("account_id" => $account_id));
+    }
+
+    /**
+     * 設定に紐づいたアカウントを取得する
+     *
+     * @return アカウント
+     */
+    public function account()
     {
         $loader = new Vizualizer_Plugin("twitter");
         $account = $loader->loadModel("Account");
-        return $account->findAllByGroupId($this->group_id);
+        $account->findByPrimaryKey($this->account_id);
+        return $account;
     }
 }

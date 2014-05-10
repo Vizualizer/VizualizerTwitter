@@ -1,0 +1,49 @@
+<?php
+
+class VizualizerTwitter_Json_SearchTweet
+{
+    const TWEET_SESSION_KEY = "SEARCHED_TWEETS";
+
+
+    public function execute()
+    {
+        $post = Vizualizer::request();
+
+        // 商品プラグインの初期化
+        $loader = new Vizualizer_Plugin("twitter");
+        $account = $loader->loadModel("Account");
+
+        $tweetData = Vizualizer_Session::get(self::TWEET_SESSION_KEY);
+        if(!is_array($tweetData)){
+            $tweetData = array();
+        }
+
+        if(!empty($post["keyword"])){
+            // アカウントを取得
+            $account->findByPrimaryKey($post["account_id"]);
+
+            // Twitterへのアクセスを初期化
+            $application = $account->application();
+            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
+            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
+            $twitter = \Codebird\Codebird::getInstance();
+            $twitter->setToken($account->access_token, $account->access_token_secret);
+
+            // ツイートを検索
+            $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"], "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
+            $tweets = $tweetsTemp->statuses;
+
+            foreach($tweets as $tweet){
+                if(!empty($tweet->id) && $tweet->retweet_count > 0){
+                    $tweetData[$tweet->id] = $tweet;
+                }
+            }
+            $post->remove("keyword");
+        }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
+            unset($tweetData[$params[1]]);
+            $post->remove($params[0]);
+        }
+        Vizualizer_Session::set(self::TWEET_SESSION_KEY, $tweetData);
+        return $tweetData;
+    }
+}
