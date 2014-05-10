@@ -42,6 +42,7 @@ class VizualizerTwitter_Json_SearchTweet
         }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
             unset($tweetData[$params[1]]);
             $post->remove($params[0]);
+            $post->remove("mode");
         }
         Vizualizer_Session::set(self::TWEET_SESSION_KEY, $tweetData);
         return $tweetData;

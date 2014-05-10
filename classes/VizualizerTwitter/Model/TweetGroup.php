@@ -67,11 +67,11 @@ class VizualizerTwitter_Model_TweetGroup extends Vizualizer_Plugin_Model
      *
      * @return ツイートリスト
      */
-    public function tweets()
+    public function tweets($sort = "", $reverse = false)
     {
         $loader = new Vizualizer_Plugin("twitter");
         $tweet = $loader->loadModel("Tweet");
-        return $tweet->findAllByGroupId($this->tweet_group_id);
+        return $tweet->findAllByGroupId($this->tweet_group_id, $sort, $reverse);
     }
 
     /**

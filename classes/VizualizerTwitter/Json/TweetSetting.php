@@ -39,6 +39,7 @@ class VizualizerTwitter_Json_TweetSetting
                     throw new Vizualizer_Exception_Database($e);
                 }
             }
+            $post->remove("target");
         }
 
         $tweetSetting->findByPrimaryKey($post["tweet_setting_id"]);

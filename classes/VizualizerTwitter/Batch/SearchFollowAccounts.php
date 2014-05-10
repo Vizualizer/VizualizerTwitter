@@ -30,6 +30,14 @@
  */
 class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Batch
 {
+    public function getDaemonName(){
+        return "search_follow_accounts";
+    }
+
+    public function getDaemonInterval()
+    {
+        return 60;
+    }
 
     public function getName()
     {
@@ -170,6 +178,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                 }
             }
         }
+
         return $data;
     }
 }

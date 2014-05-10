@@ -31,12 +31,14 @@ class VizualizerTwitter_Json_Tweet
                     $tweetDb->save();
                 }
                 Vizualizer_Session::set(VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY, array());
+                $post->remove("commit");
             }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
                 $tweetDb = $loader->loadModel("Tweet");
                 $tweetDb->findByPrimaryKey($params[1]);
                 if($tweetDb->tweet_id > 0){
                     $tweetDb->delete();
                 }
+                $post->remove("mode");
             }
             // エラーが無かった場合、処理をコミットする。
             Vizualizer_Database_Factory::commit($connection);

@@ -18,6 +18,7 @@ class VizualizerTwitter_Json_Advertise
                 $advertise->account_id = $post["account_id"];
                 $advertise->advertise_text = $post["text"];
                 $advertise->save();
+                $post->remove("text");
             }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
                 $advertise = $loader->loadModel("TweetAdvertise");
                 $advertise->findByPrimaryKey($params[1]);
@@ -30,6 +31,7 @@ class VizualizerTwitter_Json_Advertise
         } catch (Exception $e) {
             Vizualizer_Database_Factory::rollback($connection);
             throw new Vizualizer_Exception_Database($e);
+            $post->remove("mode");
         }
 
         $advertise = $loader->loadModel("TweetAdvertise");

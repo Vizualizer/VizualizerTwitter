@@ -34,6 +34,13 @@ class VizualizerTwitter_Json_Account
                             $account->follow_status = "0";
                         }
                         break;
+                    case "tweet_status":
+                        if ($account->tweet_status == "0") {
+                            $account->tweet_status = "1";
+                        } elseif ($account->tweet_status == "1") {
+                            $account->tweet_status = "0";
+                        }
+                        break;
                     case "follow_keyword":
                         if(!empty($post["value"])){
                             $keywords = $account->followKeywords();
@@ -90,6 +97,7 @@ class VizualizerTwitter_Json_Account
                     throw new Vizualizer_Exception_Database($e);
                 }
             }
+            $post->remove("target");
         }
 
         $account->findByPrimaryKey($post["account_id"]);

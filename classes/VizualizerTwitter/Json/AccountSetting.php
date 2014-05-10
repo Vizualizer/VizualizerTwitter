@@ -39,6 +39,7 @@ class VizualizerTwitter_Json_AccountSetting
                     }
                 }
             }
+            $post->remove("target");
         }
 
         $account->findByPrimaryKey($post["account_id"]);

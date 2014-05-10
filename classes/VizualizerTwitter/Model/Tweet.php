@@ -58,9 +58,9 @@ class VizualizerTwitter_Model_Tweet extends Vizualizer_Plugin_Model
      * @param $group_id グループID
      * @return 設定のリスト
      */
-    public function findAllByGroupId($group_id)
+    public function findAllByGroupId($group_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("tweet_group_id" => $group_id));
+        return $this->findAllBy(array("tweet_group_id" => $group_id), $sort, $reverse);
     }
 
 
