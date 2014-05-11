@@ -53,7 +53,6 @@ class VizualizerTwitter_Module_Tweet_Setting_Initialize extends Vizualizer_Plugi
                     }
                     $group->tweet_group_name = "デフォルト";
                     $group->save();
-                    print_r($group->toArray());
 
                     $setting = $loader->loadModel("TweetSetting");
                     $setting->account_id = $account->account_id;
