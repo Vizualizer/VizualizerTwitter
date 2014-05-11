@@ -94,7 +94,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             }
 
             // ユーザー情報を検索
-            for ($i = 0; $i < 3; $i ++) {
+            for ($i = 0; $i < 10; $i ++) {
                 $twitter = \Codebird\Codebird::getInstance();
                 $twitter->setToken($account->access_token, $account->access_token_secret);
 
@@ -136,7 +136,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     $follow = $loader->loadModel("Follow");
                     $follow->findBy(array("account_id" => $account->account_id, "user_id" => $user->id));
                     if ($follow->follow_id > 0) {
-                        echo "Skipped targeted : ".$user->id."\r\n";
+                        echo "Skipped targeted : ".$user->id." was followed\r\n";
                         continue;
                     }
 

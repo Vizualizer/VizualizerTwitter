@@ -30,7 +30,7 @@ class VizualizerTwitter_Json_SearchTweet
             $twitter->setToken($account->access_token, $account->access_token_secret);
 
             // ツイートを検索
-            $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"], "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
+            $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
             $tweets = $tweetsTemp->statuses;
 
             foreach($tweets as $tweet){
