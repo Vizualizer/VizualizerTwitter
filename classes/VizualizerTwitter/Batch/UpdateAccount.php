@@ -74,8 +74,8 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                 $account->friend_count = $user->friends_count;
                 $account->follower_count = $user->followers_count;
                 $account->favorite_count = $user->favourites_count;
+                $account->notification = $user->notifications;
                 echo "Update Account for ".$account->account_id."  : \r\n";
-                print_r($account->toArray());
                 $account->save();
 
                 // エラーが無かった場合、処理をコミットする。

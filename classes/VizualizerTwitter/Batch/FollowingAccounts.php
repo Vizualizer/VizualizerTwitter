@@ -85,6 +85,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                 } else {
                     $friends = $twitter->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
+
                 foreach ($friends->ids as $userId) {
                     $friendIds[$userId] = $userId;
                 }

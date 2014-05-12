@@ -40,10 +40,23 @@ class VizualizerTwitter_Json_SearchTweet
             }
             $post->remove("keyword");
         }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
-            unset($tweetData[$params[1]]);
+            $tweetData[$params[1]]->delete_target = $post["value"];
+            $post->remove($params[0]);
+            $post->remove("mode");
+            Vizualizer_Session::set(self::TWEET_SESSION_KEY, $tweetData);
+            return $tweetData[$params[1]]->delete_target;
+        }elseif($post["mode"] == "delete_all_target"){
+            foreach($tweetData as $id => $tweet){
+                if($tweet->delete_target == "1"){
+                    unset($tweetData[$id]);
+                }
+            }
             $post->remove($params[0]);
             $post->remove("mode");
         }
+        uasort($tweetData, function($a, $b){
+            return ($a->retweet_count < $b->retweet_count);
+        });
         Vizualizer_Session::set(self::TWEET_SESSION_KEY, $tweetData);
         return $tweetData;
     }
