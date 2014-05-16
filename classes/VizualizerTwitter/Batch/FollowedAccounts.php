@@ -105,6 +105,10 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                         if (empty($follow->follow_date)) {
                             $follow->follow_date = date("Y-m-d H:i:s");
                             $follow->save();
+                        }elseif (empty($follow->friend_date)) {
+                            $twitter->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
+                            $follow->friend_date = date("Y-m-d H:i:s");
+                            $follow->save();
                         }
                         unset($followerIds[$follow->user_id]);
                     }
