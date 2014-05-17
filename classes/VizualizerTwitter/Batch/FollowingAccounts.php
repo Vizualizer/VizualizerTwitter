@@ -32,7 +32,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
 {
     public function getDaemonName()
     {
-        return "followed_accounts";
+        return "following_accounts";
     }
 
     public function getDaemonInterval()
