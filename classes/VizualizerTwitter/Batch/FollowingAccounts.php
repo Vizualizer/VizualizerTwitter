@@ -86,6 +86,10 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     $friends = $twitter->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
 
+                if (!isset($followers->ids) || !is_array($followers->ids)) {
+                    break;
+                }
+
                 foreach ($friends->ids as $userId) {
                     $friendIds[$userId] = $userId;
                 }
@@ -97,16 +101,18 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                // フォロワーになっていないフレンドを取得
-                $follow = $loader->loadModel("Follow");
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in: user_id" => array_values($followerIds)));
-                foreach ($follows as $follow) {
-                    if (array_key_exists($follow->user_id, $friendIds)) {
-                        if (empty($follow->friend_date)) {
-                            $follow->friend_date = date("Y-m-d H:i:s");
-                            $follow->save();
+                if (is_array($friendIds) && !empty($friendIds)) {
+                    // フォロワーになっていないフレンドを取得
+                    $follow = $loader->loadModel("Follow");
+                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in: user_id" => array_values($friendIds)));
+                    foreach ($follows as $follow) {
+                        if (array_key_exists($follow->user_id, $friendIds)) {
+                            if (empty($follow->friend_date)) {
+                                $follow->friend_date = date("Y-m-d H:i:s");
+                                $follow->save();
+                            }
+                            unset($friendIds[$follow->user_id]);
                         }
-                        unset($friendIds[$follow->user_id]);
                     }
                 }
 
