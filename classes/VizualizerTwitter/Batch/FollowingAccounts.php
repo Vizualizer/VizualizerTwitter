@@ -86,7 +86,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     $friends = $twitter->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
 
-                if (!isset($followers->ids) || !is_array($followers->ids)) {
+                if (!isset($friends->ids) || !is_array($friends->ids)) {
                     break;
                 }
 
@@ -104,7 +104,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                 if (is_array($friendIds) && !empty($friendIds)) {
                     // フォロワーになっていないフレンドを取得
                     $follow = $loader->loadModel("Follow");
-                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in: user_id" => array_values($friendIds)));
+                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => array_values($friendIds)));
                     foreach ($follows as $follow) {
                         if (array_key_exists($follow->user_id, $friendIds)) {
                             if (empty($follow->friend_date)) {

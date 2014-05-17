@@ -105,7 +105,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                 if (is_array($followerIds) && !empty($followerIds)) {
                     // フォロワーになっていないフレンドを取得
                     $follow = $loader->loadModel("Follow");
-                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in: user_id" => array_values($followerIds)));
+                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => array_values($followerIds)));
                     foreach ($follows as $follow) {
                         if (array_key_exists($follow->user_id, $followerIds)) {
                             if (empty($follow->follow_date)) {
