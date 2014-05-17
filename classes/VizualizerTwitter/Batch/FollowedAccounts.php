@@ -86,6 +86,11 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                 } else {
                     $followers = $twitter->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
+
+                if (!isset($followers->ids) || !is_array($followers->ids)) {
+                    break;
+                }
+
                 foreach ($followers->ids as $userId) {
                     $followerIds[$userId] = $userId;
                 }
@@ -97,20 +102,24 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                // フォロワーになっていないフレンドを取得
-                $follow = $loader->loadModel("Follow");
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in: user_id" => array_values($followerIds)));
-                foreach ($follows as $follow) {
-                    if (array_key_exists($follow->user_id, $followerIds)) {
-                        if (empty($follow->follow_date)) {
-                            $follow->follow_date = date("Y-m-d H:i:s");
-                            $follow->save();
-                        }elseif (empty($follow->friend_date)) {
-                            $twitter->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
-                            $follow->friend_date = date("Y-m-d H:i:s");
-                            $follow->save();
+                if (is_array($followerIds) && !empty($followerIds)) {
+                    // フォロワーになっていないフレンドを取得
+                    $follow = $loader->loadModel("Follow");
+                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in: user_id" => array_values($followerIds)));
+                    foreach ($follows as $follow) {
+                        if (array_key_exists($follow->user_id, $followerIds)) {
+                            if (empty($follow->follow_date)) {
+                                $follow->follow_date = date("Y-m-d H:i:s");
+                                $follow->save();
+                            }elseif (empty($follow->friend_date)) {
+                                $result = $twitter->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
+                                if ($result->following) {
+                                    $follow->friend_date = date("Y-m-d H:i:s");
+                                    $follow->save();
+                                }
+                            }
+                            unset($followerIds[$follow->user_id]);
                         }
-                        unset($followerIds[$follow->user_id]);
                     }
                 }
 
