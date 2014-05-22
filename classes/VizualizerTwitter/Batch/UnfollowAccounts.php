@@ -65,16 +65,7 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
             if ($account->follow_status == "3") {
-                // トランザクションの開始
-                $connection = Vizualizer_Database_Factory::begin("twitter");
-                try {
-                    $account->follow_status = 1;
-                    $account->save();
-                    Vizualizer_Database_Factory::commit($connection);
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                    throw new Vizualizer_Exception_Database($e);
-                }
+                $account->updateFollowStatus(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
@@ -91,27 +82,14 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             $follow = $loader->loadModel("Follow");
             $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null));
 
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
-
             // ステータスを実行中に変更
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $account->follow_status = 2;
-                $account->save();
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-            }
+            $account->updateFollowStatus(2);
 
             foreach ($follows as $follow) {
+                $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
                     // アンフォロー処理を実行する。
-                    $twitter->friendships_destroy(array("user_id" => $follow->user_id));
+                    $account->getTwitter()->friendships_destroy(array("user_id" => $follow->user_id));
                     $follow->friend_cancel_date = date("Y-m-d H:i:s");
                     $follow->save();
 
@@ -135,17 +113,7 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             }
 
             // ステータスを待機中に変更
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $account->follow_count = 0;
-                $account->follow_status = 1;
-                $account->next_follow_time = date("Y-m-d H:i:s", strtotime("+1 day"));
-
-                $account->save();
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-            }
+            $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+1 day")), true);
         }
 
         return $data;

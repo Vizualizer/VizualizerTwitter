@@ -91,14 +91,6 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                 continue;
             }
 
-
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
-
             // アカウントのステータスが有効のアカウントのみを対象とする。
             if ($account->tweet_status != "1") {
                 echo "Account is not ready.\r\n";
@@ -142,14 +134,14 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                         if($tweet->tweet_id != $lastTweetId){
                             $tweetLog->tweet_id = $tweet->tweet_id;
                             $tweetLog->tweet_type = 1;
-                            $tweetLog->tweet_text = $tweet->tweet_text." ".$tweet->screen_name;
+                            $tweetLog->tweet_text = $tweet->tweet_text;
                             break;
                         }
                     }
                 }
 
                 if(!empty($tweetLog->tweet_text)){
-                    $result = $twitter->statuses_update(array("status" => $tweetLog->tweet_text));
+                    $result = $account->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
                     echo "Post tweet : ".$tweetLog->tweet_text."\r\n";
                     print_r($result);
                     if(!empty($result->id)){

@@ -61,28 +61,30 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
             // ユーザー情報を取得
             $user = $twitter->users_show(array("user_id" => $account->twitter_id));
 
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
+            if (isset($user->id) && !empty($user->id)) {
+                // TwitterのIDが取得できた場合のみ更新
+                $connection = Vizualizer_Database_Factory::begin("twitter");
 
-            try {
-                // アカウント情報を登録
-                $account->twitter_id = $user->id;
-                $account->screen_name = $user->screen_name;
-                $account->name = $user->name;
-                $account->profile_image_url = $user->profile_image_url;
-                $account->tweet_count = $user->statuses_count;
-                $account->friend_count = $user->friends_count;
-                $account->follower_count = $user->followers_count;
-                $account->favorite_count = $user->favourites_count;
-                $account->notification = $user->notifications;
-                echo "Update Account for ".$account->account_id."  : \r\n";
-                $account->save();
+                try {
+                    // アカウント情報を登録
+                    $account->twitter_id = $user->id;
+                    $account->screen_name = $user->screen_name;
+                    $account->name = $user->name;
+                    $account->profile_image_url = $user->profile_image_url;
+                    $account->tweet_count = $user->statuses_count;
+                    $account->friend_count = $user->friends_count;
+                    $account->follower_count = $user->followers_count;
+                    $account->favorite_count = $user->favourites_count;
+                    $account->notification = $user->notifications;
+                    echo "Update Account for ".$account->account_id."  : \r\n";
+                    $account->save();
 
-                // エラーが無かった場合、処理をコミットする。
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+                    // エラーが無かった場合、処理をコミットする。
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
             }
         }
         return $data;

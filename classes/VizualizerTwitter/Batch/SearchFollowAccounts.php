@@ -68,12 +68,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         }
 
         foreach ($accounts as $account) {
-
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-
             // 検索キーワードを取得する。
             $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
             $setting = $loader->loadModel("Setting");
@@ -96,15 +90,12 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             // ユーザー情報を検索
             for ($i = 0; $i < 3; $i ++) {
                 foreach($keywords as $keyword){
-                    $twitter = \Codebird\Codebird::getInstance();
-                    $twitter->setToken($account->access_token, $account->access_token_secret);
-
                     if($i < 2){
                         $page = $i + 1;
                     }else{
                         $page = mt_rand(3, 50);
                     }
-                    $users = (array) $twitter->users_search(array("q" => $keyword, "page" => $page, "per_page" => 20));
+                    $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "per_page" => 20));
                     unset($users["httpstatus"]);
                     echo "Search Users（".count($users)."） in page ".$page."\r\n";
                     foreach ($users as $index => $user) {

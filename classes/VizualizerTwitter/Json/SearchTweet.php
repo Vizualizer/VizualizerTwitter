@@ -34,6 +34,9 @@ class VizualizerTwitter_Json_SearchTweet
             $tweets = $tweetsTemp->statuses;
 
             foreach($tweets as $tweet){
+                if(!isset($post["ignore_signature"]) || $post["ignore_signature"] != "1"){
+                    $tweet->text .= " ".$tweet->user->screen_name;
+                }
                 if(!empty($tweet->id) && $tweet->retweet_count > 0){
                     $tweetData[$tweet->id] = $tweet;
                 }

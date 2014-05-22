@@ -47,6 +47,6 @@ class VizualizerTwitter
      */
     final public static function install()
     {
-        VizualizerTrade_Table_Types::install();
+        VizualizerTwitter_Table_Accounts::install();
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-class VizualizerTwitter_Json_Tweet
+class VizualizerTwitter_Json_OriginalTweet
 {
-    const DELETE_TARGET_KEY = "TWEET_DELETE_TARGET";
+    const DELETE_TARGET_KEY = "ORIGINAL_TWEET_DELETE_TARGET";
 
     public function execute()
     {
@@ -21,23 +21,15 @@ class VizualizerTwitter_Json_Tweet
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
             if(!empty($post["commit"])){
-                $tweetData = Vizualizer_Session::get(VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY);
-                foreach($tweetData as $tweet){
-                    $tweetDb = $loader->loadModel("Tweet");
-                    $tweetDb->findBy(array("twitter_id" => $tweet->id));
-                    if(!($tweetDb->tweet_id > 0)){
-                        $tweetDb = $loader->loadModel("Tweet");
-                        $tweetDb->twitter_id = $tweet->id;
-                    }
-                    $tweetDb->tweet_group_id = $post["group_id"];
-                    $tweetDb->user_id = $tweet->user->id;
-                    $tweetDb->screen_name = $tweet->user->screen_name;
-                    $tweetDb->tweet_text = $tweet->text;
-                    $tweetDb->retweet_count = $tweet->retweet_count;
-                    $tweetDb->favorite_count = $tweet->favorite_count;
-                    $tweetDb->save();
-                }
-                Vizualizer_Session::set(VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY, array());
+                $tweetDb = $loader->loadModel("Tweet");
+                $tweetDb->twitter_id = "0";
+                $tweetDb->tweet_group_id = $post["group_id"];
+                $tweetDb->user_id = "0";
+                $tweetDb->screen_name = "0";
+                $tweetDb->tweet_text = $post["text"];
+                $tweetDb->retweet_count = "0";
+                $tweetDb->favorite_count = "0";
+                $tweetDb->save();
                 $post->remove("commit");
             }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
                 $deleteTarget[$params[1]] = $post["value"];
@@ -67,7 +59,7 @@ class VizualizerTwitter_Json_Tweet
         $tweetDb = $loader->loadModel("Tweet");
         $result = array();
         if($post["group_id"] > 0){
-            $data = $tweetDb->findAllBy(array("group_id" => $post["group_id"], "ne:user_id" => "0"), retweet_count, true);
+            $data = $tweetDb->findAllBy(array("group_id" => $post["group_id"], "user_id" => "0"), retweet_count, true);
             foreach($data as $item){
                 $item->delete_target = $deleteTarget[$item->tweet_id];
                 $result[] = $item->toArray();

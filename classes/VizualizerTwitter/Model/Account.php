@@ -33,6 +33,21 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     const FOLLOW_MODE_NORMAL = "2";
     const FOLLOW_MODE_SAFE = "1";
 
+    const FOLLOW_STATUS_SUSPEND = 0;
+    const FOLLOW_STATUS_STANDBY = 1;
+    const FOLLOW_STATUS_RUNNING = 2;
+    const FOLLOW_STATUS_CLOSED = 3;
+    const FOLLOW_STATUS_NOLIST = 4;
+    const FOLLOW_STATUS_RETRY = 5;
+    const FOLLOW_STATUS_SKIPPED = 6;
+
+    const TWEET_STATUS_SUSPENDED = 0;
+    const FOLLOW_STATUS_ACTIVATED = 1;
+
+    /**
+     * ツイッターアクセス用のインスタンス
+     */
+    private $twitter;
 
     /**
      * コンストラクタ
@@ -97,8 +112,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     {
         $data = explode("\r\n", $this->follow_keywords);
         $result = array();
-        foreach($data as $item){
-            if(!empty($item)){
+        foreach ($data as $item) {
+            if (!empty($item)) {
                 $result[] = $item;
             }
         }
@@ -114,8 +129,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     {
         $data = explode("\r\n", $this->ignore_keywords);
         $result = array();
-        foreach($data as $item){
-            if(!empty($item)){
+        foreach ($data as $item) {
+            if (!empty($item)) {
                 $result[] = $item;
             }
         }
@@ -224,7 +239,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         return $tweetSettings;
     }
 
-
     /**
      * アカウントに紐づいたツイート広告を取得する
      *
@@ -238,7 +252,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         return $tweetAdvertises;
     }
 
-
     /**
      * アカウントに紐づいたツイートログを取得する
      *
@@ -250,5 +263,48 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $tweetLog = $loader->loadModel("TweetLog");
         $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
         return $tweetLogs;
+    }
+
+    /**
+     * ツイッターAPI用のオブジェクトを取得
+     */
+    public function getTwitter(){
+        if(!$this->twitter){
+            $application = $this->application();
+            \Codebird\Codebird::setConsumerKey($application->api_key, $application->api_secret);
+            $this->twitter = \Codebird\Codebird::getInstance();
+            $this->twitter->setToken($this->access_token, $this->access_token_secret);
+        }
+        return $this->twitter;
+    }
+
+    /**
+     * フォローステータスを更新する
+     *
+     * @param int $status フォローステータス
+     * @param int $next 次回のフォロー実行時間
+     * @param boolean $reset フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
+     */
+    public function updateFollowStatus($status, $next = "", $reset = false)
+    {
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            $this->follow_status = $status;
+            if(!empty($next)){
+                $this->next_follow_time = $next;
+                if($reset){
+                    $this->follow_count = 0;
+                }else{
+                    $this->follow_count ++;
+                }
+            }
+            $this->save();
+            Vizualizer_Database_Factory::commit($connection);
+            continue;
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
     }
 }

@@ -69,21 +69,13 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
         }
 
         foreach ($accounts as $account) {
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-
-            // フォロワーのIDを取得する。
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
             $cursor = 0;
             $friendIds = array();
             while (true) {
                 if ($cursor > 0) {
-                    $friends = $twitter->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
+                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
                 } else {
-                    $friends = $twitter->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
+                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
 
                 if (!isset($friends->ids) || !is_array($friends->ids)) {
@@ -108,6 +100,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     foreach ($follows as $follow) {
                         if (array_key_exists($follow->user_id, $friendIds)) {
                             if (empty($follow->friend_date)) {
+                                // フォローしているにも関わらず日付が設定されていない場合は現在日時を設定
                                 $follow->friend_date = date("Y-m-d H:i:s");
                                 $follow->save();
                             }

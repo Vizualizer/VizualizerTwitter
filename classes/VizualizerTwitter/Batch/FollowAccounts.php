@@ -60,6 +60,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
         $accounts = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s")), "next_follow_time", false);
 
         foreach ($accounts as $account) {
+            // フォロー人数の上限を迎えていた場合はスキップ
             if(($account->follower_count < 1819 && $account->friend_count > 2000) || ($account->follower_count >= 1819 && $account->follower_count * 1.1 < $account->friend_count)){
                 continue;
             }
@@ -68,16 +69,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
             if ($account->follow_status == "3") {
-                // トランザクションの開始
-                $connection = Vizualizer_Database_Factory::begin("twitter");
-                try {
-                    $account->follow_status = 1;
-                    $account->save();
-                    Vizualizer_Database_Factory::commit($connection);
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                    throw new Vizualizer_Exception_Database($e);
-                }
+                $account->updateFollowStatus(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
@@ -86,27 +78,18 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                 continue;
             }
 
+            // フォロー設定を取得
             $setting = $account->followSetting();
 
-            // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
+            // 本日のフォロー状況を取得
             $history = $loader->loadModel("FollowHistory");
             $today = date("Y-m-d");
             $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+
+            // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
             if ($setting->daily_follows < $history->follow_count) {
-                // トランザクションの開始
-                $connection = Vizualizer_Database_Factory::begin("twitter");
-                try {
-                    $account->follow_status = 3;
-                    $account->next_follow_time = date("Y-m-d 00:00:00", strtotime("+1 day"));
-                    $account->follow_count = 0;
-                    $account->save();
-                    Vizualizer_Database_Factory::commit($connection);
-                    echo "Over daily follows for ".$history->follow_count." to ".$setting->daily_follows." in ".$account->account_id."\r\n";
-                    continue;
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                    throw new Vizualizer_Exception_Database($e);
-                }
+                $account->updateFollowStatus(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
+                echo "Over daily follows for ".$history->follow_count." to ".$setting->daily_follows." in ".$account->account_id."\r\n";
             }
 
             // リストを取得する。
@@ -116,27 +99,9 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             // 結果が0件の場合はリスト無しにしてスキップ
             if ($follows->count() == 0) {
-                // トランザクションの開始
-                $connection = Vizualizer_Database_Factory::begin("twitter");
-
-                try {
-                    $account->follow_status = 4;
-                    $account->save();
-                    Vizualizer_Database_Factory::commit($connection);
-                    echo "No List in ".$account->account_id."\r\n";
-                    continue;
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                    throw new Vizualizer_Exception_Database($e);
-                }
+                $account->updateFollowStatus(4);
+                echo "No List in ".$account->account_id."\r\n";
             }
-
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
 
             // ステータスを実行中に変更
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -151,7 +116,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             foreach ($follows as $follow) {
                 try {
                     // フォロー処理を実行する。
-                    $twitter->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
+                    $account->getTwitter()->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
                     $follow->friend_date = date("Y-m-d H:i:s");
                     $follow->save();
 
@@ -166,32 +131,15 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                     Vizualizer_Database_Factory::commit($connection);
 
                     echo "Followed to ".$follow->user_id." in ".$account->account_id."\r\n";
-
-                    // 所定時間待機
-                    // sleep($setting->min_follow_interval);
                 } catch (Exception $e) {
                     Vizualizer_Database_Factory::rollback($connection);
                 }
             }
 
-            // ステータスを待機中に変更
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $account->follow_count ++;
-
-                if($account->follow_count < $account->follow_unit){
-                    // 規定秒数を加算
-                    $account->next_follow_time = date("Y-m-d H:i:s", strtotime("+".$setting->min_follow_interval." second"));
-                }else{
-                    $account->follow_count = 0;
-                    $account->follow_status = 1;
-                    $account->next_follow_time = date("Y-m-d H:i:s", strtotime("+".$account->follow_unit_interval." minute"));
-                }
-
-                $account->save();
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
+            if($account->follow_count < $account->follow_unit - 1){
+                $account->updateFollowStatus(2, date("Y-m-d H:i:s", strtotime("+".$setting->min_follow_interval." second")));
+            }else{
+                $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+".$account->follow_unit_interval." minute")), true);
             }
         }
 

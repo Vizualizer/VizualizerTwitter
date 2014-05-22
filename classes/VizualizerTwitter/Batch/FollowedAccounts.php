@@ -70,21 +70,13 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
         }
 
         foreach ($accounts as $account) {
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-
-            // フォロワーのIDを取得する。
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
             $cursor = 0;
             $followerIds = array();
             while (true) {
                 if ($cursor > 0) {
-                    $followers = $twitter->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
+                    $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
                 } else {
-                    $followers = $twitter->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000));
+                    $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
 
                 if (!isset($followers->ids) || !is_array($followers->ids)) {
@@ -109,10 +101,12 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                     foreach ($follows as $follow) {
                         if (array_key_exists($follow->user_id, $followerIds)) {
                             if (empty($follow->follow_date)) {
+                                // フォロワーなのに、フォロー日時が入っていない場合は、暫定的に現在日時を設定
                                 $follow->follow_date = date("Y-m-d H:i:s");
                                 $follow->save();
                             }elseif (empty($follow->friend_date)) {
-                                $result = $twitter->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
+                                // フォロワーなのに、フレンドになっていない場合はリフォロー処理を行う。
+                                $result = $account->getTwitter()->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
                                 if ($result->following) {
                                     $follow->friend_date = date("Y-m-d H:i:s");
                                     $follow->save();
