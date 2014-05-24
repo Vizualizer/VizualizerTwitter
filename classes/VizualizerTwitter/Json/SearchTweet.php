@@ -33,6 +33,7 @@ class VizualizerTwitter_Json_SearchTweet
             $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
             $tweets = $tweetsTemp->statuses;
 
+            $tweetData = array();
             foreach($tweets as $tweet){
                 if(!isset($post["ignore_signature"]) || $post["ignore_signature"] != "1"){
                     $tweet->text .= " ".$tweet->user->screen_name;

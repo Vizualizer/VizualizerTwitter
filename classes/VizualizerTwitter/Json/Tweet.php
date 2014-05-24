@@ -22,22 +22,25 @@ class VizualizerTwitter_Json_Tweet
         try {
             if(!empty($post["commit"])){
                 $tweetData = Vizualizer_Session::get(VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY);
-                foreach($tweetData as $tweet){
-                    $tweetDb = $loader->loadModel("Tweet");
-                    $tweetDb->findBy(array("twitter_id" => $tweet->id));
-                    if(!($tweetDb->tweet_id > 0)){
+                foreach($tweetData as $id => $tweet){
+                    if($tweet->delete_target == "1"){
                         $tweetDb = $loader->loadModel("Tweet");
-                        $tweetDb->twitter_id = $tweet->id;
+                        $tweetDb->findBy(array("twitter_id" => $tweet->id));
+                        if(!($tweetDb->tweet_id > 0)){
+                            $tweetDb = $loader->loadModel("Tweet");
+                            $tweetDb->twitter_id = $tweet->id;
+                        }
+                        $tweetDb->tweet_group_id = $post["group_id"];
+                        $tweetDb->user_id = $tweet->user->id;
+                        $tweetDb->screen_name = $tweet->user->screen_name;
+                        $tweetDb->tweet_text = $tweet->text;
+                        $tweetDb->retweet_count = $tweet->retweet_count;
+                        $tweetDb->favorite_count = $tweet->favorite_count;
+                        $tweetDb->save();
+                        unset($tweetData[$id]);
                     }
-                    $tweetDb->tweet_group_id = $post["group_id"];
-                    $tweetDb->user_id = $tweet->user->id;
-                    $tweetDb->screen_name = $tweet->user->screen_name;
-                    $tweetDb->tweet_text = $tweet->text;
-                    $tweetDb->retweet_count = $tweet->retweet_count;
-                    $tweetDb->favorite_count = $tweet->favorite_count;
-                    $tweetDb->save();
                 }
-                Vizualizer_Session::set(VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY, array());
+                Vizualizer_Session::set(VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY, $tweetData);
                 $post->remove("commit");
             }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
                 $deleteTarget[$params[1]] = $post["value"];
