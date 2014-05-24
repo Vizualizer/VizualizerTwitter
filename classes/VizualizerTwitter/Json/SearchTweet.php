@@ -38,6 +38,7 @@ class VizualizerTwitter_Json_SearchTweet
                     $tweet->text .= " ".$tweet->user->screen_name;
                 }
                 if(!empty($tweet->id) && $tweet->retweet_count > 0){
+                    $tweet->delete_target = "1";
                     $tweetData[$tweet->id] = $tweet;
                 }
             }
