@@ -18,7 +18,7 @@ class VizualizerTwitter_Json_Account
                 $account->findByPrimaryKey($post["account_id"]);
                 switch ($p[1]) {
                     case "follow_mode":
-                        if($account->follower_count < 2000){
+                        if ($account->follower_count < 2000) {
                             return array("error" => "フォロワーが2000人未満の場合はモードを変更できません");
                         }
                         if ($account->follow_mode == "1") {
@@ -42,25 +42,31 @@ class VizualizerTwitter_Json_Account
                         }
                         break;
                     case "follow_keyword":
-                        if(!empty($post["value"])){
+                        if (!empty($post["value"])) {
                             $keywords = $account->followKeywords();
-                            $keywords[] = $post["value"];
+                            $values = explode(" ", str_replace("　", " ", trim($post["value"])));
+                            foreach ($values as $value) {
+                                $keywords[] = $value;
+                            }
                             $account->follow_keywords = implode("\r\n", $keywords);
                         }
                         break;
                     case "ignore_keyword":
-                        if(!empty($post["value"])){
+                        if (!empty($post["value"])) {
                             $keywords = $account->ignoreKeywords();
-                            $keywords[] = $post["value"];
+                            $values = explode(" ", str_replace("　", " ", trim($post["value"])));
+                            foreach ($values as $value) {
+                                $keywords[] = $value;
+                            }
                             $account->ignore_keywords = implode("\r\n", $keywords);
                         }
                         break;
                     case "follow_keyword_delete":
-                        if(!empty($post["value"])){
+                        if (!empty($post["value"])) {
                             $keywords = $account->followKeywords();
                             $newKeywords = array();
-                            foreach($keywords as $keyword){
-                                if($keyword != $post["value"]){
+                            foreach ($keywords as $keyword) {
+                                if ($keyword != $post["value"]) {
                                     $newKeywords[] = $keyword;
                                 }
                             }
@@ -68,11 +74,11 @@ class VizualizerTwitter_Json_Account
                         }
                         break;
                     case "ignore_keyword_delete":
-                        if(!empty($post["value"])){
+                        if (!empty($post["value"])) {
                             $keywords = $account->ignoreKeywords();
                             $newKeywords = array();
-                            foreach($keywords as $keyword){
-                                if($keyword != $post["value"]){
+                            foreach ($keywords as $keyword) {
+                                if ($keyword != $post["value"]) {
                                     $newKeywords[] = $keyword;
                                 }
                             }
@@ -104,7 +110,7 @@ class VizualizerTwitter_Json_Account
         $account->follow_keywords = $account->followKeywords();
         $account->ignore_keywords = $account->ignoreKeywords();
         $followSettings = array();
-        foreach($account->followSettings() as $setting){
+        foreach ($account->followSettings() as $setting) {
             $followSettings[] = $setting->toArray();
         }
         $account->follow_settings = $followSettings;

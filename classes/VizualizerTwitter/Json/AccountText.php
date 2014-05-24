@@ -46,7 +46,9 @@ class VizualizerTwitter_Json_AccountText
         $accounts = $account->findAllBy(array());
         $attributes = array();
         foreach($accounts as $acc){
-            $attributes[$acc->attribute] = $acc->attribute;
+            if(!empty($acc->attribute)){
+                $attributes[$acc->attribute] = $acc->attribute;
+            }
         }
 
         $account->findByPrimaryKey($post["account_id"]);
