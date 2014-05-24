@@ -71,7 +71,8 @@ class VizualizerTwitter_Model_FollowSetting extends Vizualizer_Plugin_Model
      */
     public function findByAccountFollowers($account_id, $follower_count)
     {
-        $this->findBy(array("account_id" => $account_id, "le:min_followers" => $follower_count), "min_followers", true);
+        $followSettings = $this->findAllBy(array("account_id" => $account_id, "le:min_followers" => $follower_count), "min_followers", true);
+        $this->findByPrimaryKey($followSettings->current()->follow_setting_id);
     }
 
     /**
