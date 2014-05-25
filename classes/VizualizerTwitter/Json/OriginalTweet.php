@@ -21,15 +21,23 @@ class VizualizerTwitter_Json_OriginalTweet
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
             if(!empty($post["commit"])){
-                $tweetDb = $loader->loadModel("Tweet");
-                $tweetDb->twitter_id = "0";
-                $tweetDb->tweet_group_id = $post["group_id"];
-                $tweetDb->user_id = "0";
-                $tweetDb->screen_name = "0";
-                $tweetDb->tweet_text = $post["text"];
-                $tweetDb->retweet_count = "0";
-                $tweetDb->favorite_count = "0";
-                $tweetDb->save();
+                $post["text"] = str_replace("\n", "\r\n", str_replace("\r", "\n", str_replace("\r\n", "\n", $post["text"])));
+                if($post["commit"] == "2"){
+                    $values = explode("\r\n", $post["text"]);
+                }else{
+                    $values = array($post["text"]);
+                }
+                foreach($values as $value){
+                    $tweetDb = $loader->loadModel("Tweet");
+                    $tweetDb->twitter_id = "0";
+                    $tweetDb->tweet_group_id = $post["group_id"];
+                    $tweetDb->user_id = "0";
+                    $tweetDb->screen_name = "0";
+                    $tweetDb->tweet_text = str_replace("\\n", "\r\n", $value);
+                    $tweetDb->retweet_count = "0";
+                    $tweetDb->favorite_count = "0";
+                    $tweetDb->save();
+                }
                 $post->remove("commit");
             }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
                 $deleteTarget[$params[1]] = $post["value"];
