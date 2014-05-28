@@ -36,7 +36,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
 
     public function getDaemonInterval()
     {
-        return 60;
+        return 120;
     }
 
     public function getName()
@@ -88,12 +88,12 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             }
 
             // ユーザー情報を検索
-            for ($i = 0; $i < 3; $i ++) {
+            for ($i = 0; $i < 2; $i ++) {
                 foreach($keywords as $keyword){
-                    if($i < 2){
+                    if($i < 1){
                         $page = $i + 1;
                     }else{
-                        $page = mt_rand(3, 50);
+                        $page = mt_rand(2, 50);
                     }
                     $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "per_page" => 20));
                     unset($users["httpstatus"]);
