@@ -23,44 +23,16 @@
  */
 
 /**
- * ターゲットユーザーのモデルです。
+ * 共通設定を保存する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_User extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Module_Setting_Save extends Vizualizer_Plugin_Module_Save
 {
 
-    /**
-     * コンストラクタ
-     *
-     * @param $values モデルに初期設定する値
-     */
-    public function __construct($values = array())
+    function execute($params)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("Users"), $values);
-    }
-
-    /**
-     * 主キーでデータを取得する。
-     *
-     * @param $user_id ユーザーID
-     */
-    public function findByPrimaryKey($user_id)
-    {
-        $this->findBy(array("user_id" => $user_id));
-    }
-
-    /**
-     * ユーザーに紐づいたフォローを取得する
-     *
-     * @return フォローリスト
-     */
-    public function followSettings()
-    {
-        $loader = new Vizualizer_Plugin("twitter");
-        $follow = $loader->loadModel("Follow");
-        return $follow->findAllByUserId($this->user_id);
+        $this->executeImpl("Twitter", "Setting", "setting_id");
     }
 }

@@ -22,31 +22,26 @@
  * @version   1.0.0
  */
 
-// プラグインの初期化
-VizualizerTwitter::initialize();
-
-
 /**
- * プラグインの設定用クラス
+ * ツイートのテキストデータを保存する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter
+class VizualizerTwitter_Module_Tweet_SavePreText extends Vizualizer_Plugin_Module_Save
 {
 
-    /**
-     * プラグインの初期化処理を行うメソッドです。
-     */
-    final public static function initialize()
+    function execute($params)
     {
-    }
+        $post = Vizualizer::request();
+        $attr = Vizualizer::attr();
 
-    /**
-     * データベースインストールの処理を行うメソッド
-     */
-    final public static function install()
-    {
-        VizualizerTwitter_Table_Accounts::install();
+        if(preg_match("/^([0-9a-zA-Z_]+)_([0-9]+)$/", $post["id"], $p) > 0){
+            $key = $p[1];
+            $_SESSION[VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY][$p[2]]->$key = $post["value"];
+            $attr["tweet"] = $_SESSION[VizualizerTwitter_Json_SearchTweet::TWEET_SESSION_KEY][$p[2]];
+        }else{
+            $attr["tweet"] = (object) array();
+        }
     }
 }

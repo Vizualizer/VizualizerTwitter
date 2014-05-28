@@ -22,31 +22,18 @@
  * @version   1.0.0
  */
 
-// プラグインの初期化
-VizualizerTwitter::initialize();
-
-
 /**
- * プラグインの設定用クラス
+ * ツイート設定のデータを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter
+class Vizualizertwitter_Module_Tweet_Setting_Detail extends Vizualizer_Plugin_Module_Detail
 {
 
-    /**
-     * プラグインの初期化処理を行うメソッドです。
-     */
-    final public static function initialize()
+    function execute($params)
     {
-    }
-
-    /**
-     * データベースインストールの処理を行うメソッド
-     */
-    final public static function install()
-    {
-        VizualizerTwitter_Table_Accounts::install();
+        $post = Vizualizer::request();
+        $this->executeImpl("Twitter", "TweetSetting", $post["tweet_setting_id"], $params->get("result", "tweetSetting"));
     }
 }

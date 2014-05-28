@@ -58,9 +58,21 @@ class VizualizerTwitter_Model_FollowSetting extends Vizualizer_Plugin_Model
      * @param $account_id アカウントID
      * @return 詳細設定のリスト
      */
-    public function findAllByAccountId($account_id)
+    public function findAllByAccountId($account_id, $sort = "setting_index", $reverse = false)
     {
-        return $this->findAllBy(array("account_id" => $account_id), "min_followers", false);
+        return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
+    }
+
+    /**
+     * アカウントに適用される設定を取得する。
+     *
+     * @param $account_id アカウントID
+     * @return 詳細設定のリスト
+     */
+    public function findByAccountFollowers($account_id, $follower_count)
+    {
+        $followSettings = $this->findAllBy(array("account_id" => $account_id, "le:min_followers" => $follower_count), "min_followers", true);
+        $this->findByPrimaryKey($followSettings->current()->follow_setting_id);
     }
 
     /**

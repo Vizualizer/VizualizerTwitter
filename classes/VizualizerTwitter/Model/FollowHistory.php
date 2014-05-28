@@ -23,12 +23,12 @@
  */
 
 /**
- * フォローのモデルです。
+ * フォロー履歴のモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_FollowHistory extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,7 +39,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("Follows"), $values);
+        parent::__construct($loader->loadTable("FollowHistorys"), $values);
     }
 
     /**
@@ -47,9 +47,9 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
      *
      * @param $follow_id フォローID
      */
-    public function findByPrimaryKey($follow_id)
+    public function findByPrimaryKey($follow_history_id)
     {
-        $this->findBy(array("follow_id" => $follow_id));
+        $this->findBy(array("follow_history_id" => $follow_history_id));
     }
 
     /**
@@ -58,32 +58,22 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
      * @param $account_id アカウントID
      * @return フォローのリスト
      */
-    public function findAllByAccountId($account_id)
+    public function findAllByAccountId($account_id, $days = 0, $sort = "history_date", $reverse = true)
     {
-        return $this->findAllBy(array("account_id" => $account_id));
-    }
-
-    /**
-     * ユーザーIDでデータを取得する。
-     *
-     * @param $user_id ユーザーID
-     * @return フォローのリスト
-     */
-    public function findAllByUserId($user_id)
-    {
-        return $this->findAllBy(array("user_id" => $user_id));
-    }
-
-    /**
-     * フォローに紐づいたアカウントを取得する
-     *
-     * @return アカウント
-     */
-    public function account()
-    {
-        $loader = new Vizualizer_Plugin("twitter");
-        $account = $loader->loadModel("Account");
-        $account->findByPrimaryKey($this->account_id);
-        return $account;
+        if($days == 0){
+            return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
+        }else{
+            $result = $this->findAllBy(array("account_id" => $account_id, "gt:history_date" => date("Y-m-d", strtotime("-".$days." day"))), $sort, $reverse);
+            $data = array();
+            for($i = 0; $i < $days; $i ++){
+                $data[date("Ymd", strtotime("-".$i." day"))] = (object) array("target_count" => 0, "follow_count" => 0, "followed_count" => 0, "unfollow_count" => 0);
+            }
+            foreach($result as $item){
+                if(isset($data[date("Ymd", strtotime($item->history_date))])){
+                    $data[date("Ymd", strtotime($item->history_date))] = $item;
+                }
+            }
+            return array_values($data);
+        }
     }
 }

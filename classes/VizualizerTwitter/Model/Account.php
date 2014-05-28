@@ -30,6 +30,24 @@
  */
 class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 {
+    const FOLLOW_MODE_NORMAL = "2";
+    const FOLLOW_MODE_SAFE = "1";
+
+    const FOLLOW_STATUS_SUSPEND = 0;
+    const FOLLOW_STATUS_STANDBY = 1;
+    const FOLLOW_STATUS_RUNNING = 2;
+    const FOLLOW_STATUS_CLOSED = 3;
+    const FOLLOW_STATUS_NOLIST = 4;
+    const FOLLOW_STATUS_RETRY = 5;
+    const FOLLOW_STATUS_SKIPPED = 6;
+
+    const TWEET_STATUS_SUSPENDED = 0;
+    const FOLLOW_STATUS_ACTIVATED = 1;
+
+    /**
+     * ツイッターアクセス用のインスタンス
+     */
+    private $twitter;
 
     /**
      * コンストラクタ
@@ -86,11 +104,45 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * フォローキーワードのリストを取得する。
+     *
+     * @return フォローキーワード
+     */
+    public function followKeywords()
+    {
+        $data = explode("\r\n", $this->follow_keywords);
+        $result = array();
+        foreach ($data as $item) {
+            if (!empty($item)) {
+                $result[] = $item;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * 拒否キーワードのリストを取得する。
+     *
+     * @return 拒否キーワード
+     */
+    public function ignoreKeywords()
+    {
+        $data = explode("\r\n", $this->ignore_keywords);
+        $result = array();
+        foreach ($data as $item) {
+            if (!empty($item)) {
+                $result[] = $item;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * アカウントに紐づいたグループを取得する
      *
      * @return グループ
      */
-    public function application()
+    public function group()
     {
         $loader = new Vizualizer_Plugin("twitter");
         $group = $loader->loadModel("Group");
@@ -129,11 +181,25 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function followSettings()
+    public function followSetting()
     {
         $loader = new Vizualizer_Plugin("twitter");
         $followSetting = $loader->loadModel("FollowSetting");
-        return $followSetting->findAllByAccountId($this->account_id);
+        $followSetting->findByAccountFollowers($this->account_id, $this->follower_count);
+        return $followSetting;
+    }
+
+    /**
+     * アカウントに紐づいたフォロー詳細設定を取得する
+     *
+     * @return 詳細設定のリスト
+     */
+    public function followSettings($sort = "setting_index", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $followSetting = $loader->loadModel("FollowSetting");
+        $followSettings = $followSetting->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $followSettings;
     }
 
     /**
@@ -146,5 +212,99 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $follow = $loader->loadModel("Follow");
         return $follow->findAllByAccountId($this->account_id);
+    }
+
+    /**
+     * アカウントに紐づいたフォローを取得する
+     *
+     * @return フォローのリスト
+     */
+    public function followHistorys($days = 0)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $follow = $loader->loadModel("FollowHistory");
+        return $follow->findAllByAccountId($this->account_id, $days);
+    }
+
+    /**
+     * アカウントに紐づいたツイート詳細設定を取得する
+     *
+     * @return 詳細設定のリスト
+     */
+    public function tweetSettings($sort = "tweet_group_id", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetSetting = $loader->loadModel("TweetSetting");
+        $tweetSettings = $tweetSetting->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetSettings;
+    }
+
+    /**
+     * アカウントに紐づいたツイート広告を取得する
+     *
+     * @return ツイート広告のリスト
+     */
+    public function tweetAdvertises($sort = "", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetAdvertise = $loader->loadModel("TweetAdvertise");
+        $tweetAdvertises = $tweetAdvertise->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetAdvertises;
+    }
+
+    /**
+     * アカウントに紐づいたツイートログを取得する
+     *
+     * @return ツイートログのリスト
+     */
+    public function tweetLogs($sort = "tweet_time", $reverse = true)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetLogs;
+    }
+
+    /**
+     * ツイッターAPI用のオブジェクトを取得
+     */
+    public function getTwitter(){
+        if(!$this->twitter){
+            $application = $this->application();
+            \Codebird\Codebird::setConsumerKey($application->api_key, $application->api_secret);
+            $this->twitter = \Codebird\Codebird::getInstance();
+            $this->twitter->setToken($this->access_token, $this->access_token_secret);
+        }
+        return $this->twitter;
+    }
+
+    /**
+     * フォローステータスを更新する
+     *
+     * @param int $status フォローステータス
+     * @param int $next 次回のフォロー実行時間
+     * @param boolean $reset フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
+     */
+    public function updateFollowStatus($status, $next = "", $reset = false)
+    {
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            $this->follow_status = $status;
+            if(!empty($next)){
+                $this->next_follow_time = $next;
+                if($reset){
+                    $this->follow_count = 0;
+                }else{
+                    $this->follow_count ++;
+                }
+            }
+            $this->save();
+            Vizualizer_Database_Factory::commit($connection);
+            continue;
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
     }
 }

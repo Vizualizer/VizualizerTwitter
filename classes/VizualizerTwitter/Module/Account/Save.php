@@ -22,31 +22,34 @@
  * @version   1.0.0
  */
 
-// プラグインの初期化
-VizualizerTwitter::initialize();
-
-
 /**
- * プラグインの設定用クラス
+ * オペレータのデータを保存する。
  *
- * @package VizualizerTwitter
+ * @package VizualizerAdmin
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter
+class VizualizerTwitter_Module_Account_Save extends Vizualizer_Plugin_Module_Save
 {
 
-    /**
-     * プラグインの初期化処理を行うメソッドです。
-     */
-    final public static function initialize()
+    function execute($params)
     {
-    }
-
-    /**
-     * データベースインストールの処理を行うメソッド
-     */
-    final public static function install()
-    {
-        VizualizerTwitter_Table_Accounts::install();
+        $post = Vizualizer::request();
+        if(!empty($post->follow_keyword)){
+            $data = explode("\r\n", $post->follow_keywords);
+            if(!is_array($data)){
+                $data = array();
+            }
+            $data[] = $post->follow_keyword;
+            $post->follow_keywords = implode("\r\n", $data);
+        }
+        if(!empty($post->ignore_keyword)){
+            $data = explode("\r\n", $post->ignore_keywords);
+            if(!is_array($data)){
+                $data = array();
+            }
+            $data[] = $post->ignore_keyword;
+            $post->ignore_keywords = implode("\r\n", $data);
+        }
+        $this->executeImpl("Twitter", "Account", "account_id");
     }
 }

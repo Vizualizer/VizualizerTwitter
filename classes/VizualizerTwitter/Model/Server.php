@@ -57,10 +57,11 @@ class VizualizerTwitter_Model_Server extends Vizualizer_Plugin_Model
      */
     public function findByPrefer()
     {
+        $loader = new Vizualizer_Plugin("twitter");
         $select = new Vizualizer_Query_Select($this->access);
         $select->addColumn($this->access->_W);
         $accounts = $loader->loadTable("Accounts");
-        $select->joinLeft($accounts, array($this->access->account_id." = ".$accounts->account_id));
+        $select->joinLeft($accounts, array($this->access->server_id." = ".$accounts->server_id));
         $select->group($this->access->server_id)->order("COUNT(".$accounts->account_id.")")->order("RAND()");
         $select->setLimit(1, 0);
         $sqlResult = $select->fetch(1, 0);

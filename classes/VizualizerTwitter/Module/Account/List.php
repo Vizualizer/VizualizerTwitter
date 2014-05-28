@@ -22,31 +22,17 @@
  * @version   1.0.0
  */
 
-// プラグインの初期化
-VizualizerTwitter::initialize();
-
-
 /**
- * プラグインの設定用クラス
+ * アカウントのリストを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter
+class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_List
 {
 
-    /**
-     * プラグインの初期化処理を行うメソッドです。
-     */
-    final public static function initialize()
+    function execute($params)
     {
-    }
-
-    /**
-     * データベースインストールの処理を行うメソッド
-     */
-    final public static function install()
-    {
-        VizualizerTwitter_Table_Accounts::install();
+        $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
     }
 }
