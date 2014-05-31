@@ -115,19 +115,25 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                $advertises = $account->tweetAdvertises("RAND()", true);
+                $advertisesTemp = $account->tweetAdvertises("RAND()", true);
+                $advertises = array();
+                foreach($advertisesTemp as $temp){
+                    if($temp->advertise_type != "1" || !empty($temp->fixed_advertise_url)){
+                        $advertises[] = $temp;
+                    }
+                }
                 $tweetLog = $loader->loadModel("TweetLog");
                 $tweetLog->account_id = $account->account_id;
                 $tweetLog->tweet_time = date("Y-m-d H:i:s");
 
-                if($account->advertise_interval > 0 && $account->advertise_interval < $count && $advertises->count() > 0){
+                if($account->advertise_interval > 0 && $account->advertise_interval < $count && count($advertises) > 0){
                     // 広告を取得し記事を作成
-                    $advertise = $advertises->current();
+                    $advertise = $advertises[0];
                     $tweetLog->tweet_id = 0;
                     $tweetLog->tweet_type = 2;
                     $tweetLog->tweet_text = $advertise->advertise_text;
-                    if(!empty($advertise->advertise_url)){
-                        $tweetLog->tweet_text .= " ".Vizualizer_ShortUrl::get($advertise->advertise_url);
+                    if(!empty($advertise->fixed_advertise_url)){
+                        $tweetLog->tweet_text .= " ".Vizualizer_ShortUrl::get($advertise->fixed_advertise_url);
                     }
                 }else{
                     // ツイートを取得し、記事を作成
