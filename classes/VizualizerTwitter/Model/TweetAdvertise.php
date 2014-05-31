@@ -45,11 +45,11 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
     /**
      * 主キーでデータを取得する。
      *
-     * @param $tweet_advertise_id ツイート広告ID
+     * @param $advertise_id ツイート広告ID
      */
-    public function findByPrimaryKey($tweet_advertise_id)
+    public function findByPrimaryKey($advertise_id)
     {
-        $this->findBy(array("tweet_advertise_id" => $tweet_advertise_id));
+        $this->findBy(array("advertise_id" => $advertise_id));
     }
 
     /**
@@ -61,6 +61,17 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
     public function findAllByAccountId($account_id)
     {
         return $this->findAllBy(array("account_id" => $account_id));
+    }
+
+    /**
+     * アカウントIDと広告種別でデータを取得する。
+     *
+     * @param $account_id アカウントID
+     * @return 設定のリスト
+     */
+    public function findAllByAccountType($account_id, $advertise_type)
+    {
+        return $this->findAllBy(array("account_id" => $account_id, "advertise_type" => $advertise_type));
     }
 
     /**

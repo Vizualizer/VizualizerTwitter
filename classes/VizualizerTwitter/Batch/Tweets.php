@@ -104,15 +104,13 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $count = 0;
             $lastTweetId = 0;
             foreach($tweetLogs as $tweetLog){
-                if($tweetLog->tweet_type != "2"){
-                    if($lastTweetId == 0){
-                        $lastTweetId = $tweetLog->tweet_id;
-                    }
-                    $count ++;
-                }
-                if($account->advertise_interval < $count){
+                if($tweetLog->tweet_type == "2"){
                     break;
                 }
+                if($lastTweetId == 0){
+                    $lastTweetId = $tweetLog->tweet_id;
+                }
+                $count ++;
             }
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -124,9 +122,13 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
 
                 if($account->advertise_interval > 0 && $account->advertise_interval < $count && $advertises->count() > 0){
                     // 広告を取得し記事を作成
+                    $advertise = $advertises->current();
                     $tweetLog->tweet_id = 0;
                     $tweetLog->tweet_type = 2;
                     $tweetLog->tweet_text = $advertise->advertise_text;
+                    if(!empty($advertise->advertise_url)){
+                        $tweetLog->tweet_text .= " ".Vizualizer_ShortUrl::get($advertise->advertise_url);
+                    }
                 }else{
                     // ツイートを取得し、記事を作成
                     $tweets = $tweetSetting->group()->tweets("RAND()", true);
@@ -140,8 +142,10 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                     }
                 }
 
+                print_r($tweetLog->toArray());
                 if(!empty($tweetLog->tweet_text)){
                     $result = $account->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
+                    $tweetLog->tweet_text = $result->text;
                     echo "Post tweet : ".$tweetLog->tweet_text."\r\n";
                     print_r($result);
                     if(!empty($result->id)){

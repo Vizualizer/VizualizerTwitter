@@ -23,25 +23,17 @@
  */
 
 /**
- * アカウントの詳細データを取得する。
+ * 広告設定のデータを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class Vizualizertwitter_Module_Setting_Detail extends Vizualizer_Plugin_Module_Detail
+class Vizualizertwitter_Module_Advertise_Detail extends Vizualizer_Plugin_Module_Detail
 {
 
     function execute($params)
     {
         $post = Vizualizer::request();
-        $attr = Vizualizer::attr();
-        if($attr[VizualizerAdmin::KEY]->operator_id > 0){
-            // サイトデータを取得する。
-            $loader = new Vizualizer_Plugin("Twitter");
-            $model = $loader->loadModel("Setting");
-            $model->findByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
-            $post->set("setting_id", $model->setting_id);
-        }
-        $this->executeImpl("Twitter", "Setting", $post["setting_id"], $params->get("result", "setting"));
+        $this->executeImpl("Twitter", "TweetAdvertise", $post["advertise_id"], $params->get("result", "advertise"));
     }
 }
