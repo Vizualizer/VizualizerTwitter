@@ -301,7 +301,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             }
             $this->save();
             Vizualizer_Database_Factory::commit($connection);
-            continue;
         } catch (Exception $e) {
             Vizualizer_Database_Factory::rollback($connection);
             throw new Vizualizer_Exception_Database($e);
