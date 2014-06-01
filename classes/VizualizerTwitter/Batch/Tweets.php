@@ -57,7 +57,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
         $model = $loader->loadModel("TweetSetting");
 
         // 本体の処理を実行
-        $tweetSettings = $model->findAllBy(array("le:next_tweet_time" => date("Y-m-d H:i:s")), "next_tweet_time", false);
+        $tweetSettings = $model->findAllBy(array("le:next_tweet_time" => date("Y-m-d H:i:s"), "gt:next_tweet_time" => "2000-01-01 00:00:00"), "next_tweet_time", false);
 
         foreach ($tweetSettings as $tweetSetting) {
             $loader = new Vizualizer_Plugin("Twitter");
