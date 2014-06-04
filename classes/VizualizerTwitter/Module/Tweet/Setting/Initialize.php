@@ -40,8 +40,9 @@ class VizualizerTwitter_Module_Tweet_Setting_Initialize extends Vizualizer_Plugi
 
         if ($account->account_id > 0) {
             // アカウントが存在している場合にはデータを初期化
-            $settings = $account->tweetSettings();
-            if ($settings->count() == 0) {
+            $setting = $account->tweetSetting();
+            if ($setting->setting_id > 0) {
+            }else{
                 // トランザクションの開始
                 $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
@@ -74,8 +75,6 @@ class VizualizerTwitter_Module_Tweet_Setting_Initialize extends Vizualizer_Plugi
                     Vizualizer_Database_Factory::rollback($connection);
                     throw new Vizualizer_Exception_Database($e);
                 }
-            }else{
-                $setting = $settings->current();
             }
             $post->set("tweet_setting_id", $setting->tweet_setting_id);
         }

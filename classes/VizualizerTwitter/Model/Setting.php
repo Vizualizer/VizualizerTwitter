@@ -53,12 +53,23 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
     }
 
     /**
+     * 管理オペレータIDとアカウントIDでデータを取得する。
+     *
+     * @param $operator_id 管理オペレータID
+     * @param $account_id アカウントID
+     */
+    public function findByOperatorAccount($operator_id, $account_id = 0)
+    {
+        $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
+    }
+
+    /**
      * 管理オペレータIDでデータを取得する。
      *
      * @param $operator_id 管理オペレータID
      */
-    public function findByOperatorId($operator_id)
+    public function findAllByOperatorId($operator_id)
     {
-        $this->findBy(array("operator_id" => $operator_id));
+        return $this->findAllBy(array("operator_id" => $operator_id));
     }
 }

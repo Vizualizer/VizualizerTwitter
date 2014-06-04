@@ -64,12 +64,12 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($account->follow_status == "3") {
+            if ($account->status()->follow_status == "3") {
                 $account->updateFollowStatus(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($account->follow_status != "1" && $account->follow_status != "2") {
+            if ($account->status()->follow_status != "1" && $account->status()->follow_status != "2") {
                 echo "Account is not ready.\r\n";
                 continue;
             }

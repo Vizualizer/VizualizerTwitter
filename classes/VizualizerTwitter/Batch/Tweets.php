@@ -57,7 +57,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
         $model = $loader->loadModel("TweetSetting");
 
         // 本体の処理を実行
-        $tweetSettings = $model->findAllBy(array("le:next_tweet_time" => date("Y-m-d H:i:s"), "gt:next_tweet_time" => "2000-01-01 00:00:00"), "next_tweet_time", false);
+        $tweetSettings = $model->findAllBy(array("le:next_tweet_time" => date("Y-m-d H:i:s")), "next_tweet_time", false);
 
         foreach ($tweetSettings as $tweetSetting) {
             $loader = new Vizualizer_Plugin("Twitter");
@@ -117,16 +117,26 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                $advertises = $account->tweetAdvertises("RAND()", true);
+                $temp = $account->tweetAdvertises("RAND()", true);
+                $advertises = array();
+                foreach($temp as $advertise){
+                    if($advertise->advertise_type != "1" || !empty($advertise->fixed_advertise_url)){
+                        $advertises[] = $advertise;
+                    }
+                }
                 $tweetLog = $loader->loadModel("TweetLog");
                 $tweetLog->account_id = $account->account_id;
                 $tweetLog->tweet_time = date("Y-m-d H:i:s");
 
-                if($account->advertise_interval > 0 && $account->advertise_interval < $count && $advertises->count() > 0){
+                if($account->advertise_interval > 0 && $account->advertise_interval < $count && count($advertises) > 0){
                     // 広告を取得し記事を作成
+                    $advertise = $advertises[0];
                     $tweetLog->tweet_id = 0;
                     $tweetLog->tweet_type = 2;
                     $tweetLog->tweet_text = $advertise->advertise_text;
+                    if(!empty($advertise->fixed_advertise_url)){
+                        $tweetLog->tweet_text .= " ".$advertise->fixed_advertise_url;
+                    }
                 }else{
                     // ツイートを取得し、記事を作成
                     $tweets = $tweetSetting->group()->tweets("RAND()", true);

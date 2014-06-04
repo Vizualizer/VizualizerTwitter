@@ -61,19 +61,19 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
         foreach ($accounts as $account) {
             // フォロー人数の上限を迎えていた場合はスキップ
-            if(($account->follower_count < 1819 && $account->friend_count > 2000) || ($account->follower_count >= 1819 && $account->follower_count * 1.1 < $account->friend_count)){
+            if($account->followLimit() < $account->friend_count){
                 continue;
             }
 
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($account->follow_status == "3") {
+            if ($account->status()->follow_status == "3") {
                 $account->updateFollowStatus(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($account->follow_status != "1" && $account->follow_status != "2") {
+            if ($account->status()->follow_status != "1" && $account->status()->follow_status != "2") {
                 echo "Account is not ready.\r\n";
                 continue;
             }
@@ -104,14 +104,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             }
 
             // ステータスを実行中に変更
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $account->follow_status = 2;
-                $account->save();
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-            }
+            $account->updateFollowStatus(2);
 
             foreach ($follows as $follow) {
                 try {
@@ -136,8 +129,8 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                 }
             }
 
-            if($account->follow_count < $account->follow_unit - 1){
-                $account->updateFollowStatus(2, date("Y-m-d H:i:s", strtotime("+".$setting->min_follow_interval." second")));
+            if($account->status()->follow_count < $setting->follow_unit - 1){
+                $account->updateFollowStatus(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
             }else{
                 $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+".$account->follow_unit_interval." minute")), true);
             }

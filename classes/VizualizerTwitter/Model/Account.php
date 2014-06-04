@@ -104,50 +104,14 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
-     * フォローキーワードのリストを取得する。
-     *
-     * @return フォローキーワード
+     * アカウントのフォローの限界値を取得する
      */
-    public function followKeywords()
-    {
-        $data = explode("\r\n", $this->follow_keywords);
-        $result = array();
-        foreach ($data as $item) {
-            if (!empty($item)) {
-                $result[] = $item;
-            }
+    public function followLimit(){
+        if($this->follower_count < 1819){
+            return 2000;
+        }else{
+            return floor($this->follower_count * 1.1);
         }
-        return $result;
-    }
-
-    /**
-     * 拒否キーワードのリストを取得する。
-     *
-     * @return 拒否キーワード
-     */
-    public function ignoreKeywords()
-    {
-        $data = explode("\r\n", $this->ignore_keywords);
-        $result = array();
-        foreach ($data as $item) {
-            if (!empty($item)) {
-                $result[] = $item;
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * アカウントに紐づいたグループを取得する
-     *
-     * @return グループ
-     */
-    public function group()
-    {
-        $loader = new Vizualizer_Plugin("twitter");
-        $group = $loader->loadModel("Group");
-        $group->findByPrimaryKey($this->group_id);
-        return $group;
     }
 
     /**
@@ -177,29 +141,72 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
-     * アカウントに紐づいたフォロー詳細設定を取得する
+     * アカウントに紐づいたステータス情報を取得する
+     *
+     * @return ステータス
+     */
+    public function status()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $accountStatus = $loader->loadModel("AccountStatus");
+        $accountStatus->findByAccountId($this->account_id);
+        if(!($accountStatus->account_status_id > 0)){
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $accountStatus->account_id = $this->account_id;
+                $accountStatus->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+            }
+        }
+        return $accountStatus;
+    }
+
+    /**
+     * アカウントに紐づいたフォロー設定を取得する
      *
      * @return 詳細設定のリスト
      */
     public function followSetting()
     {
         $loader = new Vizualizer_Plugin("twitter");
-        $followSetting = $loader->loadModel("FollowSetting");
-        $followSetting->findByAccountFollowers($this->account_id, $this->follower_count);
-        return $followSetting;
+        $setting = $loader->loadModel("Setting");
+        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        if($setting->use_follow_setting != "1"){
+            $setting->findByOperatorAccount($this->operator_id, "0");
+        }
+        $setting->follow_interval = $setting->follow_interval_1;
+        $setting->refollow_timeout = $setting->refollow_timeout_1;
+        $setting->daily_follows = $setting->daily_follows_1;
+        for($i = 2; $i < 6; $i ++){
+            $key = "follower_limit_".$i;
+            if($setting->$key > 0 && $setting->$key < $this->follower_count){
+                $key = "follow_interval_".$i;
+                $setting->follow_interval = $setting->$key;
+                $key = "refollow_timeout_".$i;
+                $setting->refollow_timeout = $setting->$key;
+                $key = "daily_follows_".$i;
+                $setting->daily_follows = $setting->$key;
+            }
+        }
+        return $setting;
     }
 
     /**
-     * アカウントに紐づいたフォロー詳細設定を取得する
+     * アカウントに紐づいたツイート設定を取得する
      *
      * @return 詳細設定のリスト
      */
-    public function followSettings($sort = "setting_index", $reverse = false)
+    public function tweetSetting()
     {
         $loader = new Vizualizer_Plugin("twitter");
-        $followSetting = $loader->loadModel("FollowSetting");
-        $followSettings = $followSetting->findAllByAccountId($this->account_id, $sort, $reverse);
-        return $followSettings;
+        $setting = $loader->loadModel("Setting");
+        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        if($setting->use_tweet_setting != "1"){
+            $setting->findByOperatorAccount($this->operator_id);
+        }
+        return $setting;
     }
 
     /**
@@ -227,16 +234,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
-     * アカウントに紐づいたツイート詳細設定を取得する
+     * アカウントに紐づいたツイートを取得する
      *
-     * @return 詳細設定のリスト
+     * @return ツイートのリスト
      */
-    public function tweetSettings($sort = "tweet_group_id", $reverse = false)
+    public function tweets($sort = "", $reverse = false)
     {
         $loader = new Vizualizer_Plugin("twitter");
-        $tweetSetting = $loader->loadModel("TweetSetting");
-        $tweetSettings = $tweetSetting->findAllByAccountId($this->account_id, $sort, $reverse);
-        return $tweetSettings;
+        $tweet = $loader->loadModel("Tweet");
+        $tweets = $tweet->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweets;
     }
 
     /**
@@ -290,14 +297,39 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
-            $this->follow_status = $status;
+            $status = $this->status();
+            $status->follow_status = $status;
             if(!empty($next)){
-                $this->next_follow_time = $next;
+                $status->next_follow_time = $next;
                 if($reset){
-                    $this->follow_count = 0;
+                    $status->follow_count = 0;
                 }else{
-                    $this->follow_count ++;
+                    $status->follow_count ++;
                 }
+            }
+            $status->save();
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+    }
+
+    /**
+     * ツイートステータスを更新する
+     *
+     * @param int $status ツイートステータス
+     * @param int $next 次回のツイート実行時間
+     */
+    public function updateTweetStatus($status, $next = "")
+    {
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            $status = $this->status();
+            $status->tweet_status = $status;
+            if(!empty($next)){
+                $status->next_tweet_time = $next;
             }
             $this->save();
             Vizualizer_Database_Factory::commit($connection);

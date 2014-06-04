@@ -23,29 +23,42 @@
  */
 
 /**
- * アカウントのリストを取得する。
+ * アカウントステータスのモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_List
+class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
 {
 
-    function execute($params)
+    /**
+     * コンストラクタ
+     *
+     * @param $values モデルに初期設定する値
+     */
+    public function __construct($values = array())
     {
-        $post = Vizualizer::request();
-        if(!empty($post["account_attribute"])){
-            $loader = new Vizualizer_Plugin("Twitter");
-            $setting = $loader->loadModel("Setting");
-            $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
-            $accountIds = array();
-            foreach($settings as $setting){
-                $accountIds[] = $setting->account_id;
-            }
-            $post->set("search", array("in:account_id" => $accountIds));
-        }else{
-            $post->remove("search");
-        }
-        $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
+        $loader = new Vizualizer_Plugin("twitter");
+        parent::__construct($loader->loadTable("AccountStatuses"), $values);
+    }
+
+    /**
+     * 主キーでデータを取得する。
+     *
+     * @param $account_status_id アカウントステータスID
+     */
+    public function findByPrimaryKey($account_status_id)
+    {
+        $this->findBy(array("account_status_id" => $account_status_id));
+    }
+
+    /**
+     * アカウントIDでデータを取得する。
+     *
+     * @param $account_id アカウントID
+     */
+    public function findByAccountId($account_id = 0)
+    {
+        $this->findBy(array("account_id" => $account_id));
     }
 }
