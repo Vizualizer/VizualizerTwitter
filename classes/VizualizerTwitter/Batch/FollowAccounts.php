@@ -54,14 +54,17 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
     protected function followAccounts($params, $data)
     {
         $loader = new Vizualizer_Plugin("Twitter");
-        $model = $loader->loadModel("Account");
+        $model = $loader->loadModel("AccountStatus");
 
         // 本体の処理を実行
-        $accounts = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s")), "next_follow_time", false);
+        $statuses = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s")), "next_follow_time", false);
 
-        foreach ($accounts as $account) {
+        foreach ($statuses as $status) {
+            $account = $status->account();
+
             // フォロー人数の上限を迎えていた場合はスキップ
             if($account->followLimit() < $account->friend_count){
+                echo "Skip for follow limit.\r\n";
                 continue;
             }
 
@@ -107,6 +110,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             $account->updateFollowStatus(2);
 
             foreach ($follows as $follow) {
+                $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
                     // フォロー処理を実行する。
                     $account->getTwitter()->friendships_create(array("user_id" => $follow->user_id, "follow" => true));

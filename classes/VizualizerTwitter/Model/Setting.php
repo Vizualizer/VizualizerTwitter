@@ -72,4 +72,17 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
     {
         return $this->findAllBy(array("operator_id" => $operator_id));
     }
+
+    /**
+     * 設定に紐づいたアカウントを取得する
+     *
+     * @return アカウント
+     */
+    public function account()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $account = $loader->loadModel("Account");
+        $account->findByPrimaryKey($this->account_id);
+        return $account;
+    }
 }

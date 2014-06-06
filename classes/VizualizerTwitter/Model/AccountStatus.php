@@ -61,4 +61,17 @@ class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
     {
         $this->findBy(array("account_id" => $account_id));
     }
+
+    /**
+     * ステータスに紐づいたアカウントを取得する
+     *
+     * @return アカウント
+     */
+    public function account()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $account = $loader->loadModel("Account");
+        $account->findByPrimaryKey($this->account_id);
+        return $account;
+    }
 }

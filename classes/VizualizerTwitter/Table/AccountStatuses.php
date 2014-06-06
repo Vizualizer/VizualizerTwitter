@@ -47,7 +47,7 @@ class VizualizerTwitter_Table_AccountStatuses extends Vizualizer_Plugin_Table
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
             // テーブルのインストール
-            $connection->query(file_get_contents(dirname(__FILE__) . "/../../../sqls/accounts.sql"));
+            $connection->query(file_get_contents(dirname(__FILE__) . "/../../../sqls/account_statuses.sql"));
             Vizualizer_Database_Factory::commit($connection);
         } catch (Exception $e) {
             Vizualizer_Database_Factory::rollback($connection);

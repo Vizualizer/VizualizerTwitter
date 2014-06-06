@@ -21,14 +21,14 @@ class VizualizerTwitter_Json_AccountStatus
                     case "follow_status":
                         if ($status->follow_status == "0") {
                             $status->follow_status = "1";
-                        } elseif ($status->follow_status == "1") {
+                        } else {
                             $status->follow_status = "0";
                         }
                         break;
                     case "tweet_status":
                         if ($status->tweet_status == "0") {
                             $status->tweet_status = "1";
-                        } elseif ($status->tweet_status == "1") {
+                        } else {
                             $status->tweet_status = "0";
                         }
                         break;

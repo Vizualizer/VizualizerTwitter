@@ -58,9 +58,9 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
      * @param $account_id アカウントID
      * @return 設定のリスト
      */
-    public function findAllByAccountId($account_id)
+    public function findAllByAccountId($account_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("account_id" => $account_id));
+        return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
     }
 
     /**
@@ -69,9 +69,9 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
      * @param $tweet_id ツイートID
      * @return 設定のリスト
      */
-    public function findAllByTweetId($tweet_id)
+    public function findAllByTweetId($tweet_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("tweet_id" => $tweet_id));
+        return $this->findAllBy(array("tweet_id" => $tweet_id), $sort, $reverse);
     }
 
     /**

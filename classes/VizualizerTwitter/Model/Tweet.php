@@ -58,7 +58,7 @@ class VizualizerTwitter_Model_Tweet extends Vizualizer_Plugin_Model
      * @param $group_id グループID
      * @return 設定のリスト
      */
-    public function findAllByAccountId($group_id, $sort = "", $reverse = false)
+    public function findAllByAccountId($account_id, $sort = "", $reverse = false)
     {
         return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
     }

@@ -173,6 +173,17 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $setting = $loader->loadModel("Setting");
         $setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        if(!($setting->setting_id > 0)){
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $setting->operator_id = $this->operator_id;
+                $setting->account_id = $this->account_id;
+                $setting->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+            }
+        }
         if($setting->use_follow_setting != "1"){
             $setting->findByOperatorAccount($this->operator_id, "0");
         }
@@ -203,9 +214,22 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $setting = $loader->loadModel("Setting");
         $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        if($setting->use_tweet_setting != "1"){
-            $setting->findByOperatorAccount($this->operator_id);
+        if(!($setting->setting_id > 0)){
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $setting->operator_id = $this->operator_id;
+                $setting->account_id = $this->account_id;
+                $setting->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+            }
         }
+        /*
+        if($setting->use_tweet_setting != "1"){
+            $setting->findByOperatorAccount($this->operator_id, "0");
+        }
+        */
         return $setting;
     }
 
@@ -260,6 +284,120 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントに紐づいたツイートのうち、優先度の高いものを取得する。
+     *
+     * @return ツイートのリスト
+     */
+    public function preferTweet()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweet = $loader->loadModel("Tweet");
+        $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
+        if($tweets->count() > 0){
+            $tweet = $tweets->current();
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $tweet->tweeted_flg = 1;
+                $tweet->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+            return $tweet;
+        }else{
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"), "RAND()");
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                foreach($tweets as $tweet){
+                    $tweet->tweeted_flg = 0;
+                    $tweet->save();
+                }
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
+            if($tweets->count() > 0){
+                $tweet = $tweets->current();
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $tweet->tweeted_flg = 1;
+                    $tweet->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+                return $tweet;
+            }else{
+                return $loader->loadModel("Tweet");
+            }
+        }
+    }
+
+    /**
+     * アカウントに紐づいたツイート広告のうち、優先度の高いものを取得する。
+     *
+     * @return ツイート広告のリスト
+     */
+    public function preferAdvertise($sort = "", $reverse = false)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweet = $loader->loadModel("TweetAdvertise");
+        $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
+        if($tweets->count() > 0){
+            $tweet = $tweets->current();
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $tweet->tweeted_flg = 1;
+                $tweet->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+            return $tweet;
+        }else{
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"), "RAND()");
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                foreach($tweets as $tweet){
+                    $tweet->tweeted_flg = 0;
+                    $tweet->save();
+                }
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
+            if($tweets->count() > 0){
+                $tweet = $tweets->current();
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $tweet->tweeted_flg = 1;
+                    $tweet->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+                return $tweet;
+            }else{
+                return $loader->loadModel("TweetAdvertise");
+            }
+        }
+    }
+
+    /**
      * アカウントに紐づいたツイートログを取得する
      *
      * @return ツイートログのリスト
@@ -292,13 +430,13 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * @param int $next 次回のフォロー実行時間
      * @param boolean $reset フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
      */
-    public function updateFollowStatus($status, $next = "", $reset = false)
+    public function updateFollowStatus($statusId, $next = "", $reset = false)
     {
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
             $status = $this->status();
-            $status->follow_status = $status;
+            $status->follow_status = $statusId;
             if(!empty($next)){
                 $status->next_follow_time = $next;
                 if($reset){

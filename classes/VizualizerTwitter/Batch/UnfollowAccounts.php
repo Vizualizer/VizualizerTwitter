@@ -55,12 +55,13 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
     protected function unfollowAccounts($params, $data)
     {
         $loader = new Vizualizer_Plugin("Twitter");
-        $model = $loader->loadModel("Account");
+        $model = $loader->loadModel("AccountStatus");
 
         // 本体の処理を実行
-        $accounts = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s", strtotime("-1 day"))), "next_follow_time", false);
+        $statuses = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s", strtotime("-1 day"))), "next_follow_time", false);
 
-        foreach ($accounts as $account) {
+        foreach ($statuses as $status) {
+            $account = $status->account();
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
