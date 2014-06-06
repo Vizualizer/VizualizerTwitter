@@ -37,7 +37,7 @@ class VizualizerTwitter_Json_Advertise
         $advertise = $loader->loadModel("TweetAdvertise");
         $result = array();
         if($post["account_id"] > 0){
-            $data = $advertise->findAllByAccountId($post["account_id"]);
+            $data = $advertise->findAllByAccountType($post["account_id"], "0");
             foreach($data as $item){
                 $result[] = $item->toArray();
             }

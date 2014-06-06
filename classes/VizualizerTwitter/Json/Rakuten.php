@@ -1,8 +1,8 @@
 <?php
 
-class VizualizerTwitter_Json_OriginalTweet
+class VizualizerTwitter_Json_Rakuten
 {
-    const DELETE_TARGET_KEY = "ORIGINAL_TWEET_DELETE_TARGET";
+    const DELETE_TARGET_KEY = "RAKUTEN_DELETE_TARGET";
 
     public function execute()
     {
@@ -20,25 +20,15 @@ class VizualizerTwitter_Json_OriginalTweet
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
-            if(!empty($post["commit"])){
-                $post["text"] = str_replace("\n", "\r\n", str_replace("\r", "\n", str_replace("\r\n", "\n", $post["text"])));
-                if($post["commit"] == "2"){
-                    $values = explode("\r\n", $post["text"]);
-                }else{
-                    $values = array($post["text"]);
-                }
-                foreach($values as $value){
-                    $tweetDb = $loader->loadModel("Tweet");
-                    $tweetDb->twitter_id = "0";
-                    $tweetDb->account_id = $post["account_id"];
-                    $tweetDb->user_id = "0";
-                    $tweetDb->screen_name = "0";
-                    $tweetDb->tweet_text = str_replace("\\n", "\r\n", $value);
-                    $tweetDb->retweet_count = "0";
-                    $tweetDb->favorite_count = "0";
-                    $tweetDb->save();
-                }
-                $post->remove("commit");
+            if(!empty($post["account_id"]) && !empty($post["text"])){
+                $advertise = $loader->loadModel("TweetAdvertise");
+                $advertise->account_id = $post["account_id"];
+                $advertise->advertise_type = "1";
+                $advertise->advertise_text = $post["text"];
+                $advertise->advertise_name = $post["name"];
+                $advertise->advertise_url = $post["url"];
+                $advertise->save();
+                $post->remove("text");
             }elseif(preg_match("/^delete_([0-9]+)$/", $post["mode"], $params) > 0){
                 $deleteTarget[$params[1]] = $post["value"];
                 $post->remove("mode");
@@ -47,9 +37,9 @@ class VizualizerTwitter_Json_OriginalTweet
             }elseif($post["mode"] == "delete_all_target"){
                 foreach($deleteTarget as $id => $value){
                     if($value == "1"){
-                        $tweetDb = $loader->loadModel("Tweet");
+                        $tweetDb = $loader->loadModel("TweetAdvertise");
                         $tweetDb->findByPrimaryKey($id);
-                        if($tweetDb->tweet_id > 0){
+                        if($tweetDb->advertise_id > 0){
                             $tweetDb->delete();
                         }
                     }
@@ -62,14 +52,15 @@ class VizualizerTwitter_Json_OriginalTweet
         } catch (Exception $e) {
             Vizualizer_Database_Factory::rollback($connection);
             throw new Vizualizer_Exception_Database($e);
+            $post->remove("mode");
         }
 
-        $tweetDb = $loader->loadModel("Tweet");
+        $advertise = $loader->loadModel("TweetAdvertise");
         $result = array();
         if($post["account_id"] > 0){
-            $data = $tweetDb->findAllBy(array("account_id" => $post["account_id"], "user_id" => "0"), "retweet_count", true);
+            $data = $advertise->findAllByAccountType($post["account_id"], "1");
             foreach($data as $item){
-                $item->delete_target = $deleteTarget[$item->tweet_id];
+                $item->delete_target = $deleteTarget[$item->advertise_id];
                 $result[] = $item->toArray();
             }
         }

@@ -30,7 +30,7 @@ class VizualizerTwitter_Json_Tweet
                             $tweetDb = $loader->loadModel("Tweet");
                             $tweetDb->twitter_id = $tweet->id;
                         }
-                        $tweetDb->tweet_group_id = $post["group_id"];
+                        $tweetDb->account_id = $post["account_id"];
                         $tweetDb->user_id = $tweet->user->id;
                         $tweetDb->screen_name = $tweet->user->screen_name;
                         $tweetDb->tweet_text = $tweet->text;
@@ -69,8 +69,8 @@ class VizualizerTwitter_Json_Tweet
 
         $tweetDb = $loader->loadModel("Tweet");
         $result = array();
-        if($post["group_id"] > 0){
-            $data = $tweetDb->findAllBy(array("group_id" => $post["group_id"], "ne:user_id" => "0"), retweet_count, true);
+        if($post["account_id"] > 0){
+            $data = $tweetDb->findAllBy(array("account_id" => $post["account_id"], "ne:user_id" => "0"), "retweet_count", true);
             foreach($data as $item){
                 $item->delete_target = $deleteTarget[$item->tweet_id];
                 $result[] = $item->toArray();

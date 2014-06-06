@@ -23,29 +23,16 @@
  */
 
 /**
- * アカウントのリストを取得する。
+ * 設定のリストを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_List
+class VizualizerTwitter_Module_Setting_List extends Vizualizer_Plugin_Module_List
 {
 
     function execute($params)
     {
-        $post = Vizualizer::request();
-        if(!empty($post["account_attribute"])){
-            $loader = new Vizualizer_Plugin("Twitter");
-            $setting = $loader->loadModel("Setting");
-            $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
-            $accountIds = array();
-            foreach($settings as $setting){
-                $accountIds[] = $setting->account_id;
-            }
-            $post->set("search", array("in:account_id" => $accountIds));
-        }else{
-            $post->remove("search");
-        }
-        $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
+        $this->executeImpl($params, "Twitter", "Setting", $params->get("result", "settings"));
     }
 }

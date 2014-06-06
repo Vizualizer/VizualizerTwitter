@@ -107,13 +107,9 @@ class VizualizerTwitter_Json_Account
         }
 
         $account->findByPrimaryKey($post["account_id"]);
-        $account->follow_keywords = $account->followKeywords();
-        $account->ignore_keywords = $account->ignoreKeywords();
-        $followSettings = array();
-        foreach ($account->followSettings() as $setting) {
-            $followSettings[] = $setting->toArray();
-        }
-        $account->follow_settings = $followSettings;
+        $account->friend_limit = $account->followLimit() - $account->friend_count;
+        $account->followSetting = $account->followSetting()->toArray();
+        $account->status = $account->status()->toArray();
 
         return $account->toArray();
     }
