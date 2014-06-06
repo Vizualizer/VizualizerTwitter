@@ -58,9 +58,20 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
      * @param $account_id アカウントID
      * @return 設定のリスト
      */
-    public function findAllByAccountId($account_id)
+    public function findAllByAccountId($account_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("account_id" => $account_id));
+        return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
+    }
+
+    /**
+     * アカウント種別でデータを取得する。
+     *
+     * @param $account_id アカウントID
+     * @return 設定のリスト
+     */
+    public function findAllByAccountType($account_id, $advertise_type, $sort = "", $reverse = false)
+    {
+        return $this->findAllBy(array("account_id" => $account_id, "advertise_type" => $advertise_type), $sort, $reverse);
     }
 
     /**

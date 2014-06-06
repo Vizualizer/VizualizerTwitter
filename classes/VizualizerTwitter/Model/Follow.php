@@ -58,9 +58,9 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
      * @param $account_id アカウントID
      * @return フォローのリスト
      */
-    public function findAllByAccountId($account_id)
+    public function findAllByAccountId($account_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("account_id" => $account_id));
+        return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
     }
 
     /**
@@ -69,9 +69,9 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
      * @param $user_id ユーザーID
      * @return フォローのリスト
      */
-    public function findAllByUserId($user_id)
+    public function findAllByUserId($user_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("user_id" => $user_id));
+        return $this->findAllBy(array("user_id" => $user_id), $sort, $reverse);
     }
 
     /**

@@ -70,22 +70,8 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         foreach ($accounts as $account) {
             // 検索キーワードを取得する。
             $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
-            $setting = $loader->loadModel("Setting");
-            $setting->findBy(array("operator_id" => $admin["operator_id"]));
-            if (!($setting->setting_id > 0)) {
-                $setting->follow_keywords = "相互フォロー フォロバ100% リフォロー100%";
-                $setting->limit_followers = 2000;
-            }
-            if ($account->follower_count < $setting->limit_followers) {
-                $keywords = explode(" ", $setting->follow_keywords);
-            } else {
-                $keywords = explode("\r\n", $account->follow_keywords);
-            }
-            if($account->follow_mode == "1"){
-                $keywords[] = "相互フォロー";
-                $keywords[] = "フォロバ100%";
-                $keywords[] = "リフォロー100%";
-            }
+            $setting = $account->followSetting();
+            $keywords = explode("\r\n", $setting->follow_keywords);
 
             // ユーザー情報を検索
             for ($i = 0; $i < 2; $i ++) {
@@ -102,24 +88,23 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         // ユーザーのIDが取得できない場合はスキップ
                         if(!($user->id > 0)){
                             echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
-                            print_r($user);
                             continue;
                         }
 
                         // 日本語チェックに引っかかる場合はスキップ
-                        if ($account->japanese_flg == "1" && $user->lang != "ja") {
+                        if ($setting->japanese_flg == "1" && $user->lang != "ja") {
                             echo "Skipped invalid not Japanese : ".$user->id."\r\n";
                             continue;
                         }
 
                         // ボットチェックに引っかかる場合はスキップ
-                        if ($account->non_bot_flg == "1" && preg_match("/BOT|ボット|ﾎﾞｯﾄ/ui", $user->description) > 0) {
+                        if ($setting->non_bot_flg == "1" && preg_match("/BOT|ボット|ﾎﾞｯﾄ/ui", $user->description) > 0) {
                             echo "Skipped invalid Bot : ".$user->id."\r\n";
                             continue;
                         }
 
                         // 拒絶キーワードを含む場合はスキップ
-                        if (!empty($account->ignore_keywords) && preg_match("/" . implode("|", explode("\r\n", $account->ignore_keywords)) . "/u", $user->description) > 0) {
+                        if (!empty($setting->ignore_keywords) && preg_match("/" . implode("|", explode("\r\n", $setting->ignore_keywords)) . "/u", $user->description) > 0) {
                             echo "Skipped invalid Profile : ".$user->id."\r\n";
                             continue;
                         }

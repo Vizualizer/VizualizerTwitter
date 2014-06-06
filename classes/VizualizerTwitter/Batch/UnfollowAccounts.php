@@ -55,21 +55,22 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
     protected function unfollowAccounts($params, $data)
     {
         $loader = new Vizualizer_Plugin("Twitter");
-        $model = $loader->loadModel("Account");
+        $model = $loader->loadModel("AccountStatus");
 
         // 本体の処理を実行
-        $accounts = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s", strtotime("-1 day"))), "next_follow_time", false);
+        $statuses = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s", strtotime("-1 day"))), "next_follow_time", false);
 
-        foreach ($accounts as $account) {
+        foreach ($statuses as $status) {
+            $account = $status->account();
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($account->follow_status == "3") {
+            if ($account->status()->follow_status == "3") {
                 $account->updateFollowStatus(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($account->follow_status != "1" && $account->follow_status != "2") {
+            if ($account->status()->follow_status != "1" && $account->status()->follow_status != "2") {
                 echo "Account is not ready.\r\n";
                 continue;
             }
