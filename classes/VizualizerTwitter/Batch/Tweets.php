@@ -30,7 +30,9 @@
  */
 class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
 {
-    public function getDaemonName(){
+
+    public function getDaemonName()
+    {
         return "tweets";
     }
 
@@ -65,18 +67,17 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetSetting = $account->tweetSetting();
 
             // 日中のみフラグの場合は夜間スキップ
-            if($tweetSetting->daytime_flg == "1" && date("H") > 0 && date("H") < 7){
-                echo $account->screen_name." : Skip tweet for daytime\r\n";
+            if ($tweetSetting->daytime_flg == "1" && date("H") > 0 && date("H") < 7) {
+                echo $account->screen_name . " : Skip tweet for daytime\r\n";
                 continue;
             }
 
             // アカウントのステータスが有効のアカウントのみを対象とする。
-            if ($account->status()->tweet_status != "1" && $account->status()->tweet_status != "2") {
-                echo $account->screen_name." : Account is not ready（".$account->status()->tweet_status."）.\r\n";
+            if (
+                $account->status()->tweet_status != "1" && $account->status()->original_status != "1" && $account->status()->advertise_status != "1" && $account->status()->rakuten_status != "1") {
+                echo $account->screen_name . " : Account BOT is not active.\r\n";
                 continue;
             }
-
-            $account->updateTweetStatus(2);
 
             $today = date("Y-m-d");
 
@@ -84,16 +85,16 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetLogs = $account->tweetLogs();
             $count = 0;
             $lastTweetId = 0;
-            foreach($tweetLogs as $tweetLog){
-                if($tweetLog->tweet_type != "2"){
-                    if($lastTweetId == 0){
+            foreach ($tweetLogs as $tweetLog) {
+                if ($tweetLog->tweet_type != "2") {
+                    if ($lastTweetId == 0) {
                         $lastTweetId = $tweetLog->tweet_id;
                     }
                     $count ++;
-                }else{
+                } else {
                     break;
                 }
-                if($tweetSetting->advertise_interval < $count){
+                if ($tweetSetting->advertise_interval < $count) {
                     break;
                 }
             }
@@ -103,45 +104,54 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetLog->tweet_time = date("Y-m-d H:i:s");
 
             $advertise = $account->preferAdvertise();
-            if($tweetSetting->advertise_interval > 0 && $tweetSetting->advertise_interval < $count && $advertise->advertise_id > 0){
-                echo $account->screen_name." : use advertise because ".$tweetSetting->advertise_interval." < ".$count.".\r\n";
+            if ($tweetSetting->advertise_interval >= 0 && $tweetSetting->advertise_interval < $count && $advertise->advertise_id > 0) {
+                echo $account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count . ".\r\n";
                 // 広告を取得し記事を作成
                 $tweetLog->tweet_id = 0;
                 $tweetLog->tweet_type = 2;
                 $tweetLog->tweet_text = $advertise->advertise_text;
-                if(!empty($advertise->fixed_advertise_url)){
-                    $tweetLog->tweet_text .= " ".$advertise->fixed_advertise_url;
+                if (!empty($advertise->fixed_advertise_url)) {
+                    $tweetLog->tweet_text .= " " . $advertise->fixed_advertise_url;
                 }
-                echo $account->screen_name." : prepare to Tweet advertise text.\r\n";
-            }else{
+                echo $account->screen_name . " : prepare to Tweet advertise text.\r\n";
+            } else {
                 // ツイートを取得し、記事を作成
                 $tweet = $account->preferTweet();
                 $tweetLog->tweet_id = $tweet->tweet_id;
                 $tweetLog->tweet_type = 1;
                 $tweetLog->tweet_text = $tweet->tweet_text;
-                echo $account->screen_name." : prepare to Tweet normal text.\r\n";
+                $tweetLog->media_url = $tweet->media_url;
+                $tweetLog->media_filename = $tweet->media_filename;
+                echo $account->screen_name . " : prepare to Tweet normal text.\r\n";
             }
 
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                if(!empty($tweetLog->tweet_text)){
-                    $result = $account->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
-                    if(!empty($result->id)){
-                        echo $account->screen_name." : Post tweet(".$result->id.") : ".$tweetLog->tweet_text."\r\n";
+                if (!empty($tweetLog->tweet_text)) {
+                    if (!empty($tweetLog->media_filename)) {
+                        $params = array("status" => str_replace(" " . $tweetLog->media_url, "", $tweetLog->tweet_text));
+                        $params["media[]"] = VIZUALIZER_SITE_ROOT.Vizualizer_Configure::get("twitter_image_savepath")."/".$tweetLog->media_filename;
+                        $result = $account->getTwitter()->statuses_updateWithMedia($params);
+                    } else {
+                        $result = $account->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
+                    }
+                    if (!empty($result->id)) {
+                        echo $account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text . "\r\n";
                         $tweetLog->twitter_id = $result->id;
+                        $tweetlog->tweet_text = $result->text;
                         $tweetLog->save();
 
                         $interval = $tweetSetting->tweet_interval;
-                        if($tweetSetting->wavy_flg == "1"){
+                        if ($tweetSetting->wavy_flg == "1") {
                             $interval = mt_rand(0, $interval) + floor($interval / 2);
                         }
 
-                        echo $account->screen_name." : Use interval : ".$interval."\r\n";
-                        $status->next_tweet_time = date("Y-m-d H:i:s", strtotime("+".$interval." minute"));
-                        echo $account->screen_name." : Next tweet at : ".$status->next_tweet_time."\r\n";
+                        echo $account->screen_name . " : Use interval : " . $interval . "\r\n";
+                        $status->next_tweet_time = date("Y-m-d H:i:s", strtotime("+" . $interval . " minute"));
+                        echo $account->screen_name . " : Next tweet at : " . $status->next_tweet_time . "\r\n";
                         $status->save();
-                    }else{
-                        echo $account->screen_name." : error in Post tweet : ".$tweetLog->tweet_text."\r\n";
+                    } else {
+                        echo $account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text . "\r\n";
                         print_r($result);
                     }
                 }

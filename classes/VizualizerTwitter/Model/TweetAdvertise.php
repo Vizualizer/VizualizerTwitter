@@ -49,7 +49,7 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
      */
     public function findByPrimaryKey($tweet_advertise_id)
     {
-        $this->findBy(array("tweet_advertise_id" => $tweet_advertise_id));
+        $this->findBy(array("advertise_id" => $tweet_advertise_id));
     }
 
     /**

@@ -58,12 +58,19 @@ class VizualizerTwitter_Json_Rakuten
         $advertise = $loader->loadModel("TweetAdvertise");
         $result = array();
         if($post["account_id"] > 0){
+            $count = $advertise->countBy(array("account_id" => $post["account_id"], "advertise_type" => "1"));
+            if($post["page"] > 1){
+                $advertise->limit(100, ($post["page"] - 1) * 100);
+            }else{
+                $advertise->limit(100, 0);
+            }
             $data = $advertise->findAllByAccountType($post["account_id"], "1");
             foreach($data as $item){
                 $item->delete_target = $deleteTarget[$item->advertise_id];
                 $result[] = $item->toArray();
             }
         }
+        $result["count"] = $count;
         return $result;
     }
 }

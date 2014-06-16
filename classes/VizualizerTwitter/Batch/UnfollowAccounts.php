@@ -81,7 +81,8 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
             // アンフォロー対象のユーザーを取得
             $follow = $loader->loadModel("Follow");
-            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null));
+            $follow->limit(200);
+            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null), "follow_date", true);
 
             // ステータスを実行中に変更
             $account->updateFollowStatus(2);

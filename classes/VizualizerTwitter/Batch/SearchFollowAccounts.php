@@ -49,6 +49,81 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         return array("searchAccounts");
     }
 
+    private function checkUser($setting, $user){
+        // ユーザーのIDが取得できない場合はスキップ
+        if(!($user->id > 0)){
+            echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
+            return false;
+        }
+
+        // 日本語チェックに引っかかる場合はスキップ
+        if ($setting->japanese_flg == "1" && $user->lang != "ja") {
+            echo "Skipped invalid not Japanese : ".$user->id."\r\n";
+            return false;
+        }
+
+        // ボットチェックに引っかかる場合はスキップ
+        if ($setting->non_bot_flg == "1" && preg_match("/BOT|ボット|ﾎﾞｯﾄ/ui", $user->description) > 0) {
+            echo "Skipped invalid Bot : ".$user->id."\r\n";
+            return false;
+        }
+
+        // 拒絶キーワードを含む場合はスキップ
+        if (!empty($setting->ignore_keywords) && preg_match("/" . implode("|", explode("\r\n", $setting->ignore_keywords)) . "/u", $user->description) > 0) {
+            echo "Skipped invalid Profile : ".$user->id."\r\n";
+            return false;
+        }
+
+        return true;
+    }
+
+    private function addUser($account, $user){
+        // フォロー対象に追加済みの場合はスキップ
+        $loader = new Vizualizer_Plugin("Twitter");
+        $follow = $loader->loadModel("Follow");
+        $follow->findBy(array("account_id" => $account->account_id, "user_id" => $user->id));
+        if ($follow->follow_id > 0) {
+            echo "Skipped targeted : ".$user->id." was followed\r\n";
+            return false;
+        }
+
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+
+        try {
+            // フォロー対象に追加
+            $follow->account_id = $account->account_id;
+            $follow->user_id = $user->id;
+            if(!empty($user->following)){
+                $follow->friend_date = date("Y-m-d H:i:s");
+            }
+            $follow->save();
+            echo "Add follow target : ".$user->id."\r\n";
+
+            // フォロー履歴に追加
+            $history = $loader->loadModel("FollowHistory");
+            $today = date("Y-m-d");
+            $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+            $history->account_id = $account->account_id;
+            $history->history_date = $today;
+            $history->target_count ++;
+            $history->save();
+
+            // リスト無しステータスの場合は待機中ステータスに移行
+            if($account->follow_status == "4"){
+                $account->follow_status == "1";
+                $account->save();
+            }
+
+            // エラーが無かった場合、処理をコミットする。
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+        return true;
+    }
+
     /**
      * 検索対象のアカウントを取得する。
      *
@@ -85,73 +160,35 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     unset($users["httpstatus"]);
                     echo "Search Users（".count($users)."） in page ".$page."\r\n";
                     foreach ($users as $index => $user) {
-                        // ユーザーのIDが取得できない場合はスキップ
-                        if(!($user->id > 0)){
-                            echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
+                        if(!$this->checkUser($setting, $user)){
                             continue;
                         }
-
-                        // 日本語チェックに引っかかる場合はスキップ
-                        if ($setting->japanese_flg == "1" && $user->lang != "ja") {
-                            echo "Skipped invalid not Japanese : ".$user->id."\r\n";
-                            continue;
+                        if($setting->follow_type == "1" || $setting->follow_type == "3"){
+                            $this->addUser($account, $user);
                         }
 
-                        // ボットチェックに引っかかる場合はスキップ
-                        if ($setting->non_bot_flg == "1" && preg_match("/BOT|ボット|ﾎﾞｯﾄ/ui", $user->description) > 0) {
-                            echo "Skipped invalid Bot : ".$user->id."\r\n";
-                            continue;
-                        }
+                        // フォロワーを追加
+                        if($setting->follow_type == "2" || $setting->follow_type == "3"){
+                            // ユーザーのフォロワーを取得
+                            $followers = (array) $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "100"));
 
-                        // 拒絶キーワードを含む場合はスキップ
-                        if (!empty($setting->ignore_keywords) && preg_match("/" . implode("|", explode("\r\n", $setting->ignore_keywords)) . "/u", $user->description) > 0) {
-                            echo "Skipped invalid Profile : ".$user->id."\r\n";
-                            continue;
-                        }
-
-                        // フォロー対象に追加済みの場合はスキップ
-                        $follow = $loader->loadModel("Follow");
-                        $follow->findBy(array("account_id" => $account->account_id, "user_id" => $user->id));
-                        if ($follow->follow_id > 0) {
-                            echo "Skipped targeted : ".$user->id." was followed\r\n";
-                            continue;
-                        }
-
-                        // トランザクションの開始
-                        $connection = Vizualizer_Database_Factory::begin("twitter");
-
-                        try {
-                            // フォロー対象に追加
-                            $follow->account_id = $account->account_id;
-                            $follow->user_id = $user->id;
-                            if(!empty($user->following)){
-                                $follow->friend_date = date("Y-m-d H:i:s");
-                            }
-                            $follow->save();
-                            echo "Add follow target : ".$user->id."\r\n";
-
-                            // フォロー履歴に追加
-                            $history = $loader->loadModel("FollowHistory");
-                            $today = date("Y-m-d");
-                            $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
-                            $history->account_id = $account->account_id;
-                            $history->history_date = $today;
-                            $history->target_count ++;
-                            $history->save();
-
-                            // リスト無しステータスの場合は待機中ステータスに移行
-                            if($account->follow_status == "4"){
-                                $account->follow_status == "1";
-                                $account->save();
+                            if (!isset($followers->ids) || !is_array($followers->ids)) {
+                                break;
                             }
 
-                            // エラーが無かった場合、処理をコミットする。
-                            Vizualizer_Database_Factory::commit($connection);
-                        } catch (Exception $e) {
-                            Vizualizer_Database_Factory::rollback($connection);
-                            throw new Vizualizer_Exception_Database($e);
+                            $followerIds = implode(",", $followers->ids);
+                            // ユーザーのフォロワーを取得
+                            $followers = (array) $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
+
+                            foreach($followers as $follower){
+                                if(isset($follower->id) && $follower->id > 0){
+                                    if(!$this->checkUser($setting, $follower)){
+                                        continue;
+                                    }
+                                    $this->addUser($account, $follower);
+                                }
+                            }
                         }
-                        // フォロー対象に追加
                     }
                 }
             }

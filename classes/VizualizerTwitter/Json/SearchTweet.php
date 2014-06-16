@@ -38,7 +38,7 @@ class VizualizerTwitter_Json_SearchTweet
                 if(!isset($post["ignore_signature"]) || $post["ignore_signature"] != "1"){
                     $tweet->text .= " ".$tweet->user->screen_name;
                 }
-                if(!empty($tweet->id) && $tweet->retweet_count > 0){
+                if(!empty($tweet->id)){
                     $tweet->delete_target = "1";
                     $tweetData[$tweet->id] = $tweet;
                 }
@@ -63,6 +63,7 @@ class VizualizerTwitter_Json_SearchTweet
             return ($a->retweet_count < $b->retweet_count);
         });
         Vizualizer_Session::set(self::TWEET_SESSION_KEY, $tweetData);
+        $tweetData["count"] = count($tweetData);
         return $tweetData;
     }
 }
