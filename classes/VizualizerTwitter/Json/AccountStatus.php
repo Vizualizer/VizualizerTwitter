@@ -19,19 +19,20 @@ class VizualizerTwitter_Json_AccountStatus
                 $status = $account->status();
                 switch ($p[1]) {
                     case "follow_status":
-                        if ($status->follow_status == "0") {
-                            $status->follow_status = "1";
-                        } else {
-                            $status->follow_status = "0";
-                        }
-                        break;
                     case "tweet_status":
-                        if ($status->tweet_status == "0") {
-                            $status->tweet_status = "1";
-                        } else {
-                            $status->tweet_status = "0";
+                    case "original_status":
+                    case "advertise_status":
+                    case "rakuten_status":
+                        $attrName = $p[1];
+                        if(!is_numeric($post["value"])){
+                            if ($status->$attrName == "0") {
+                                $status->$attrName = "1";
+                            } else {
+                                $status->$attrName = "0";
+                            }
+                        }else{
+                            $status->$attrName = $post["value"];
                         }
-                        break;
                     default:
                         $attribute = $p[1];
                         $status->$attribute = $post["value"];
