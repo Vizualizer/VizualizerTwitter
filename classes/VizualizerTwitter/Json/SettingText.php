@@ -27,7 +27,7 @@ class VizualizerTwitter_Json_SettingText
                             }
                             $setting->$attribute = str_replace(" ", "\r\n", implode("\r\n", $attributes));
                         }elseif($post["type"] == "delete"){
-                            $attributes = explode("\r\n", $setting->$attribute);
+                            $attributes = explode("\r\n", str_replace(" ", "\r\n", $setting->$attribute));
                             foreach($attributes as $index => $attr){
                                 if($attr == $post["value"]){
                                     unset($attributes[$index]);

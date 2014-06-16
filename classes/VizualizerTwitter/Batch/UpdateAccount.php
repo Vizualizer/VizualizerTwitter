@@ -76,6 +76,12 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                     $account->follower_count = $user->followers_count;
                     $account->favorite_count = $user->favourites_count;
                     $account->notification = $user->notifications;
+                    $setting = $loader->loadModel("GlobalSetting");
+                    $setting->findByOperator($account->operator_id);
+                    if($setting->global_setting_id > 0){
+                        $account->rakuten_application_id = $setting->rakuten_application_id;
+                        $account->rakuten_affiliate_id = $setting->rakuten_affiliate_id;
+                    }
                     echo "Update Account for ".$account->account_id."  : \r\n";
                     $account->save();
 

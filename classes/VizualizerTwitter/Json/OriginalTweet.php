@@ -34,6 +34,7 @@ class VizualizerTwitter_Json_OriginalTweet
                     $tweetDb->user_id = "0";
                     $tweetDb->screen_name = "0";
                     $tweetDb->tweet_text = str_replace("\\n", "\r\n", $value);
+                    $tweetDb->media_filename = $post["media_filename"];
                     $tweetDb->retweet_count = "0";
                     $tweetDb->favorite_count = "0";
                     $tweetDb->save();
@@ -67,12 +68,19 @@ class VizualizerTwitter_Json_OriginalTweet
         $tweetDb = $loader->loadModel("Tweet");
         $result = array();
         if($post["account_id"] > 0){
-            $data = $tweetDb->findAllBy(array("account_id" => $post["account_id"], "user_id" => "0"), "retweet_count", true);
+            $count = $tweetDb->countBy(array("account_id" => $post["account_id"], "user_id" => "0"));
+            if($post["page"] > 1){
+                $tweetDb->limit(100, ($post["page"] - 1) * 100);
+            }else{
+                $tweetDb->limit(100, 0);
+            }
+            $data = $tweetDb->findAllBy(array("account_id" => $post["account_id"], "user_id" => "0"));
             foreach($data as $item){
                 $item->delete_target = $deleteTarget[$item->tweet_id];
                 $result[] = $item->toArray();
             }
         }
+        $result["count"] = $count;
         return $result;
     }
 }

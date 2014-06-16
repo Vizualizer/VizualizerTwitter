@@ -32,7 +32,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 {
     const FOLLOW_MODE_NORMAL = "2";
     const FOLLOW_MODE_SAFE = "1";
-
     const FOLLOW_STATUS_SUSPEND = 0;
     const FOLLOW_STATUS_STANDBY = 1;
     const FOLLOW_STATUS_RUNNING = 2;
@@ -40,7 +39,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     const FOLLOW_STATUS_NOLIST = 4;
     const FOLLOW_STATUS_RETRY = 5;
     const FOLLOW_STATUS_SKIPPED = 6;
-
     const TWEET_STATUS_SUSPENDED = 0;
     const FOLLOW_STATUS_ACTIVATED = 1;
 
@@ -106,10 +104,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * アカウントのフォローの限界値を取得する
      */
-    public function followLimit(){
-        if($this->follower_count < 1819){
+    public function followLimit()
+    {
+        if ($this->follower_count < 1819) {
             return 2000;
-        }else{
+        } else {
             return floor($this->follower_count * 1.1);
         }
     }
@@ -150,7 +149,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $accountStatus = $loader->loadModel("AccountStatus");
         $accountStatus->findByAccountId($this->account_id);
-        if(!($accountStatus->account_status_id > 0)){
+        if (!($accountStatus->account_status_id > 0)) {
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $accountStatus->account_id = $this->account_id;
@@ -173,7 +172,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $setting = $loader->loadModel("Setting");
         $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        if(!($setting->setting_id > 0)){
+        if (!($setting->setting_id > 0)) {
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $setting->operator_id = $this->operator_id;
@@ -184,20 +183,22 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 Vizualizer_Database_Factory::rollback($connection);
             }
         }
-        if($setting->use_follow_setting != "1"){
+        $attribute = $setting->account_attribute;
+        if ($setting->use_follow_setting != "1") {
             $setting->findByOperatorAccount($this->operator_id, "0");
         }
+        $setting->account_attribute = $attribute;
         $setting->follow_interval = $setting->follow_interval_1;
         $setting->refollow_timeout = $setting->refollow_timeout_1;
         $setting->daily_follows = $setting->daily_follows_1;
-        for($i = 2; $i < 6; $i ++){
-            $key = "follower_limit_".$i;
-            if($setting->$key > 0 && $setting->$key < $this->follower_count){
-                $key = "follow_interval_".$i;
+        for ($i = 2; $i < 6; $i ++) {
+            $key = "follower_limit_" . $i;
+            if ($setting->$key > 0 && $setting->$key < $this->follower_count) {
+                $key = "follow_interval_" . $i;
                 $setting->follow_interval = $setting->$key;
-                $key = "refollow_timeout_".$i;
+                $key = "refollow_timeout_" . $i;
                 $setting->refollow_timeout = $setting->$key;
-                $key = "daily_follows_".$i;
+                $key = "daily_follows_" . $i;
                 $setting->daily_follows = $setting->$key;
             }
         }
@@ -214,7 +215,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $setting = $loader->loadModel("Setting");
         $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        if(!($setting->setting_id > 0)){
+        if (!($setting->setting_id > 0)) {
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $setting->operator_id = $this->operator_id;
@@ -226,10 +227,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             }
         }
         /*
-        if($setting->use_tweet_setting != "1"){
-            $setting->findByOperatorAccount($this->operator_id, "0");
-        }
-        */
+         * if($setting->use_tweet_setting != "1"){
+         * $setting->findByOperatorAccount($this->operator_id, "0"); }
+         */
         return $setting;
     }
 
@@ -291,9 +291,25 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function preferTweet()
     {
         $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLog->limit(10);
+        $tweetLogs = $tweetLog->findAllBy(array("account_id" => $this->account_id), "create_time", true);
+        $ignoreTweets = array();
+        foreach ($tweetLogs as $tweetLog) {
+            $ignoreTweets[] = $tweetLog->tweet_text;
+        }
         $tweet = $loader->loadModel("Tweet");
-        $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
-        if($tweets->count() > 0){
+        $tweetOrder = (($this->tweetSetting()->tweet_order == "1")?"retweet_count":"RAND()");
+        if ($this->status()->tweet_status > 0 && $this->status()->original_status > 0) {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        } elseif ($this->status()->tweet_status > 0) {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "gt:user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        } elseif ($this->status()->original_status > 0) {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        } else {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "user_id" => "-1", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        }
+        if ($tweets->count() > 0) {
             $tweet = $tweets->current();
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -306,12 +322,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 throw new Vizualizer_Exception_Database($e);
             }
             return $tweet;
-        }else{
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"), "RAND()");
+        } else {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"));
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                foreach($tweets as $tweet){
+                foreach ($tweets as $tweet) {
                     $tweet->tweeted_flg = 0;
                     $tweet->save();
                 }
@@ -320,8 +336,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 Vizualizer_Database_Factory::rollback($connection);
                 throw new Vizualizer_Exception_Database($e);
             }
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
-            if($tweets->count() > 0){
+            if ($this->status()->tweet_status > 0 && $this->status()->original_status > 0) {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            } elseif ($this->status()->tweet_status > 0) {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "gt:user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            } elseif ($this->status()->original_status > 0) {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            } else {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "user_id" => "-1", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            }
+            if ($tweets->count() > 0) {
                 $tweet = $tweets->current();
                 // トランザクションの開始
                 $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -334,7 +358,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                     throw new Vizualizer_Exception_Database($e);
                 }
                 return $tweet;
-            }else{
+            } else {
                 return $loader->loadModel("Tweet");
             }
         }
@@ -348,9 +372,25 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function preferAdvertise($sort = "", $reverse = false)
     {
         $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLog->limit(10);
+        $tweetLogs = $tweetLog->findAllBy(array("account_id" => $this->account_id), "create_time", true);
+        $ignoreTweets = array();
+        foreach ($tweetLogs as $tweetLog) {
+            $ignoreTweets[] = $tweetLog->tweet_text;
+        }
         $tweet = $loader->loadModel("TweetAdvertise");
-        $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
-        if($tweets->count() > 0){
+        $tweetOrder = (($this->tweetSetting()->advertise_order == "1")?"create_time":"RAND()");
+        if ($this->status()->advertise_status > 0 && $this->status()->rakuten_status > 0) {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        } elseif ($this->status()->advertise_status > 0) {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "0", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        } elseif ($this->status()->rakuten_status > 0) {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        } else {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "-1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        }
+        if ($tweets->count() > 0) {
             $tweet = $tweets->current();
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -363,12 +403,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 throw new Vizualizer_Exception_Database($e);
             }
             return $tweet;
-        }else{
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"), "RAND()");
+        } else {
+            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"));
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
-                foreach($tweets as $tweet){
+                foreach ($tweets as $tweet) {
                     $tweet->tweeted_flg = 0;
                     $tweet->save();
                 }
@@ -377,8 +417,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 Vizualizer_Database_Factory::rollback($connection);
                 throw new Vizualizer_Exception_Database($e);
             }
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0"), "RAND()");
-            if($tweets->count() > 0){
+            if ($this->status()->advertise_status > 0 && $this->status()->rakuten_status > 0) {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            } elseif ($this->status()->advertise_status > 0) {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "0", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            } elseif ($this->status()->rakuten_status > 0) {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            } else {
+                $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "-1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            }
+            if ($tweets->count() > 0) {
                 $tweet = $tweets->current();
                 // トランザクションの開始
                 $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -391,7 +439,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                     throw new Vizualizer_Exception_Database($e);
                 }
                 return $tweet;
-            }else{
+            } else {
                 return $loader->loadModel("TweetAdvertise");
             }
         }
@@ -413,8 +461,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * ツイッターAPI用のオブジェクトを取得
      */
-    public function getTwitter(){
-        if(!$this->twitter){
+    public function getTwitter()
+    {
+        if (!$this->twitter) {
             $application = $this->application();
             \Codebird\Codebird::setConsumerKey($application->api_key, $application->api_secret);
             $this->twitter = \Codebird\Codebird::getInstance();
@@ -428,7 +477,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @param int $status フォローステータス
      * @param int $next 次回のフォロー実行時間
-     * @param boolean $reset フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
+     * @param boolean $reset
+     *            フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
      */
     public function updateFollowStatus($statusId, $next = "", $reset = false)
     {
@@ -437,11 +487,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         try {
             $status = $this->status();
             $status->follow_status = $statusId;
-            if(!empty($next)){
+            if (!empty($next)) {
                 $status->next_follow_time = $next;
-                if($reset){
+                if ($reset) {
                     $status->follow_count = 0;
-                }else{
+                } else {
                     $status->follow_count ++;
                 }
             }
@@ -466,7 +516,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         try {
             $status = $this->status();
             $status->tweet_status = $status;
-            if(!empty($next)){
+            if (!empty($next)) {
                 $status->next_tweet_time = $next;
             }
             $this->save();

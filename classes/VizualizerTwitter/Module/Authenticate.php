@@ -64,66 +64,37 @@ class VizualizerTwitter_Module_Authenticate extends Vizualizer_Plugin_Module
 
                 // アカウント情報を登録
                 $account = $loader->loadModel("Account");
-                $account->twitter_id = $user->id;
-                $account->screen_name = $user->screen_name;
-                $account->name = $user->name;
-                $account->profile_image_url = $user->profile_image_url;
-                $account->tweet_count = $user->statuses_count;
-                $account->friend_count = $user->friends_count;
-                $account->follower_count = $user->followers_count;
-                $account->favorite_count = $user->favourites_count;
-                $account->follow_mode = VizualizerTwitter_Model_Account::FOLLOW_MODE_SAFE;
-                $account->follow_unit = 10;
-                $account->follow_unit_interval = 10;
-                $account->application_id = $twitterInfo["application_id"];
-                $account->server_id = $server->server_id;
-                $account->access_token = $reply->oauth_token;
-                $account->access_token_secret = $reply->oauth_token_secret;
-                $account->save();
-                $post->set("account_id", $account->account_id);
+                $account->findBy(array("twitter_id" => $user->id));
+                if($account->account_id > 0){
+                    $account->application_id = $twitterInfo["application_id"];
+                    $account->access_token = $reply->oauth_token;
+                    $account->access_token_secret = $reply->oauth_token_secret;
+                    $account->save();
+                    $post->set("account_id", $account->account_id);
+                }else{
+                    $account->twitter_id = $user->id;
+                    $account->screen_name = $user->screen_name;
+                    $account->name = $user->name;
+                    $account->profile_image_url = $user->profile_image_url;
+                    $account->tweet_count = $user->statuses_count;
+                    $account->friend_count = $user->friends_count;
+                    $account->follower_count = $user->followers_count;
+                    $account->favorite_count = $user->favourites_count;
+                    $account->follow_mode = VizualizerTwitter_Model_Account::FOLLOW_MODE_SAFE;
+                    $account->follow_unit = 10;
+                    $account->follow_unit_interval = 10;
+                    $account->application_id = $twitterInfo["application_id"];
+                    $account->server_id = $server->server_id;
+                    $account->access_token = $reply->oauth_token;
+                    $account->access_token_secret = $reply->oauth_token_secret;
+                    $account->save();
+                    $post->set("account_id", $account->account_id);
 
-                // デフォルトの設定を登録する。
-                $setting = $loader->loadModel("FollowSetting");
-                $setting->account_id = $account->account_id;
-                $setting->setting_index = 0;
-                $setting->min_followers = 0;
-                $setting->min_follow_interval = 20;
-                $setting->refollow_timeout = 40;
-                $setting->daily_follows = 40;
-                $setting->save();
-                $setting = $loader->loadModel("FollowSetting");
-                $setting->account_id = $account->account_id;
-                $setting->setting_index = 1;
-                $setting->min_followers = 100;
-                $setting->min_follow_interval = 20;
-                $setting->refollow_timeout = 40;
-                $setting->daily_follows = 80;
-                $setting->save();
-                $setting = $loader->loadModel("FollowSetting");
-                $setting->account_id = $account->account_id;
-                $setting->setting_index = 2;
-                $setting->min_followers = 300;
-                $setting->min_follow_interval = 20;
-                $setting->refollow_timeout = 40;
-                $setting->daily_follows = 120;
-                $setting->save();
-                $setting = $loader->loadModel("FollowSetting");
-                $setting->account_id = $account->account_id;
-                $setting->setting_index = 3;
-                $setting->min_followers = 0;
-                $setting->min_follow_interval = 0;
-                $setting->refollow_timeout = 0;
-                $setting->daily_follows = 0;
-                $setting->save();
-                $setting = $loader->loadModel("FollowSetting");
-                $setting->account_id = $account->account_id;
-                $setting->setting_index = 4;
-                $setting->min_followers = 0;
-                $setting->min_follow_interval = 0;
-                $setting->refollow_timeout = 0;
-                $setting->daily_follows = 0;
-                $setting->save();
-
+                    // デフォルトの設定を登録する。
+                    $setting = $loader->loadModel("Setting");
+                    $setting->account_id = $account->account_id;
+                    $setting->save();
+                }
                 // エラーが無かった場合、処理をコミットする。
                 Vizualizer_Database_Factory::commit($connection);
             } catch (Exception $e) {
@@ -143,6 +114,7 @@ class VizualizerTwitter_Module_Authenticate extends Vizualizer_Plugin_Module
             // リクエストトークンを取得
             $attr = Vizualizer::attr();
             $reply = $twitter->oauth_requestToken(array("oauth_callback" => VIZUALIZER_URL . $attr["templateName"]));
+            print_r($reply);
             $twitterInfo["request_token"] = $reply->oauth_token;
             $twitterInfo["request_token_secret"] = $reply->oauth_token_secret;
             Vizualizer_Session::set("TWITTER_INFO", $twitterInfo);
