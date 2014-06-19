@@ -106,11 +106,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function followLimit()
     {
-        if ($this->follower_count < 1819) {
-            return 2000;
-        } else {
-            return floor($this->follower_count * 1.1);
-        }
+        $setting = $this->followSetting();
+        return floor($setting->follow_ratio * $this->follower_count / 100);
     }
 
     /**
@@ -163,6 +160,37 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントがフォロー処理可能か調べる
+     * @return true：フォロー可能／false：フォロー不可能
+     */
+    public function isFollowable(){
+        // 24時間以内にアンフォローが無く、上限に達していない場合はフォロー可能
+        $loader = new Vizualizer_Plugin("twitter");
+        $follow = $loader->loadModel("Follow");
+        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => date("Y-m-d H:i:s", strtotime("-1 day"))));
+        if($unfollowCount == 0 && $this->friend_count < $this->followLimit()){
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * アカウントがアンフォロー処理可能か調べる
+     * @return true：アンフォロー可能／false：アンフォロー不可能
+     */
+    public function isUnfollowable(){
+        // 24時間以内にフォローが存在せず、リフォロー期限を超えているフォローが存在している場合はアンフォロー可能
+        $loader = new Vizualizer_Plugin("twitter");
+        $follow = $loader->loadModel("Follow");
+        $followCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_date" => date("Y-m-d H:i:s", strtotime("-1 day"))));
+        $refollowCount = $follow->countBy(array("account_id" => $this->account_id, "follow_date" => null, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-" . $this->followSetting()->refollow_timeout . " hour"))));
+        if($followCount == 0 && $refollowCount > 0){
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * アカウントに紐づいたフォロー設定を取得する
      *
      * @return 詳細設定のリスト
@@ -188,18 +216,18 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             $setting->findByOperatorAccount($this->operator_id, "0");
         }
         $setting->account_attribute = $attribute;
-        $setting->follow_interval = $setting->follow_interval_1;
-        $setting->refollow_timeout = $setting->refollow_timeout_1;
+        $setting->follow_ratio = $setting->follow_ratio_1;
         $setting->daily_follows = $setting->daily_follows_1;
-        for ($i = 2; $i < 6; $i ++) {
+        $setting->daily_unfollows = $setting->daily_unfollows_1;
+        for ($i = 2; $i < 10; $i ++) {
             $key = "follower_limit_" . $i;
             if ($setting->$key > 0 && $setting->$key < $this->follower_count) {
-                $key = "follow_interval_" . $i;
-                $setting->follow_interval = $setting->$key;
-                $key = "refollow_timeout_" . $i;
-                $setting->refollow_timeout = $setting->$key;
+                $key = "follow_ratio_" . $i;
+                $setting->follow_ratio = $setting->$key;
                 $key = "daily_follows_" . $i;
                 $setting->daily_follows = $setting->$key;
+                $key = "daily_unfollows_" . $i;
+                $setting->daily_unfollows = $setting->$key;
             }
         }
         return $setting;

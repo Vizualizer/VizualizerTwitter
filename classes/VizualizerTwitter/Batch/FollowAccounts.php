@@ -62,9 +62,9 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
         foreach ($statuses as $status) {
             $account = $status->account();
 
-            // フォロー人数の上限を迎えていた場合はスキップ
-            if($account->followLimit() < $account->friend_count){
-                echo "Skip for follow limit.\r\n";
+            // フォロー可能状態で無い場合はスキップ
+            if(!$account->isFollowable()){
+                echo "Skip for not followable.\r\n";
                 continue;
             }
 
@@ -90,7 +90,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
 
             // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
-            if ($setting->daily_follows < $history->follow_count) {
+            if ($setting->daily_follows <= $history->follow_count) {
                 $account->updateFollowStatus(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
                 echo "Over daily follows for ".$history->follow_count." to ".$setting->daily_follows." in ".$account->account_id."\r\n";
             }

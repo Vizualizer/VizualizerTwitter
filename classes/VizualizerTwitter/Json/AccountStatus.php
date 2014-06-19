@@ -24,7 +24,7 @@ class VizualizerTwitter_Json_AccountStatus
                     case "advertise_status":
                     case "rakuten_status":
                         $attrName = $p[1];
-                        if(!is_numeric($post["value"])){
+                        if(!isset($post["value"]) || !is_numeric($post["value"])){
                             if ($status->$attrName == "0") {
                                 $status->$attrName = "1";
                             } else {
@@ -33,6 +33,7 @@ class VizualizerTwitter_Json_AccountStatus
                         }else{
                             $status->$attrName = $post["value"];
                         }
+                        break;
                     default:
                         $attribute = $p[1];
                         $status->$attribute = $post["value"];
