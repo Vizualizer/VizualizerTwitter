@@ -62,6 +62,13 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
         foreach ($statuses as $status) {
             $account = $status->account();
+
+            // アンフォロー可能状態で無い場合はスキップ
+            if(!$account->isUnfollowable()){
+                echo "Skip for not unfollowable.\r\n";
+                continue;
+            }
+
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
@@ -77,12 +84,21 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
             $setting = $account->followSetting();
 
+            // 本日のフォロー状況を取得
+            $history = $loader->loadModel("FollowHistory");
             $today = date("Y-m-d");
+            $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
 
-            // アンフォロー対象のユーザーを取得
+            // アカウントのアンフォロー数が1日のアンフォロー数を超えた場合はステータスを終了にしてスキップ
+            if ($setting->daily_unfollows <= $history->unfollow_count) {
+                $account->updateFollowStatus(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
+                echo "Over daily unfollows for ".$history->unfollow_count." to ".$setting->daily_unfollows." in ".$account->account_id."\r\n";
+            }
+
+            // リストを取得する。
             $follow = $loader->loadModel("Follow");
-            $follow->limit(200);
-            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null), "follow_date", true);
+            $follow->limit(1, 0);
+            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null), "friend_date", false);
 
             // ステータスを実行中に変更
             $account->updateFollowStatus(2);
@@ -114,8 +130,11 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
                 }
             }
 
-            // ステータスを待機中に変更
-            $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+1 day")), true);
+            if($account->status()->follow_count < $setting->follow_unit - 1){
+                $account->updateFollowStatus(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
+            }else{
+                $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+".$account->follow_unit_interval." minute")), true);
+            }
         }
 
         return $data;
