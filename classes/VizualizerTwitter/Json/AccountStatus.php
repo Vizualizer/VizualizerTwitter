@@ -56,6 +56,7 @@ class VizualizerTwitter_Json_AccountStatus
         }
 
         $status = $account->status();
+        $status->isUnfollowable = $account->isUnfollowable();
 
         return $status->toArray();
     }

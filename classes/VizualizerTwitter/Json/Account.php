@@ -110,6 +110,7 @@ class VizualizerTwitter_Json_Account
         $account->friend_limit = $account->followLimit() - $account->friend_count;
         $account->followSetting = $account->followSetting()->toArray();
         $account->status = $account->status()->toArray();
+        $account->isUnfollowable = $account->isUnfollowable();
 
         return $account->toArray();
     }
