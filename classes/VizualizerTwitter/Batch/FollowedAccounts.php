@@ -104,12 +104,26 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                                 // フォロワーなのに、フォロー日時が入っていない場合は、暫定的に現在日時を設定
                                 $follow->follow_date = date("Y-m-d H:i:s");
                                 $follow->save();
+                                // フォロー履歴に追加
+                                $history = $loader->loadModel("FollowHistory");
+                                $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+                                $history->account_id = $account->account_id;
+                                $history->history_date = $today;
+                                $history->follower_count ++;
+                                $history->save();
                             }elseif (empty($follow->friend_date)) {
                                 // フォロワーなのに、フレンドになっていない場合はリフォロー処理を行う。
                                 $result = $account->getTwitter()->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
                                 if ($result->following) {
                                     $follow->friend_date = date("Y-m-d H:i:s");
                                     $follow->save();
+                                    // フォロー履歴に追加
+                                    $history = $loader->loadModel("FollowHistory");
+                                    $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+                                    $history->account_id = $account->account_id;
+                                    $history->history_date = $today;
+                                    $history->follow_count ++;
+                                    $history->save();
                                 }
                             }
                             unset($followerIds[$follow->user_id]);
@@ -123,6 +137,13 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                     $follow->user_id = $userId;
                     $follow->follow_date = date("Y-m-d H:i:s");
                     $follow->save();
+                    // フォロー履歴に追加
+                    $history = $loader->loadModel("FollowHistory");
+                    $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+                    $history->account_id = $account->account_id;
+                    $history->history_date = $today;
+                    $history->follower_count ++;
+                    $history->save();
                 }
                 // エラーが無かった場合、処理をコミットする。
                 Vizualizer_Database_Factory::commit($connection);
