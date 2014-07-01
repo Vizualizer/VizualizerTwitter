@@ -126,7 +126,6 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                         Vizualizer_Database_Factory::rollback($connection);
                         throw new Vizualizer_Exception_Database($e);
                     }
-                    return true;
                 } elseif ($result->errors[0]->code == "160") {
                     // 既にフォロー済みの場合は、DBに日付のみを設定
                     $connection = Vizualizer_Database_Factory::begin("twitter");
