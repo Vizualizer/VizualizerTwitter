@@ -78,33 +78,41 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
 
-                if(empty($friends->errors)){
-                    if (!isset($friends->ids) || !is_array($friends->ids)) {
-                        break;
-                    }
+                if (!isset($friends->ids) || !is_array($friends->ids)) {
+                    break;
+                }
 
-                    foreach ($friends->ids as $userId) {
-                        $friendIds[$userId] = $userId;
-                        if(count($friendIds) == 100){
-                            $list = (array) $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
+                foreach ($friends->ids as $userId) {
+                    $friendIds[$userId] = $userId;
+                    if(count($friendIds) == 100){
+                        $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
+                        if(!is_array($list->errors) || empty($list->errors)){
                             $friendIds = array();
                             foreach($list as $item){
                                 $account->addFollowUser($item, true, false);
                             }
+                        }else{
+                            $friendIds = array();
+                            Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
+                            break;
                         }
                     }
-                    if(count($friendIds) > 0){
-                        $list = (array) $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
+                }
+                if(count($friendIds) > 0){
+                    $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
+                    if(!is_array($list->errors) || empty($list->errors)){
                         $friendIds = array();
                         foreach($list as $item){
                             $account->addFollowUser($item, true, false);
                         }
+                    }else{
+                        Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
                     }
+                }
 
-                    $cursor = $friends->next_cursor;
-                    if ($cursor == 0) {
-                        break;
-                    }
+                $cursor = $friends->next_cursor;
+                if ($cursor == 0) {
+                    break;
                 }
             }
         }

@@ -163,6 +163,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * フォローデータを登録する。
      */
     public function addFollowUser($user, $asFriend = false, $asFollower = false) {
+        // ユーザーの形式で無い場合はスキップ
+        if(is_numeric($user) || !isset($user->id)){
+            return false;
+        }
+
         // ユーザーのIDが取得できない場合はスキップ
         if(!($user->id > 0)){
             echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
