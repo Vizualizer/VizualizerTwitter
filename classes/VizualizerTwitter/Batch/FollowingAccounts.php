@@ -84,43 +84,36 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
 
                 foreach ($friends->ids as $userId) {
                     $friendIds[$userId] = $userId;
+                    if(count($friendIds) == 100){
+                        $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
+                        if(!is_array($list->errors) || empty($list->errors)){
+                            $friendIds = array();
+                            foreach($list as $item){
+                                $account->addFollowUser($item, true, false);
+                            }
+                        }else{
+                            $friendIds = array();
+                            Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
+                            break;
+                        }
+                    }
                 }
+                if(count($friendIds) > 0){
+                    $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
+                    if(!is_array($list->errors) || empty($list->errors)){
+                        $friendIds = array();
+                        foreach($list as $item){
+                            $account->addFollowUser($item, true, false);
+                        }
+                    }else{
+                        Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
+                    }
+                }
+
                 $cursor = $friends->next_cursor;
                 if ($cursor == 0) {
                     break;
                 }
-            }
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                if (is_array($friendIds) && !empty($friendIds)) {
-                    // フォロワーになっていないフレンドを取得
-                    $follow = $loader->loadModel("Follow");
-                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => array_values($friendIds)));
-                    foreach ($follows as $follow) {
-                        if (array_key_exists($follow->user_id, $friendIds)) {
-                            if (empty($follow->friend_date)) {
-                                // フォローしているにも関わらず日付が設定されていない場合は現在日時を設定
-                                $follow->friend_date = date("Y-m-d H:i:s");
-                                $follow->save();
-                            }
-                            unset($friendIds[$follow->user_id]);
-                        }
-                    }
-                }
-
-                foreach ($friendIds as $userId) {
-                    $follow = $loader->loadModel("Follow");
-                    $follow->account_id = $account->account_id;
-                    $follow->user_id = $userId;
-                    $follow->friend_date = date("Y-m-d H:i:s");
-                    $follow->save();
-                }
-                // エラーが無かった場合、処理をコミットする。
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
             }
         }
 

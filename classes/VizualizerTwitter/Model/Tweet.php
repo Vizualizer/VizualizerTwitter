@@ -88,4 +88,105 @@ class VizualizerTwitter_Model_Tweet extends Vizualizer_Plugin_Model
         $group->findByPrimaryKey($this->account_id);
         return $group;
     }
+
+    /**
+     * 直近でツイートした履歴を取得する。
+     * @param number $count
+     * @return ツイート履歴
+     */
+    protected function getTweetedHistory($count = 10){
+        // 過去X件のツイートを取得する。
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLog->limit($count);
+        $tweetLogs = $tweetLog->findAllBy(array("account_id" => $this->account_id), "create_time", true);
+        $ignoreTweets = array();
+        foreach ($tweetLogs as $tweetLog) {
+            $ignoreTweets[] = $tweetLog->tweet_text;
+        }
+        return $ignoreTweets;
+    }
+
+    /**
+     * ツイート済みのフラグをリセットする。
+     * @throws Vizualizer_Exception_Database
+     */
+    protected function resetTweeted(){
+        $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"));
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            foreach ($tweets as $tweet) {
+                $tweet->tweeted_flg = 0;
+                $tweet->save();
+            }
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+    }
+
+    /**
+     * 優先度の高いツイートを取得する。
+     * @param array $ignoreTweets ツイート履歴
+     * @throws Vizualizer_Exception_Database
+     * @return 優先度の高いツイート
+     */
+    protected function getPreferTweet($ignoreTweets){
+        // ツイートを取得
+        $account = $this->account();
+        $status = $account->status();
+        $tweetOrder = (($account->tweetSetting()->tweet_order == "1") ? "retweet_count" : "RAND()");
+        if ($status->tweet_status > 0 && $status->original_status > 0) {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        } elseif ($status->tweet_status > 0) {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "gt:user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        } elseif ($status->original_status > 0) {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        } else {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "user_id" => "-1", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+        }
+        // ツイートが1件以上ある場合は該当のツイートを取得する。
+        if ($tweets->count() > 0) {
+            $tweet = $tweets->current();
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $tweet->tweeted_flg = 1;
+                $tweet->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+            return $tweet;
+        }
+        return false;
+    }
+
+    /**
+     * アカウントに紐づいたツイートのうち、優先度の高いものを取得する。
+     *
+     * @return ツイートのリスト
+     */
+    public function findByPrefer()
+    {
+        // ツイート履歴を取得
+        $tweeted = $this->getTweetedHistory();
+
+        // 優先ツイートを取得
+        $tweet = $this->getPreferTweet($tweeted);
+
+        if($tweet === false){
+            // 優先ツイートが取得できなかった場合は、一度ツイート済みフラグをリセットして再取得する。
+            $this->resetTweeted();
+            $tweet = $this->getPreferTweet($tweeted);
+            if($tweet === false){
+                $loader = new Vizualizer_Plugin("twitter");
+                return $loader->loadModel("Tweet");
+            }
+        }
+        return $tweet;
+    }
 }
