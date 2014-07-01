@@ -74,4 +74,57 @@ class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
         $account->findByPrimaryKey($this->account_id);
         return $account;
     }
+
+    /**
+     * フォローステータスを更新する
+     *
+     * @param int $status フォローステータス
+     * @param int $next 次回のフォロー実行時間
+     * @param boolean $reset
+     *            フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
+     */
+    public function updateFollow($statusId, $next = "", $reset = false)
+    {
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            $this->follow_status = $statusId;
+            if (!empty($next)) {
+                $this->next_follow_time = $next;
+                if ($reset) {
+                    $this->follow_count = 0;
+                } else {
+                    $this->follow_count ++;
+                }
+            }
+            $this->save();
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+    }
+
+    /**
+     * ツイートステータスを更新する
+     *
+     * @param int $status ツイートステータス
+     * @param int $next 次回のツイート実行時間
+     */
+    public function updateTweet($statusId, $next = "")
+    {
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            $this->tweet_status = $statusId;
+            if (!empty($next)) {
+                $this->next_tweet_time = $next;
+            }
+            $this->save();
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+    }
 }

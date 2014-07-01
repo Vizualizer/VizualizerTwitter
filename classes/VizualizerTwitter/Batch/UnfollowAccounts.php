@@ -58,27 +58,32 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
         $model = $loader->loadModel("AccountStatus");
 
         // 本体の処理を実行
-        $statuses = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s", strtotime("-1 day"))), "next_follow_time", false);
+        $statuses = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s")), "next_follow_time", false);
 
         foreach ($statuses as $status) {
             $account = $status->account();
 
+            // アカウントデータが存在しない場合はスキップ
+            if(!($account->account_id > 0)){
+                continue;
+            }
+
             // アンフォロー可能状態で無い場合はスキップ
             if(!$account->isUnfollowable()){
-                echo "Skip for not unfollowable.\r\n";
+                Vizualizer_Logger::writeInfo("Skip for not unfollowable in ".$account->screen_name);
                 continue;
             }
 
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($account->status()->follow_status == "3") {
-                $account->updateFollowStatus(1);
+            if ($status->follow_status == "3") {
+                $status->updateFollow(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($account->status()->follow_status != "1" && $account->status()->follow_status != "2") {
-                echo "Account is not ready.\r\n";
+            if ($status->follow_status != "1" && $status->follow_status != "2") {
+                Vizualizer_Logger::writeInfo("Account is not ready in ".$account->screen_name);
                 continue;
             }
 
@@ -90,50 +95,30 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
 
             // アカウントのアンフォロー数が1日のアンフォロー数を超えた場合はステータスを終了にしてスキップ
-            if ($setting->daily_unfollows <= $history->unfollow_count) {
-                $account->updateFollowStatus(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
-                echo "Over daily unfollows for ".$history->unfollow_count." to ".$setting->daily_unfollows." in ".$account->account_id."\r\n";
+            $follow = $loader->loadModel("Follow");
+            $unfollowed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_cancel_date" => $today));
+            if ($setting->daily_unfollows <= $unfollowed) {
+                $status->updateFollow(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
+                Vizualizer_Logger::writeInfo("Over daily unfollows for ".$unfollowed." to ".$setting->daily_unfollows." in ".$account->screen_name);
+                continue;
             }
 
             // リストを取得する。
             $follow = $loader->loadModel("Follow");
             $follow->limit(1, 0);
-            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null), "friend_date", false);
+            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-".$setting->refollow_timeout." hour")), "follow_date" => null, "friend_cancel_date" => null), "friend_date", false);
 
             // ステータスを実行中に変更
-            $account->updateFollowStatus(2);
+            $status->updateFollow(2);
 
             foreach ($follows as $follow) {
-                $connection = Vizualizer_Database_Factory::begin("twitter");
-                try {
-                    // アンフォロー処理を実行する。
-                    $account->getTwitter()->friendships_destroy(array("user_id" => $follow->user_id));
-                    $follow->friend_cancel_date = date("Y-m-d H:i:s");
-                    $follow->save();
-
-                    // フォロー履歴に追加
-                    $history = $loader->loadModel("FollowHistory");
-                    $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
-                    $history->account_id = $account->account_id;
-                    $history->history_date = $today;
-                    $history->unfollow_count ++;
-                    $history->save();
-
-                    Vizualizer_Database_Factory::commit($connection);
-
-                    echo "Unfollowed to ".$follow->user_id." in ".$account->account_id."\r\n";
-
-                    // 所定時間待機
-                    // sleep($setting->min_follow_interval);
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                }
+                $follow->unfollow();
             }
 
-            if($account->status()->follow_count < $setting->follow_unit - 1){
-                $account->updateFollowStatus(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
+            if($status->follow_count < $setting->follow_unit - 1){
+                $status->updateFollow(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
             }else{
-                $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+".$account->follow_unit_interval." minute")), true);
+                $status->updateFollow(1, date("Y-m-d H:i:s", strtotime("+".$setting->follow_unit_interval." minute")), true);
             }
         }
 

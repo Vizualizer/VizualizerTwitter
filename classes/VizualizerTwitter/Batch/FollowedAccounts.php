@@ -85,72 +85,35 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
 
                 foreach ($followers->ids as $userId) {
                     $followerIds[$userId] = $userId;
+                    if(count($followerIds) == 100){
+                        $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
+                        if(!is_array($list->errors) || empty($list->errors)){
+                            $followerIds = array();
+                            foreach($list as $item){
+                                $account->addFollowUser($item, false, true);
+                            }
+                        }else{
+                            $followerIds = array();
+                            Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
+                            break;
+                        }
+                    }
+                }
+                if(count($followerIds) > 0){
+                    $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
+                    if(!is_array($list->errors) || empty($list->errors)){
+                        $followerIds = array();
+                        foreach($list as $item){
+                            $account->addFollowUser($item, false, true);
+                        }
+                    }else{
+                        Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
+                    }
                 }
                 $cursor = $followers->next_cursor;
                 if ($cursor == 0) {
                     break;
                 }
-            }
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                if (is_array($followerIds) && !empty($followerIds)) {
-                    // フォロワーになっていないフレンドを取得
-                    $follow = $loader->loadModel("Follow");
-                    $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => array_values($followerIds)));
-                    foreach ($follows as $follow) {
-                        if (array_key_exists($follow->user_id, $followerIds)) {
-                            if (empty($follow->follow_date)) {
-                                // フォロワーなのに、フォロー日時が入っていない場合は、暫定的に現在日時を設定
-                                $follow->follow_date = date("Y-m-d H:i:s");
-                                $follow->save();
-                                // フォロー履歴に追加
-                                $history = $loader->loadModel("FollowHistory");
-                                $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
-                                $history->account_id = $account->account_id;
-                                $history->history_date = $today;
-                                $history->follower_count ++;
-                                $history->save();
-                            }elseif (empty($follow->friend_date)) {
-                                // フォロワーなのに、フレンドになっていない場合はリフォロー処理を行う。
-                                $result = $account->getTwitter()->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
-                                if ($result->following) {
-                                    $follow->friend_date = date("Y-m-d H:i:s");
-                                    $follow->save();
-                                    // フォロー履歴に追加
-                                    $history = $loader->loadModel("FollowHistory");
-                                    $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
-                                    $history->account_id = $account->account_id;
-                                    $history->history_date = $today;
-                                    $history->follow_count ++;
-                                    $history->save();
-                                }
-                            }
-                            unset($followerIds[$follow->user_id]);
-                        }
-                    }
-                }
-
-                foreach ($followerIds as $userId) {
-                    $follow = $loader->loadModel("Follow");
-                    $follow->account_id = $account->account_id;
-                    $follow->user_id = $userId;
-                    $follow->follow_date = date("Y-m-d H:i:s");
-                    $follow->save();
-                    // フォロー履歴に追加
-                    $history = $loader->loadModel("FollowHistory");
-                    $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
-                    $history->account_id = $account->account_id;
-                    $history->history_date = $today;
-                    $history->follower_count ++;
-                    $history->save();
-                }
-                // エラーが無かった場合、処理をコミットする。
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                print_r($e);
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
             }
         }
 
