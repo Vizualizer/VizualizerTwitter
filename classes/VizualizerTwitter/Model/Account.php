@@ -251,7 +251,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         // 24時間以内にアンフォローが無く、上限に達していない場合はフォロー可能
         $loader = new Vizualizer_Plugin("twitter");
         $follow = $loader->loadModel("Follow");
-        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => date("Y-m-d 00:00:00", strtotime("-6 hour"))));
+        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => date("Y-m-d 00:00:00", strtotime("-3 hour"))));
         if ($unfollowCount == 0 && $this->friend_count < $this->followLimit()) {
             return true;
         }
@@ -269,7 +269,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         // 24時間以内にアンフォローが存在するか上限に達している場合で、リフォロー期限を超えているフォローが存在している場合はアンフォロー可能
         $loader = new Vizualizer_Plugin("twitter");
         $follow = $loader->loadModel("Follow");
-        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => date("Y-m-d 00:00:00", strtotime("-6 hour"))));
+        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => date("Y-m-d 00:00:00", strtotime("-3 hour"))));
         $refollowCount = $follow->countBy(array("account_id" => $this->account_id, "follow_date" => null, "le:friend_date" => date("Y-m-d H:i:s", strtotime("-" . $this->followSetting()->refollow_timeout . " hour"))));
         if (($this->followLimit() < $this->friend_count || $unfollowCount > 0) && $refollowCount > 0) {
             return true;

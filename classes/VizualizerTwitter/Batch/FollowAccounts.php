@@ -121,7 +121,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             $result = false;
             foreach ($follows as $follow) {
-                $follow->follow();
+                $result = $follow->follow();
             }
 
             if($result){

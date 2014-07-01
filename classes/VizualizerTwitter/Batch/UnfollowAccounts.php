@@ -111,14 +111,17 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             // ステータスを実行中に変更
             $status->updateFollow(2);
 
+            $result = false;
             foreach ($follows as $follow) {
-                $follow->unfollow();
+                $result = $follow->unfollow();
             }
 
-            if($status->follow_count < $setting->follow_unit - 1){
-                $status->updateFollow(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
-            }else{
-                $status->updateFollow(1, date("Y-m-d H:i:s", strtotime("+".$setting->follow_unit_interval." minute")), true);
+            if($result){
+                if($status->follow_count < $setting->follow_unit - 1){
+                    $status->updateFollow(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
+                }else{
+                    $status->updateFollow(1, date("Y-m-d H:i:s", strtotime("+".$setting->follow_unit_interval." minute")), true);
+                }
             }
         }
 
