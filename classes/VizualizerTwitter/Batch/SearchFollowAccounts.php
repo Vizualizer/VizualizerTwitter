@@ -73,38 +73,43 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             $setting = $account->followSetting();
             $keywords = explode("\r\n", $setting->follow_keywords);
 
-            // ユーザー情報を検索
-            for ($i = 0; $i < 2; $i ++) {
-                foreach($keywords as $keyword){
-                    if($i < 1){
-                        $page = $i + 1;
-                    }else{
-                        $page = mt_rand(2, 50);
-                    }
-                    $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
-                    unset($users["httpstatus"]);
-                    Vizualizer_Logger::writeInfo("Search Users（".count($users)."） in page ".$page." in " . $account->screen_name);
-                    foreach ($users as $index => $user) {
-                        if($setting->follow_type == "1" || $setting->follow_type == "3"){
-                            $account->addFollowUser($user);
+            // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
+            $follow = $loader->loadModel("Follow");
+            $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => date("Y-m-d")));
+            if ($searched < $setting->daily_follows * 2) {
+                // ユーザー情報を検索
+                for ($i = 0; $i < 2; $i ++) {
+                    foreach($keywords as $keyword){
+                        if($i < 1){
+                            $page = $i + 1;
+                        }else{
+                            $page = mt_rand(2, 50);
                         }
-
-                        // フォロワーを追加
-                        if($setting->follow_type == "2" || $setting->follow_type == "3"){
-                            // ユーザーのフォロワーを取得
-                            $followers = (array) $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "100"));
-
-                            if (!isset($followers->ids) || !is_array($followers->ids)) {
-                                break;
+                        $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
+                        unset($users["httpstatus"]);
+                        Vizualizer_Logger::writeInfo("Search Users（".count($users)."） in page ".$page." in " . $account->screen_name);
+                        foreach ($users as $index => $user) {
+                            if($setting->follow_type == "1" || $setting->follow_type == "3"){
+                                $account->addFollowUser($user);
                             }
 
-                            $followerIds = implode(",", $followers->ids);
-                            // ユーザーのフォロワーを取得
-                            $followers = (array) $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
+                            // フォロワーを追加
+                            if($setting->follow_type == "2" || $setting->follow_type == "3"){
+                                // ユーザーのフォロワーを取得
+                                $followers = (array) $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "100"));
 
-                            foreach($followers as $follower){
-                                if(isset($follower->id) && $follower->id > 0){
-                                    $account->addFollowUser($follower);
+                                if (!isset($followers->ids) || !is_array($followers->ids)) {
+                                    break;
+                                }
+
+                                $followerIds = implode(",", $followers->ids);
+                                // ユーザーのフォロワーを取得
+                                $followers = (array) $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
+
+                                foreach($followers as $follower){
+                                    if(isset($follower->id) && $follower->id > 0){
+                                        $account->addFollowUser($follower);
+                                    }
                                 }
                             }
                         }
