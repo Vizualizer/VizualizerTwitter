@@ -23,12 +23,12 @@
  */
 
 /**
- * 共通設定のモデルです。
+ * グループのモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_GlobalSetting extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_Group extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,26 +39,25 @@ class VizualizerTwitter_Model_GlobalSetting extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("GlobalSettings"), $values);
+        parent::__construct($loader->loadTable("Groups"), $values);
     }
 
     /**
      * 主キーでデータを取得する。
      *
-     * @param $setting_id 共通設定ID
+     * @param $group_id グループID
      */
-    public function findByPrimaryKey($global_setting_id)
+    public function findByPrimaryKey($group_id)
     {
-        $this->findBy(array("global_setting_id" => $global_setting_id));
+        $this->findBy(array("group_id" => $group_id));
     }
 
     /**
-     * 管理オペレータIDとアカウントIDでデータを取得する。
-     *
-     * @param $operator_id 管理オペレータID
+     * アカウントグループを取得
      */
-    public function findByOperator($operator_id)
-    {
-        $this->findBy(array("operator_id" => $operator_id));
+    public function accountGroups(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountGroup");
+        return $model->findAllByGroupId($this->group_id);
     }
 }
