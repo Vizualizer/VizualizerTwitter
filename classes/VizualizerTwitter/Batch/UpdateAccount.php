@@ -85,7 +85,7 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                     echo "Update Account for ".$account->account_id."  : \r\n";
                     $account->save();
 
-                    $today = date("Y-m-d");
+                    $today = Vizualizer::now()->date("Y-m-d");
                     $follow = $loader->loadModel("Follow");
                     $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => $today));
                     $followed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_date" => $today));

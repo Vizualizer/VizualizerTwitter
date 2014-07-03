@@ -103,7 +103,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
             $result = $account->getTwitter()->friendships_create(array("user_id" => $this->user_id, "follow" => true));
             if (isset($result->errors)) {
                 if ($result->errors[0]->code == "161") {
-                    $account->status()->updateFollow(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
+                    $account->status()->updateFollow(3, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
                 } elseif ($result->errors[0]->code == "108" || $result->errors[0]->code == "36") {
                     // フォロー処理の際に、ユーザーが既に存在しない場合は、データ自体を削除
                     $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -130,7 +130,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                     // 既にフォロー済みの場合は、DBに日付のみを設定
                     $connection = Vizualizer_Database_Factory::begin("twitter");
                     try {
-                        $this->friend_date = date("Y-m-d H:i:s");
+                        $this->friend_date = Vizualizer::now()->date("Y-m-d H:i:s");
                         $this->save();
                         Vizualizer_Logger::writeInfo("Already followed to " . $this->user_id . " in " . $account->screen_name);
                         Vizualizer_Database_Factory::commit($connection);
@@ -148,7 +148,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
             } else {
                 $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
-                    $this->friend_date = date("Y-m-d H:i:s");
+                    $this->friend_date = Vizualizer::now()->date("Y-m-d H:i:s");
                     $this->save();
                     Vizualizer_Logger::writeInfo("Followed to " . $this->user_id . " in " . $account->screen_name);
                     // エラーが無かった場合、処理をコミットする。
@@ -177,7 +177,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
         $account = $this->account();
         if (isset($result->errors)) {
             if ($result->errors[0]->code == "161" || $result->errors[0]->code == "162") {
-                $account->status()->updateFollow(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
+                $account->status()->updateFollow(3, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
             } elseif ($result->errors[0]->code == "108" || $result->errors[0]->code == "34") {
                 try {
                     $this->delete();
@@ -192,7 +192,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
             return false;
         } else {
             try {
-                $this->friend_cancel_date = date("Y-m-d H:i:s");
+                $this->friend_cancel_date = Vizualizer::now()->date("Y-m-d H:i:s");
                 $this->save();
                 Vizualizer_Logger::writeInfo("Unfollowed to " . $this->user_id . " in " . $account->screen_name);
                 // エラーが無かった場合、処理をコミットする。

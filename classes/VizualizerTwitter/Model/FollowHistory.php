@@ -63,14 +63,14 @@ class VizualizerTwitter_Model_FollowHistory extends Vizualizer_Plugin_Model
         if($days == 0){
             return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
         }else{
-            $result = $this->findAllBy(array("account_id" => $account_id, "gt:history_date" => date("Y-m-d", strtotime("-".$days." day"))), $sort, $reverse);
+            $result = $this->findAllBy(array("account_id" => $account_id, "gt:history_date" => Vizualizer::now()->strToTime("-".$days." day")->date("Y-m-d")), $sort, $reverse);
             $data = array();
             for($i = 0; $i < $days; $i ++){
-                $data[date("Ymd", strtotime("-".$i." day"))] = (object) array("target_count" => 0, "follow_count" => 0, "followed_count" => 0, "unfollow_count" => 0);
+                $data[Vizualizer::now()->strToTime("-".$i." day")->date("Ymd")] = (object) array("target_count" => 0, "follow_count" => 0, "followed_count" => 0, "unfollow_count" => 0);
             }
             foreach($result as $item){
-                if(isset($data[date("Ymd", strtotime($item->history_date))])){
-                    $data[date("Ymd", strtotime($item->history_date))] = $item;
+                if(isset($data[Vizualizer::now()->strToTime($item->history_date)->date("Ymd")])){
+                    $data[Vizualizer::now()->strToTime($item->history_date)->date("Ymd")] = $item;
                 }
             }
             return array_values($data);
