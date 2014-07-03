@@ -74,7 +74,7 @@ class Vizualizertwitter_Module_Advertise_RakutenList extends Vizualizer_Plugin_M
 
         $result = array();
         foreach ($advertises as $advertise) {
-            if (empty($advertise->fixed_advertise_url) || strtotime($advertise->update_time) < time("-3 day")) {
+            if (empty($advertise->fixed_advertise_url) || strtotime($advertise->update_time) < Vizualizer::now()->strToTime("-3 day")->getTime()) {
                 $result[] = $advertise->advertise_id."@".$advertise->advertise_url;
             }
         }
