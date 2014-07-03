@@ -139,6 +139,9 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                         throw new Vizualizer_Exception_Database($e);
                     }
                     return true;
+                } elseif ($result->errors[0]->code == "64") {
+                    // アカウントのステータスを凍結中に変更
+                    $account->status()->updateStatus(1);
                 }
                 Vizualizer_Logger::writeError("Failed to Follow on " . $this->user_id . " in " . $account->screen_name . " by " . print_r($result->errors, true));
                 return false;
