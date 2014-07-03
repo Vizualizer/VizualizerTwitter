@@ -23,16 +23,17 @@
  */
 
 /**
- * 共通設定を保存する。
+ * グループの詳細データを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_GlobalSetting_Save extends Vizualizer_Plugin_Module_Save
+class Vizualizertwitter_Module_Group_Detail extends Vizualizer_Plugin_Module_Detail
 {
 
     function execute($params)
     {
-        $this->executeImpl("Twitter", "GlobalSetting", "global_setting_id");
+        $post = Vizualizer::request();
+        $this->executeImpl("Twitter", "Group", $post["group_id"], $params->get("result", "group"));
     }
 }
