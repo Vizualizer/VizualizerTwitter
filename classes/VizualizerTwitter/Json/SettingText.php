@@ -18,7 +18,7 @@ class VizualizerTwitter_Json_SettingText
                 if (!empty($post["target"])) {
                     if (preg_match("/^([a-zA-Z0-9_]+)_([0-9]+)$/", $post["target"], $p) > 0) {
                         $post->set("account_id", $p[2]);
-                        $setting->findByOperatorAccount($operator["operator_id"], $post["account_id"]);
+                        $setting->findBy(array("operator_id" => $operator["operator_id"], "account_id" => $post["account_id"]));
                         $attribute = $p[1];
                         if($post["type"] == "add"){
                             $attributes = explode("\r\n", $setting->$attribute);
@@ -61,7 +61,7 @@ class VizualizerTwitter_Json_SettingText
                     }
                 }
 
-                $setting->findByOperatorAccount($operator["operator_id"], $post["account_id"]);
+                $setting->findBy(array("operator_id" => $operator["operator_id"], "account_id" => $post["account_id"]));
                 $setting->attributes = $attributes;
 
                 $keywords = array();
