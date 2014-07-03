@@ -75,6 +75,26 @@ class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
         return $account;
     }
 
+
+    /**
+     * アカウントステータスを更新する
+     *
+     * @param int $status アカウントステータス
+     */
+    public function updateStatus($statusId)
+    {
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            $this->account_status = $statusId;
+            $this->save();
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+    }
+
     /**
      * フォローステータスを更新する
      *
