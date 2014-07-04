@@ -33,6 +33,6 @@ class VizualizerTwitter_Module_Group_Save extends Vizualizer_Plugin_Module_Save
 
     function execute($params)
     {
-        $this->executeImpl("Twitter", "Account", "account_id");
+        $this->executeImpl("Twitter", "Group", "group_id");
     }
 }

@@ -23,12 +23,12 @@
  */
 
 /**
- * グループのリストを取得する。
+ * グループのリストをページ分割して取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Group_List extends Vizualizer_Plugin_Module_List
+class VizualizerTwitter_Module_Group_Page extends Vizualizer_Plugin_Module_Page
 {
 
     function execute($params)
