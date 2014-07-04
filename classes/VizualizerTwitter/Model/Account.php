@@ -283,6 +283,19 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントに紐づいた設定を取得する
+     *
+     * @return 詳細設定のリスト
+     */
+    public function setting()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $setting = $loader->loadModel("Setting");
+        $setting->findBy(array("operator_id" => $this->operator_id, "account_id" => $this->account_id));
+        return $setting;
+    }
+
+    /**
      * アカウントに紐づいたフォロー設定を取得する
      *
      * @return 詳細設定のリスト
