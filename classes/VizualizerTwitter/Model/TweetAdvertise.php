@@ -75,17 +75,6 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
     }
 
     /**
-     * アカウントIDと広告種別でデータを取得する。
-     *
-     * @param $account_id アカウントID
-     * @return 設定のリスト
-     */
-    public function findAllByAccountType($account_id, $advertise_type)
-    {
-        return $this->findAllBy(array("account_id" => $account_id, "advertise_type" => $advertise_type));
-    }
-
-    /**
      * 設定に紐づいたアカウントを取得する
      *
      * @return アカウント
