@@ -103,7 +103,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetLog->account_id = $account->account_id;
             $tweetLog->tweet_time = date("Y-m-d H:i:s");
 
-            $advertise = $account->tweetAdvertises()->findByPrefer();
+            $advertise = $account->tweetAdvertises()->current()->findByPrefer();
             if ($tweetSetting->advertise_interval >= 0 && $tweetSetting->advertise_interval < $count && $advertise->advertise_id > 0) {
                 echo $account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count . ".\r\n";
                 // 広告を取得し記事を作成
@@ -116,7 +116,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                 echo $account->screen_name . " : prepare to Tweet advertise text.\r\n";
             } else {
                 // ツイートを取得し、記事を作成
-                $tweet = $account->tweets()->findByPrefer();
+                $tweet = $account->tweets()->current()->findByPrefer();
                 $tweetLog->tweet_id = $tweet->tweet_id;
                 $tweetLog->tweet_type = 1;
                 $tweetLog->tweet_text = $tweet->tweet_text;
