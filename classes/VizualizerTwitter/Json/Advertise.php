@@ -23,6 +23,7 @@ class VizualizerTwitter_Json_Advertise
             if(!empty($post["account_id"]) && !empty($post["text"])){
                 $advertise = $loader->loadModel("TweetAdvertise");
                 $advertise->account_id = $post["account_id"];
+                $advertise->advertise_type = "0";
                 $advertise->advertise_text = $post["text"];
                 $advertise->save();
                 $post->remove("text");

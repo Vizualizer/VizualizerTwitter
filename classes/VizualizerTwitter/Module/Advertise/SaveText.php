@@ -23,25 +23,22 @@
  */
 
 /**
- * アカウントの詳細データを取得する。
+ * ツイートのテキストデータを保存する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class Vizualizertwitter_Module_Setting_Detail extends Vizualizer_Plugin_Module_Detail
+class VizualizerTwitter_Module_Advertise_SaveText extends Vizualizer_Plugin_Module_Save
 {
 
     function execute($params)
     {
         $post = Vizualizer::request();
-        $attr = Vizualizer::attr();
-        if($attr[VizualizerAdmin::KEY]->operator_id > 0){
-            // サイトデータを取得する。
-            $loader = new Vizualizer_Plugin("Twitter");
-            $model = $loader->loadModel("Setting");
-            $model->findByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
-            $post->set("setting_id", $model->setting_id);
+        if(preg_match("/^([0-9a-zA-Z_]+)_([0-9]+)$/", $post["id"], $p) > 0){
+            $post->set("save", "1");
+            $post->set($p[1], $post["value"]);
+            $post->set("advertise_id", $p[2]);
         }
-        $this->executeImpl("Twitter", "Setting", $post["setting_id"], $params->get("result", "setting"));
+        $this->executeImpl("Twitter", "TweetAdvertise", "advertise_id");
     }
 }

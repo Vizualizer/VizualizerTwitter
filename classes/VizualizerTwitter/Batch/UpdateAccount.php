@@ -85,6 +85,24 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                     echo "Update Account for ".$account->account_id."  : \r\n";
                     $account->save();
 
+                    $today = Vizualizer::now()->date("Y-m-d");
+                    $follow = $loader->loadModel("Follow");
+                    $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => $today));
+                    $followed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_date" => $today));
+                    $refollowed = $follow->countBy(array("account_id" => $account->account_id, "back:follow_date" => $today));
+                    $unfollowed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_cancel_date" => $today));
+                    $followHistory = $loader->loadModel("FollowHistory");
+                    $followHistory->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+                    if(!($followHistory->follow_history_id > 0)){
+                        $followHistory->account_id = $account->account_id;
+                        $followHistory->history_date = $today;
+                    }
+                    $followHistory->target_count = $searched;
+                    $followHistory->follow_count = $followed;
+                    $followHistory->followed_count = $refollowed;
+                    $followHistory->unfollow_count = $unfollowed;
+                    $followHistory->save();
+
                     // エラーが無かった場合、処理をコミットする。
                     Vizualizer_Database_Factory::commit($connection);
                 } catch (Exception $e) {

@@ -23,12 +23,12 @@
  */
 
 /**
- * アカウントステータスのモデルです。
+ * アカウントオペレータのモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,17 +39,17 @@ class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("AccountStatuses"), $values);
+        parent::__construct($loader->loadTable("AccountOperators"), $values);
     }
 
     /**
      * 主キーでデータを取得する。
      *
-     * @param $account_status_id アカウントステータスID
+     * @param $account_operator_id アカウントオペレータID
      */
-    public function findByPrimaryKey($account_status_id)
+    public function findByPrimaryKey($account_operator_id)
     {
-        $this->findBy(array("account_status_id" => $account_status_id));
+        $this->findBy(array("account_operator_id" => $account_operator_id));
     }
 
     /**

@@ -23,25 +23,41 @@
  */
 
 /**
- * アカウントの詳細データを取得する。
+ * グループのモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class Vizualizertwitter_Module_Setting_Detail extends Vizualizer_Plugin_Module_Detail
+class VizualizerTwitter_Model_Group extends Vizualizer_Plugin_Model
 {
 
-    function execute($params)
+    /**
+     * コンストラクタ
+     *
+     * @param $values モデルに初期設定する値
+     */
+    public function __construct($values = array())
     {
-        $post = Vizualizer::request();
-        $attr = Vizualizer::attr();
-        if($attr[VizualizerAdmin::KEY]->operator_id > 0){
-            // サイトデータを取得する。
-            $loader = new Vizualizer_Plugin("Twitter");
-            $model = $loader->loadModel("Setting");
-            $model->findByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
-            $post->set("setting_id", $model->setting_id);
-        }
-        $this->executeImpl("Twitter", "Setting", $post["setting_id"], $params->get("result", "setting"));
+        $loader = new Vizualizer_Plugin("twitter");
+        parent::__construct($loader->loadTable("Groups"), $values);
+    }
+
+    /**
+     * 主キーでデータを取得する。
+     *
+     * @param $group_id グループID
+     */
+    public function findByPrimaryKey($group_id)
+    {
+        $this->findBy(array("group_id" => $group_id));
+    }
+
+    /**
+     * アカウントグループを取得
+     */
+    public function accountGroups(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountGroup");
+        return $model->findAllByGroupId($this->group_id);
     }
 }

@@ -59,7 +59,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
         $model = $loader->loadModel("AccountStatus");
 
         // 本体の処理を実行
-        $statuses = $model->findAllBy(array("le:next_tweet_time" => date("Y-m-d H:i:s")), "next_tweet_time", false);
+        $statuses = $model->findAllBy(array("le:next_tweet_time" => Vizualizer::now()->date("Y-m-d H:i:s")), "next_tweet_time", false);
 
         foreach ($statuses as $status) {
             $loader = new Vizualizer_Plugin("Twitter");
@@ -67,7 +67,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetSetting = $account->tweetSetting();
 
             // 日中のみフラグの場合は夜間スキップ
-            if ($tweetSetting->daytime_flg == "1" && date("H") > 0 && date("H") < 7) {
+            if ($tweetSetting->daytime_flg == "1" && Vizualizer::now()->date("H") > 0 && Vizualizer::now()->date("H") < 7) {
                 echo $account->screen_name . " : Skip tweet for daytime\r\n";
                 continue;
             }
@@ -79,7 +79,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                 continue;
             }
 
-            $today = date("Y-m-d");
+            $today = Vizualizer::now()->date("Y-m-d");
 
             // ログを取得する。
             $tweetLogs = $account->tweetLogs();
@@ -101,7 +101,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             // トランザクションの開始
             $tweetLog = $loader->loadModel("TweetLog");
             $tweetLog->account_id = $account->account_id;
-            $tweetLog->tweet_time = date("Y-m-d H:i:s");
+            $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
 
             $advertise = $account->tweetAdvertises()->current()->findByPrefer();
             if ($tweetSetting->advertise_interval >= 0 && $tweetSetting->advertise_interval < $count && $advertise->advertise_id > 0) {
@@ -147,7 +147,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                         }
 
                         echo $account->screen_name . " : Use interval : " . $interval . "\r\n";
-                        $status->next_tweet_time = date("Y-m-d H:i:s", strtotime("+" . $interval . " minute"));
+                        $status->next_tweet_time = Vizualizer::now()->strToTime("+" . $interval . " minute")->date("Y-m-d H:i:s");
                         echo $account->screen_name . " : Next tweet at : " . $status->next_tweet_time . "\r\n";
                         $status->save();
                     } else {

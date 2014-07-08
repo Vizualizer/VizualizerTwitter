@@ -23,6 +23,7 @@ class VizualizerTwitter_Json_AccountStatus
                     case "original_status":
                     case "advertise_status":
                     case "rakuten_status":
+                    case "retweet_status":
                         $attrName = $p[1];
                         if(!isset($post["value"]) || !is_numeric($post["value"])){
                             if ($status->$attrName == "0") {

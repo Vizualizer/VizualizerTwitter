@@ -23,25 +23,16 @@
  */
 
 /**
- * アカウントの詳細データを取得する。
+ * グループのリストをページ分割して取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class Vizualizertwitter_Module_Setting_Detail extends Vizualizer_Plugin_Module_Detail
+class VizualizerTwitter_Module_Group_Page extends Vizualizer_Plugin_Module_Page
 {
 
     function execute($params)
     {
-        $post = Vizualizer::request();
-        $attr = Vizualizer::attr();
-        if($attr[VizualizerAdmin::KEY]->operator_id > 0){
-            // サイトデータを取得する。
-            $loader = new Vizualizer_Plugin("Twitter");
-            $model = $loader->loadModel("Setting");
-            $model->findByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
-            $post->set("setting_id", $model->setting_id);
-        }
-        $this->executeImpl("Twitter", "Setting", $post["setting_id"], $params->get("result", "setting"));
+        $this->executeImpl($params, "Twitter", "Group", $params->get("result", "groups"));
     }
 }

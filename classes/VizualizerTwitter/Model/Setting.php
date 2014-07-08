@@ -61,6 +61,50 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
     public function findByOperatorAccount($operator_id, $account_id = 0)
     {
         $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
+        if (!($this->setting_id > 0)) {
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $this->operator_id = $operator_id;
+                $this->account_id = $account_id;
+                $this->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+            }
+        }
+        $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
+        if($account_id > 0){
+            // アカウントIDが渡されている場合には、基本の設定を呼び出す。
+            $loader = new Vizualizer_Plugin("twitter");
+            $setting = $loader->loadModel("Setting");
+            $setting->findByOperatorAccount($operator_id, "0");
+            if ($this->use_follow_setting != "1") {
+                // 個別の設定を利用しないとしている場合には、setting_id, operator_id, account_id, account_attribute以外を基本設定の数値で上書きする
+                $keys = array_keys($setting->toArray());
+                foreach($keys as $key){
+                    if($key != "setting_id" && $key != "operator_id" && $key != "account_id" && $key != "account_attribute"){
+                        $this->$key = $setting->$key;
+                    }
+                }
+            }
+
+            // アカウントIDが渡されている場合には、フォロワーの数に応じて利用する設定値を共通設定から取得する。
+            $this->follow_ratio = $setting->follow_ratio_1;
+            $this->daily_follows = $setting->daily_follows_1;
+            $this->daily_unfollows = $setting->daily_unfollows_1;
+            $account = $this->account();
+            for ($i = 2; $i < 10; $i ++) {
+                $key = "follower_limit_" . $i;
+                if ($setting->$key > 0 && $setting->$key <= $account->follower_count) {
+                    $key = "follow_ratio_" . $i;
+                    $this->follow_ratio = $setting->$key;
+                    $key = "daily_follows_" . $i;
+                    $this->daily_follows = $setting->$key;
+                    $key = "daily_unfollows_" . $i;
+                    $this->daily_unfollows = $setting->$key;
+                }
+            }
+        }
     }
 
     /**

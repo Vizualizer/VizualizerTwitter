@@ -45,11 +45,11 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
     /**
      * 主キーでデータを取得する。
      *
-     * @param $tweet_advertise_id ツイート広告ID
+     * @param $advertise_id ツイート広告ID
      */
-    public function findByPrimaryKey($tweet_advertise_id)
+    public function findByPrimaryKey($advertise_id)
     {
-        $this->findBy(array("advertise_id" => $tweet_advertise_id));
+        $this->findBy(array("advertise_id" => $advertise_id));
     }
 
     /**
@@ -85,5 +85,107 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
         $account = $loader->loadModel("Account");
         $account->findByPrimaryKey($this->account_id);
         return $account;
+    }
+
+    /**
+     * 直近でツイートした履歴を取得する。
+     * @param number $count
+     * @return ツイート履歴
+     */
+    protected function getTweetedHistory($count = 10){
+        // 過去X件のツイートを取得する。
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLog->limit($count);
+        $tweetLogs = $tweetLog->findAllBy(array("account_id" => $this->account_id), "create_time", true);
+        $ignoreTweets = array();
+        foreach ($tweetLogs as $tweetLog) {
+            $ignoreTweets[] = $tweetLog->tweet_text;
+        }
+        return $ignoreTweets;
+    }
+
+    /**
+     * ツイート済みのフラグをリセットする。
+     * @throws Vizualizer_Exception_Database
+     */
+    protected function resetTweeted(){
+        $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "1"));
+        // トランザクションの開始
+        $connection = Vizualizer_Database_Factory::begin("twitter");
+        try {
+            foreach ($tweets as $tweet) {
+                $tweet->tweeted_flg = 0;
+                $tweet->save();
+            }
+            Vizualizer_Database_Factory::commit($connection);
+        } catch (Exception $e) {
+            Vizualizer_Database_Factory::rollback($connection);
+            throw new Vizualizer_Exception_Database($e);
+        }
+    }
+
+    /**
+     * 優先度の高いツイートを取得する。
+     * @param array $ignoreTweets ツイート履歴
+     * @throws Vizualizer_Exception_Database
+     * @return 優先度の高いツイート
+     */
+    protected function getPreferTweet($ignoreTweets){
+        // ツイートを取得
+        $account = $this->account();
+        $status = $account->status();
+
+        $tweetOrder = (($account->tweetSetting()->advertise_order == "1") ? "create_time" : "RAND()");
+        if ($status->advertise_status > 0 && $status->rakuten_status > 0) {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        } elseif ($status->advertise_status > 0) {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "0", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        } elseif ($status->rakuten_status > 0) {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        } else {
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "-1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+        }
+        // ツイートが1件以上ある場合は該当のツイートを取得する。
+        if ($tweets->count() > 0) {
+            $tweet = $tweets->current();
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $tweet->tweeted_flg = 1;
+                $tweet->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+            return $tweet;
+        }
+        return false;
+    }
+
+    /**
+     * アカウントに紐づいたツイートのうち、優先度の高いものを取得する。
+     *
+     * @return ツイートのリスト
+     */
+    public function findByPrefer()
+    {
+        // ツイート履歴を取得
+        $tweeted = $this->getTweetedHistory();
+
+        // 優先ツイートを取得
+        $tweet = $this->getPreferTweet($tweeted);
+
+        if($tweet === false){
+            // 優先ツイートが取得できなかった場合は、一度ツイート済みフラグをリセットして再取得する。
+            $this->resetTweeted();
+            $tweet = $this->getPreferTweet($tweeted);
+            if($tweet === false){
+                $loader = new Vizualizer_Plugin("twitter");
+                return $loader->loadModel("TweetAdvertise");
+            }
+        }
+        return $tweet;
     }
 }

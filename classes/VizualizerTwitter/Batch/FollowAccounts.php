@@ -57,27 +57,33 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
         $model = $loader->loadModel("AccountStatus");
 
         // 本体の処理を実行
-        $statuses = $model->findAllBy(array("le:next_follow_time" => date("Y-m-d H:i:s")), "next_follow_time", false);
+        $statuses = $model->findAllBy(array("le:next_follow_time" => Vizualizer::now()->date("Y-m-d H:i:s")), "next_follow_time", false);
 
         foreach ($statuses as $status) {
             $account = $status->account();
 
+            // アカウントデータが存在しない場合はスキップ
+            if(!($account->account_id > 0)){
+                continue;
+            }
+
             // フォロー可能状態で無い場合はスキップ
             if(!$account->isFollowable()){
-                echo "Skip for not followable.\r\n";
+                Vizualizer_Logger::writeInfo("Skip for not followable in ".$account->screen_name);
                 continue;
             }
 
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($account->status()->follow_status == "3") {
-                $account->updateFollowStatus(1);
+            if ($status->follow_status == "3") {
+                Vizualizer_Logger::writeInfo("Account reactivated by end status in ".$account->screen_name);
+                $status->updateFollow(1);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($account->status()->follow_status != "1" && $account->status()->follow_status != "2") {
-                echo "Account is not ready.\r\n";
+            if ($status->follow_status != "1" && $status->follow_status != "2") {
+                Vizualizer_Logger::writeInfo("Account is not ready in ".$account->screen_name);
                 continue;
             }
 
@@ -86,13 +92,16 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             // 本日のフォロー状況を取得
             $history = $loader->loadModel("FollowHistory");
-            $today = date("Y-m-d");
+            $today = Vizualizer::now()->date("Y-m-d");
             $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
 
             // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
-            if ($setting->daily_follows <= $history->follow_count) {
-                $account->updateFollowStatus(3, date("Y-m-d 00:00:00", strtotime("+1 day")), true);
-                echo "Over daily follows for ".$history->follow_count." to ".$setting->daily_follows." in ".$account->account_id."\r\n";
+            $follow = $loader->loadModel("Follow");
+            $followed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_date" => $today));
+            if ($setting->daily_follows <= $followed) {
+                $status->updateFollow(3, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
+                Vizualizer_Logger::writeInfo("Over daily follows for ".$followed." to ".$setting->daily_follows." in ".$account->screen_name);
+                continue;
             }
 
             // リストを取得する。
@@ -102,41 +111,25 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             // 結果が0件の場合はリスト無しにしてスキップ
             if ($follows->count() == 0) {
-                $account->updateFollowStatus(4);
-                echo "No List in ".$account->account_id."\r\n";
+                $status->updateFollow(4);
+                Vizualizer_Logger::writeInfo("No List in ".$account->screen_name);
+                continue;
             }
 
             // ステータスを実行中に変更
-            $account->updateFollowStatus(2);
+            $status->updateFollow(2);
 
+            $result = false;
             foreach ($follows as $follow) {
-                $connection = Vizualizer_Database_Factory::begin("twitter");
-                try {
-                    // フォロー処理を実行する。
-                    $account->getTwitter()->friendships_create(array("user_id" => $follow->user_id, "follow" => true));
-                    $follow->friend_date = date("Y-m-d H:i:s");
-                    $follow->save();
-
-                    // フォロー履歴に追加
-                    $history = $loader->loadModel("FollowHistory");
-                    $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
-                    $history->account_id = $account->account_id;
-                    $history->history_date = $today;
-                    $history->follow_count ++;
-                    $history->save();
-
-                    Vizualizer_Database_Factory::commit($connection);
-
-                    echo "Followed to ".$follow->user_id." in ".$account->account_id."\r\n";
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                }
+                $result = $follow->follow();
             }
 
-            if($account->status()->follow_count < $setting->follow_unit - 1){
-                $account->updateFollowStatus(2, date("Y-m-d H:i:s", strtotime("+".$setting->follow_interval." second")));
-            }else{
-                $account->updateFollowStatus(1, date("Y-m-d H:i:s", strtotime("+".$account->follow_unit_interval." minute")), true);
+            if($result){
+                if ($status->follow_count < $setting->follow_unit - 1) {
+                    $status->updateFollow(2, Vizualizer::now()->strToTime("+".$setting->follow_interval." second")->date("Y-m-d H:i:s"));
+                } else {
+                    $status->updateFollow(1, Vizualizer::now()->strToTime("+".$setting->follow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
+                }
             }
         }
 
