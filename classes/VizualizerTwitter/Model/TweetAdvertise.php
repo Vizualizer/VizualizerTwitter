@@ -138,13 +138,13 @@ class VizualizerTwitter_Model_TweetAdvertise extends Vizualizer_Plugin_Model
 
         $tweetOrder = (($account->tweetSetting()->advertise_order == "1") ? "create_time" : "RAND()");
         if ($status->advertise_status > 0 && $status->rakuten_status > 0) {
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
         } elseif ($status->advertise_status > 0) {
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "0", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "0", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
         } elseif ($status->rakuten_status > 0) {
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
         } else {
-            $tweets = $tweet->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "-1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "advertise_type" => "-1", "tweeted_flg" => "0", "nin:advertise_text" => $ignoreTweets), $tweetOrder);
         }
         // ツイートが1件以上ある場合は該当のツイートを取得する。
         if ($tweets->count() > 0) {
