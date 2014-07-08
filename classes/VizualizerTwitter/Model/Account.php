@@ -301,7 +301,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function accountGroups(){
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountGroup");
-        return $model->findAllByGroupId($this->account_id);
+        return $model->findAllByAccountId($this->account_id);
+    }
+
+    /**
+     * アカウントオペレータを取得
+     */
+    public function accountOperators(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountOperator");
+        return $model->findAllByAccountId($this->account_id);
     }
 
     /**
