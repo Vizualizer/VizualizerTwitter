@@ -112,6 +112,16 @@ class VizualizerTwitter_Json_Account
         $account->followSetting = $account->followSetting()->toArray();
         $account->status = $account->status()->toArray();
         $account->isUnfollowable = $account->isUnfollowable();
+        $accountGroups = $account->accountGroups();
+        $account->groups = array();
+        foreach($accountGroups as $accountGroup){
+            $account->groups[] = $accountGroup->toArray();
+        }
+        $accountGroups = $account->accountGroups();
+        $account->groups = array();
+        foreach($accountGroups as $accountGroup){
+            $account->groups[] = $accountGroup->toArray();
+        }
 
         return $account->toArray();
     }
