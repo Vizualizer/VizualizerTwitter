@@ -171,10 +171,11 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
 
-        // アンフォロー処理を実行する。
-        $result = $this->getTwitter()->friendships_destroy(array("user_id" => $this->user_id));
-
         $account = $this->account();
+
+        // アンフォロー処理を実行する。
+        $result = $account->getTwitter()->friendships_destroy(array("user_id" => $this->user_id));
+
         if (isset($result->errors)) {
             if ($result->errors[0]->code == "161" || $result->errors[0]->code == "162") {
                 $account->status()->updateFollow(3, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
