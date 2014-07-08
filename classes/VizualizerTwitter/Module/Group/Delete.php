@@ -23,17 +23,16 @@
  */
 
 /**
- * アカウントの詳細データを取得する。
+ * グループのデータを削除する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class Vizualizertwitter_Module_GlobalSetting_Detail extends Vizualizer_Plugin_Module_Detail
+class VizualizerTwitter_Module_Group_Delete extends Vizualizer_Plugin_Module_Delete
 {
 
     function execute($params)
     {
-        $post = Vizualizer::request();
-        $this->executeImpl("Twitter", "GlobalSetting", $post["global_setting_id"], $params->get("result", "globalSetting"));
+        $this->executeImpl("Twitter", "Group", "group_id");
     }
 }

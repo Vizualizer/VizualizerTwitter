@@ -283,6 +283,15 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントグループを取得
+     */
+    public function accountGroups(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountGroup");
+        return $model->findAllByGroupId($this->account_id);
+    }
+
+    /**
      * アカウントに紐づいたフォロー設定を取得する
      *
      * @return 詳細設定のリスト

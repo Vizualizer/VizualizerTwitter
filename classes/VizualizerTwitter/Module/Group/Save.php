@@ -23,42 +23,16 @@
  */
 
 /**
- * 共通設定のモデルです。
+ * グループのデータを保存する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_GlobalSetting extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Module_Group_Save extends Vizualizer_Plugin_Module_Save
 {
 
-    /**
-     * コンストラクタ
-     *
-     * @param $values モデルに初期設定する値
-     */
-    public function __construct($values = array())
+    function execute($params)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("GlobalSettings"), $values);
-    }
-
-    /**
-     * 主キーでデータを取得する。
-     *
-     * @param $setting_id 共通設定ID
-     */
-    public function findByPrimaryKey($global_setting_id)
-    {
-        $this->findBy(array("global_setting_id" => $global_setting_id));
-    }
-
-    /**
-     * 管理オペレータIDとアカウントIDでデータを取得する。
-     *
-     * @param $operator_id 管理オペレータID
-     */
-    public function findByOperator($operator_id)
-    {
-        $this->findBy(array("operator_id" => $operator_id));
+        $this->executeImpl("Twitter", "Group", "group_id");
     }
 }
