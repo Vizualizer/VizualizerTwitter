@@ -53,6 +53,22 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントIDとグループIDでデータを取得する。
+     * @param int $account_id
+     */
+    public function findByAccountGroup($account_id, $group_id){
+        $this->findBy(array("account_id" => $account_id, "group_id" => $group_id));
+    }
+
+    /**
+     * アカウントIDとグループIDでデータを取得する。
+     * @param int $account_id
+     */
+    public function findByAccountIndex($account_id, $group_index){
+        $this->findBy(array("account_id" => $account_id, "group_index" => $group_index));
+    }
+
+    /**
      * アカウントIDでデータを取得する。
      * @param int $account_id
      */
@@ -94,7 +110,7 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * @param int $group_id
      * @throws Vizualizer_Exception_Database
      */
-    public function addAccountGroup($account_id, $group_id){
+    public function addAccountGroup($account_id, $group_id, $index = 0){
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
@@ -104,6 +120,7 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
             try {
                 $model->account_id = $account_id;
                 $model->group_id = $group_id;
+                $model->group_index = $index;
                 $model->save();
                 Vizualizer_Database_Factory::commit($connection);
             } catch (Exception $e) {
@@ -142,11 +159,18 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * @param int $group_id
      * @param int $new_group_id
      */
-    public function changeAccountGroups($account_id, $group_id, $new_group_id){
+    public function changeAccountGroup($account_id, $group_id, $new_group_id){
+        // 設定する組み合わせが存在する場合には処理を行わない
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountGroup");
+        $model->findByAccountGroup($account_id, $new_group_id);
+        if($model->accoung_group_id > 0){
+            return false;
+        }
+
         if($group_id > 0 && $new_group_id > 0){
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
-            $loader = new Vizualizer_Plugin("twitter");
             $model = $loader->loadModel("AccountGroup");
             $model->findBy(array("account_id" => $account_id, "group_id" => $group_id));
             if($model->account_group_id > 0){
@@ -163,6 +187,44 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
             $this->removeAccountGroup($account_id, $group_id);
         }elseif($new_group_id > 0){
             $this->addAccountGroup($account_id, $new_group_id);
+        }
+    }
+
+    /**
+     * グループを置き換える
+     * @param int $account_id
+     * @param int $group_index
+     * @param int $new_group_id
+     */
+    public function updateAccountGroup($account_id, $group_index, $new_group_id){
+        // 設定する組み合わせが存在する場合には処理を行わない
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountGroup");
+        $model->findByAccountGroup($account_id, $new_group_id);
+        if($model->accoung_group_id > 0){
+            return false;
+        }
+
+        // Group Indexが指定された場合のみ処理を実行
+        if($group_index > 0){
+            $model = $loader->loadModel("AccountGroup");
+            $model->findBy(array("account_id" => $account_id, "group_index" => $group_index));
+
+            if($model->account_group_id > 0 && $new_group_id > 0){
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $model->group_id = $new_group_id;
+                    $model->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+            }elseif($new_group_id > 0){
+                $this->addAccountGroup($account_id, $new_group_id, $group_index);
+            }elseif($model->account_group_id > 0){
+                $this->removeAccountGroup($account_id, $model->group_id);
+            }
         }
     }
 }

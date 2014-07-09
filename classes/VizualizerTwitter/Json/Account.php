@@ -2,6 +2,55 @@
 
 class VizualizerTwitter_Json_Account
 {
+    protected function getAccountInfo($accountId){
+        $loader = new Vizualizer_Plugin("twitter");
+        $account = $loader->loadModel("Account");
+        $account->findByPrimaryKey($accountId);
+        $account->friend_limit = $account->followLimit() - $account->friend_count;
+        $account->setting = $account->setting()->toArray();
+        $account->followSetting = $account->followSetting()->toArray();
+        $account->status = $account->status()->toArray();
+        $account->isUnfollowable = $account->isUnfollowable();
+        $accounts = $account->findAllBy(array());
+        $attributes = array();
+        foreach($accounts as $acc){
+            if(!empty($acc->attribute)){
+                $attributes[$acc->attribute] = $acc->attribute;
+            }
+        }
+        $account->attributes = $attributes;
+        $accountGroups = $account->accountGroups();
+        $groups = array();
+        foreach($accountGroups as $accountGroup){
+            if($accountGroup->group_index > 0){
+                for($i = 1; $i <= $accountGroup->group_index; $i ++){
+                    if(!isset($groups[$i])){
+                        $groups[$i] = 0;
+                    }
+                }
+                $groups[$accountGroup->group_index] = $accountGroup->group_id;
+            }else{
+                $groups[] = $accountGroup->group_id;
+            }
+        }
+        $account->groups = $groups;
+        $accountOperators = $account->accountOperators();
+        $operators = array();
+        foreach($accountOperators as $accountOperator){
+            if($accountOperator->operator_index > 0){
+                for($i = 1; $i <= $accountOperator->operator_index; $i ++){
+                    if(!isset($operators[$i])){
+                        $operators[$i] = 0;
+                    }
+                }
+                $operators[$accountOperator->operator_index] = $accountOperator->operator_id;
+            }else{
+                $operators[] = $accountOperator->operator_id;
+            }
+        }
+        $account->operators = $operators;
+        return $account;
+    }
 
     public function execute()
     {
@@ -106,23 +155,7 @@ class VizualizerTwitter_Json_Account
             $post->remove("target");
         }
 
-        $account->findByPrimaryKey($post["account_id"]);
-        $account->friend_limit = $account->followLimit() - $account->friend_count;
-        $account->setting = $account->setting()->toArray();
-        $account->followSetting = $account->followSetting()->toArray();
-        $account->status = $account->status()->toArray();
-        $account->isUnfollowable = $account->isUnfollowable();
-        $accountGroups = $account->accountGroups();
-        $account->groups = array();
-        foreach($accountGroups as $accountGroup){
-            $account->groups[] = $accountGroup->toArray();
-        }
-        $accountGroups = $account->accountGroups();
-        $account->groups = array();
-        foreach($accountGroups as $accountGroup){
-            $account->groups[] = $accountGroup->toArray();
-        }
-
+        $account = $this->getAccountInfo($post["account_id"]);
         return $account->toArray();
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-class VizualizerTwitter_Json_AccountSetting
+class VizualizerTwitter_Json_AccountSetting extends VizualizerTwitter_Json_Account
 {
 
     public function execute()
@@ -42,15 +42,7 @@ class VizualizerTwitter_Json_AccountSetting
             $post->remove("target");
         }
 
-        $account->findByPrimaryKey($post["account_id"]);
-        $account->follow_keywords = $account->followKeywords();
-        $account->ignore_keywords = $account->ignoreKeywords();
-        $followSettings = array();
-        foreach ($account->followSettings() as $setting) {
-            $followSettings[] = $setting->toArray();
-        }
-        $account->follow_settings = $followSettings;
-
+        $account = $this->getAccountInfo($post["account_id"]);
         return $account->toArray();
     }
 }
