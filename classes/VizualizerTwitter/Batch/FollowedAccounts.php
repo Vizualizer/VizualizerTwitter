@@ -90,7 +90,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                         if(!is_array($list->errors) || empty($list->errors)){
                             $followerIds = array();
                             foreach($list as $item){
-                                $account->addFollowUser($item, false, true);
+                                $account->addFollower($item);
                             }
                         }else{
                             $followerIds = array();
@@ -104,7 +104,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                     if(!is_array($list->errors) || empty($list->errors)){
                         $followerIds = array();
                         foreach($list as $item){
-                            $account->addFollowUser($item, false, true);
+                            $account->addFollower($item);
                         }
                     }else{
                         Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);

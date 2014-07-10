@@ -70,6 +70,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
 
         foreach ($accounts as $account) {
             $cursor = 0;
+            $allFriends = array();
             $friendIds = array();
             while (true) {
                 if ($cursor > 0) {
@@ -89,7 +90,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                         if(!is_array($list->errors) || empty($list->errors)){
                             $friendIds = array();
                             foreach($list as $item){
-                                $account->addFollowUser($item, true, false);
+                                $account->addFriend($item);
                             }
                         }else{
                             $friendIds = array();
@@ -103,7 +104,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     if(!is_array($list->errors) || empty($list->errors)){
                         $friendIds = array();
                         foreach($list as $item){
-                            $account->addFollowUser($item, true, false);
+                            $account->addFriend($item);
                         }
                     }else{
                         Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
