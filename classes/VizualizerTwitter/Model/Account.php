@@ -160,6 +160,126 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * 追加可能かどうかのチェックを行う。
+     */
+    protected function checkAddUser($user){
+        // ユーザーの形式で無い場合はスキップ
+        if(is_numeric($user) || !isset($user->id)){
+            return false;
+        }
+
+        // ユーザーのIDが取得できない場合はスキップ
+        if(!($user->id > 0)){
+            echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
+            return false;
+        }
+
+        // 日本語チェックに引っかかる場合はスキップ
+        $setting = $this->followSetting();
+        if ($setting->japanese_flg == "1" && $user->lang != "ja") {
+            Vizualizer_Logger::writeInfo("Skipped invalid not Japanese : ".$user->screen_name);
+            return false;
+        }
+
+        // デフォルト画像チェックに引っかかる場合はスキップ
+        if ($setting->unique_icon_flg == "1" && $user->default_profile_image) {
+            Vizualizer_Logger::writeInfo("Skipped invalid Default icon : ".$user->screen_name);
+            return false;
+        }
+
+        // ボットチェックに引っかかる場合はスキップ
+        if ($setting->non_bot_flg == "1" && preg_match("/BOT|ボット|ﾎﾞｯﾄ/ui", $user->description) > 0) {
+            Vizualizer_Logger::writeInfo("Skipped invalid Bot : ".$user->screen_name);
+            return false;
+        }
+
+        // 拒絶キーワードを含む場合はスキップ
+        if (!empty($setting->ignore_keywords) && preg_match("/" . implode("|", explode("\r\n", $setting->ignore_keywords)) . "/u", $user->description) > 0) {
+            Vizualizer_Logger::writeInfo("Skipped invalid Profile : ".$user->screen_name);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * フォローを追加する。
+     */
+    public function addFriend($user){
+        // 追加可能かチェック
+        if($this->checkAddUser($user)){
+
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+
+            try {
+                // フォロー対象に追加
+                $loader = new Vizualizer_Plugin("Twitter");
+
+                // アカウントフレンドのデータを更新
+                $follow = $loader->loadModel("AccountFriend");
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+                $follow->account_id = $this->account_id;
+                $follow->user_id = $user->id;
+                $follow->checked_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                $follow->save();
+
+                // フォローのデータを追加
+                $follow = $loader->loadModel("Follow");
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+                if(!($follow->follow_id > 0)){
+                    $follow->account_id = $this->account_id;
+                    $follow->user_id = $user->id;
+                    $follow->save();
+                }
+
+                // エラーが無かった場合、処理をコミットする。
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+        }
+    }
+
+    /**
+     * フォロワーを追加する。
+     */
+    public function addFollower($user){
+        // 追加可能かチェック
+        if($this->checkAddUser($user)){
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+
+            try {
+                $loader = new Vizualizer_Plugin("Twitter");
+
+                // アカウントフォローワーを更新
+                $follow = $loader->loadModel("AccountFollower");
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+                $follow->account_id = $this->account_id;
+                $follow->user_id = $user->id;
+                $follow->checked_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                $follow->save();
+
+                // フォローのデータを追加
+                $follow = $loader->loadModel("Follow");
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+                if(!($follow->follow_id > 0)){
+                    $follow->account_id = $this->account_id;
+                    $follow->user_id = $user->id;
+                    $follow->save();
+                }
+
+                // エラーが無かった場合、処理をコミットする。
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+        }
+    }
+
+    /**
      * フォローデータを登録する。
      */
     public function addFollowUser($user, $asFriend = false, $asFollower = false) {
@@ -202,7 +322,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         // フォロー対象に追加済みの場合はスキップ
         $loader = new Vizualizer_Plugin("Twitter");
         $follow = $loader->loadModel("Follow");
-        $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->screen_name));
+        $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
 
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
