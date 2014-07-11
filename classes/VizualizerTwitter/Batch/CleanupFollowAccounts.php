@@ -70,7 +70,7 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
         try {
             $loader = new Vizualizer_Plugin("Twitter");
             $update = new Vizualizer_Query_Update($follows);
-            $update->joinLeft($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-48 hour")->date("Y-m-d H:i:s")));
+            $update->joinLeft($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
             $update->addSets($follows->friend_date." = ".$friends->checked_time);
             $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
             $update->addWhere($follows->friend_date." IS NULL");
@@ -104,7 +104,7 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
         try {
             $loader = new Vizualizer_Plugin("Twitter");
             $update = new Vizualizer_Query_Update($follows);
-            $update->joinLeft($followers, array($follows->account_id." = ".$followers->account_id, $follows->user_id." = ".$followers->user_id, $followers->checked_time." > ?"), array(Vizualizer::now()->strToTime("-48 hour")->date("Y-m-d H:i:s")));
+            $update->joinLeft($followers, array($follows->account_id." = ".$followers->account_id, $follows->user_id." = ".$followers->user_id, $followers->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
             $update->addSets($follows->follow_date." = ".$followers->checked_time);
             $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
             $update->addWhere($follows->follow_date." IS NULL OR ".$followers->checked_time." IS NULL");
@@ -138,8 +138,8 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
         try {
             $loader = new Vizualizer_Plugin("Twitter");
             $update = new Vizualizer_Query_Update($follows);
-            $update->joinLeft($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-48 hour")->date("Y-m-d H:i:s")));
-            $update->addSets($follows->friend_cancel_date." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
+            $update->joinLeft($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
+            $update->addSets($follows->friend_cancel_date." = ?", array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
             $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
             $update->addWhere($follows->friend_date." IS NOT NULL");
             $update->addWhere($follows->friend_cancel_date." IS NULL");
