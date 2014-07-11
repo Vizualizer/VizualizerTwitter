@@ -99,4 +99,11 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
         $group->findByPrimaryKey($this->tweet_id);
         return $group;
     }
+
+    public function getUrl(){
+        if(preg_match("/https?:\\/\\/[\\w\\/:%#$&?()~.=+-]+/", $this->tweet_text, $params) > 0){
+            return $params[0];
+        }
+        return "";
+    }
 }
