@@ -96,15 +96,20 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                             // フォロワーを追加
                             if($setting->follow_type == "2" || $setting->follow_type == "3"){
                                 // ユーザーのフォロワーを取得
-                                $followers = (array) $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "100"));
+                                $followers = $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "5000"));
 
                                 if (!isset($followers->ids) || !is_array($followers->ids)) {
                                     break;
                                 }
 
+                                if(count($followers->ids) > 100){
+                                    shuffle($followers->ids);
+                                    $followers->ids = array_splice($followers->ids, 0, 100);
+                                }
+
                                 $followerIds = implode(",", $followers->ids);
                                 // ユーザーのフォロワーを取得
-                                $followers = (array) $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
+                                $followers = $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
 
                                 foreach($followers as $follower){
                                     if(isset($follower->id) && $follower->id > 0){
