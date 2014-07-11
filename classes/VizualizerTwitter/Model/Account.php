@@ -527,6 +527,18 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * 一度もツイートしていないツイートデータの件数を取得する。
+     * @return int ツイートの件数
+     */
+    public function getPreTweetCount(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("Tweet");
+        $count = $tweetLog->countBy(array("account_id" => $this->account_id, "first_tweeted_flg" => "0"));
+        return $count;
+
+    }
+
+    /**
      * ツイッターAPI用のオブジェクトを取得
      */
     public function getTwitter()
