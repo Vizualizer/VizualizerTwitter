@@ -139,6 +139,14 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                         echo $account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text . "\r\n";
                         $tweetLog->twitter_id = $result->id;
                         $tweetlog->tweet_text = $result->text;
+                        if(count($result->entities->media) > 0){
+                            $media = $result->entities->media[0];
+                            $tweetLog->media_url = $media->url;
+                            $tweetLog->media_link = $media->media_url;
+                        }else{
+                            $tweetLog->media_url = "";
+                            $tweetLog->media_link = "";
+                        }
                         $tweetLog->save();
 
                         $interval = $tweetSetting->tweet_interval;

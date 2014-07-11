@@ -99,4 +99,22 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
         $group->findByPrimaryKey($this->tweet_id);
         return $group;
     }
+
+    /**
+     * ツイートのテキストを取得する
+     */
+    public function getText(){
+        if($this->media_url != ""){
+            return str_replace($this->media_url, "", $this->tweet_text);
+        }
+        return $this->tweet_text;
+    }
+
+    /**
+     * ツイートのURLを取得する。
+     * @return string ツイートに含まれるURL
+     */
+    public function getUrl(){
+        return $this->media_link;
+    }
 }
