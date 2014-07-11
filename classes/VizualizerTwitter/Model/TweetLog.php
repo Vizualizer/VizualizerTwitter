@@ -100,6 +100,20 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
         return $group;
     }
 
+    /**
+     * ツイートのテキストを取得する
+     */
+    public function getText(){
+        if($this->getUrl() != ""){
+            return str_replace($this->getUrl(), "", $this->tweet_text);
+        }
+        return $this->tweet_text;
+    }
+
+    /**
+     * ツイートのURLを取得する。
+     * @return string ツイートに含まれるURL
+     */
     public function getUrl(){
         if(preg_match("/https?:\\/\\/[\\w\\/:%#$&?()~.=+-]+/", $this->tweet_text, $params) > 0){
             return $params[0];
