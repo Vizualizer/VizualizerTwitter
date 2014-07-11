@@ -137,7 +137,7 @@ class VizualizerTwitter_Model_Tweet extends Vizualizer_Plugin_Model
         // ツイートを取得
         $account = $this->account();
         $status = $account->status();
-        $tweetOrder = (($account->tweetSetting()->tweet_order == "1") ? "retweet_count" : "RAND()");
+        $tweetOrder = "(1 - first_tweeted_flg) * 10000000 + ".(($account->tweetSetting()->tweet_order == "1") ? "retweet_count" : "RAND()");
         if ($status->tweet_status > 0 && $status->original_status > 0) {
             $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
         } elseif ($status->tweet_status > 0) {
@@ -154,6 +154,7 @@ class VizualizerTwitter_Model_Tweet extends Vizualizer_Plugin_Model
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $tweet->tweeted_flg = 1;
+                $tweet->first_tweeted_flg = 1;
                 $tweet->save();
                 Vizualizer_Database_Factory::commit($connection);
             } catch (Exception $e) {
