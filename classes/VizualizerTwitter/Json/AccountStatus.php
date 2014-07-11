@@ -1,6 +1,6 @@
 <?php
 
-class VizualizerTwitter_Json_AccountStatus
+class VizualizerTwitter_Json_AccountStatus extends VizualizerTwitter_Json_Account
 {
 
     public function execute()
@@ -56,9 +56,7 @@ class VizualizerTwitter_Json_AccountStatus
             $post->remove("target");
         }
 
-        $status = $account->status();
-        $status->isUnfollowable = $account->isUnfollowable();
-
-        return $status->toArray();
+        $account = $this->getAccountInfo($post["account_id"]);
+        return $account->toArray();
     }
 }
