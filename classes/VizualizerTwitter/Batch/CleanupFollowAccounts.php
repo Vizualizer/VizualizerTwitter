@@ -142,6 +142,7 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
             $update->addSets($follows->friend_cancel_date." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
             $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
             $update->addWhere($follows->friend_date." IS NOT NULL");
+            $update->addWhere($follows->friend_cancel_date." IS NULL");
             $update->addWhere($friends->checked_time." IS NULL");
             $update->execute();
         // エラーが無かった場合、処理をコミットする。
