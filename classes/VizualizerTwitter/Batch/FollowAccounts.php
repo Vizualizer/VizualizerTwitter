@@ -60,7 +60,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
         $statuses = $model->findAllBy(array("le:next_follow_time" => Vizualizer::now()->date("Y-m-d H:i:s")), "next_follow_time", false);
         $statusIds = array();
         foreach($statuses as $status){
-            $statusIds[] = $status->status_id;
+            $statusIds[] = $status->account_status_id;
         }
 
         foreach ($statusIds as $statusId) {
