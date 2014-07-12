@@ -59,12 +59,19 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
         // 本体の処理を実行
         $statuses = $model->findAllBy(array("le:next_follow_time" => Vizualizer::now()->date("Y-m-d H:i:s")), "next_follow_time", false);
+        $statusIds = array();
+        foreach($statuses as $status){
+            $statusIds[] = $status->status_id;
+        }
 
-        foreach ($statuses as $status) {
+        foreach ($statusIds as $statusId) {
+            $status = $loader->loadModel("AccountStatus");
+            $status->findByPrimaryKey($statusId);
             $account = $status->account();
 
             // アカウントデータが存在しない場合はスキップ
             if(!($account->account_id > 0)){
+                Vizualizer_Logger::writeInfo("Skip for not user in ".$account->screen_name);
                 continue;
             }
 
