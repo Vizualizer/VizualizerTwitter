@@ -48,7 +48,7 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
 
     public function getFlows()
     {
-        return array("cleanupFollowers");
+        return array("cleanupFollows", "cleanupFollowers");
     }
 
     /**
