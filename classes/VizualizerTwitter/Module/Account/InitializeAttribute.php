@@ -23,16 +23,28 @@
  */
 
 /**
- * アカウントのリストを取得する。
+ * アカウント検索用にaccount_attributeを初期化する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_List
+class VizualizerTwitter_Module_Account_InitializeAttribute extends Vizualizer_Plugin_Module
 {
 
     function execute($params)
     {
-        $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
-    }
+        $post = Vizualizer::request();
+        if(!empty($post["account_attribute"])){
+            $loader = new Vizualizer_Plugin("Twitter");
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
+            $accountIds = array();
+            foreach($settings as $setting){
+                $accountIds[] = $setting->account_id;
+            }
+            $post->set("search", array("in:account_id" => $accountIds));
+        }else{
+            $post->remove("search");
+        }
+     }
 }
