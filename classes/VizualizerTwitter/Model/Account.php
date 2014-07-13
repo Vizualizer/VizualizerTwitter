@@ -527,6 +527,20 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントに紐づいたツイートログを件数制限して取得する
+     *
+     * @return ツイートログのリスト
+     */
+    public function limitedTweetLogs($limit, $sort = "tweet_time", $reverse = true)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLog->limit($limit);
+        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetLogs;
+    }
+
+    /**
      * 一度もツイートしていないツイートデータの件数を取得する。
      * @return int ツイートの件数
      */

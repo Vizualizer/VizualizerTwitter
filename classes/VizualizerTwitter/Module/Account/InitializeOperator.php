@@ -23,32 +23,16 @@
  */
 
 /**
- * アカウント検索用にgroup_idを初期化する。
+ * アカウント検索用にoperator_idを初期化する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin_Module
+class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plugin_Module
 {
 
     function execute($params)
     {
-        // 取得対象のグループIDを調整
-        $post = Vizualizer::request();
-        if(!is_array($post["group_id"])){
-            $post->set("group_id", array());
-        }
-        $groupIds = $post["group_id"];
-        if($post["add_group_id"] > 0){
-            $groupIds[$post["add_group_id"]] = $post["add_group_id"];
-            $post->remove("add_group_id");
-        }
-        if($post["del_group_id"] > 0){
-            unset($groupIds[$post["del_group_id"]]);
-            $post->remove("del_group_id");
-        }
-        $post->set("group_id", $groupIds);
-
         // グループIDの対象となるアカウントのリストを取得
         $loader = new Vizualizer_Plugin("Twitter");
         $model = $loader->loadModel("AccountGroup");
@@ -60,11 +44,7 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             foreach($models as $model){
                 $newAccountIds[$model->account_id] = $model->account_id;
             }
-            if(!is_array($accountIds)){
-                $accountIds = $newAccountIds;
-            }else{
-                $accountIds = array_intersect($accountIds, $newAccountIds);
-            }
+            $accountIds = array_intersect($accountIds, $newAccountIds);
         }else{
             // グループ未指定の場合は対象を無しにする。
             $accountIds = array(0);

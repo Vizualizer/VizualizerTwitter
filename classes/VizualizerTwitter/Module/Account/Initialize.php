@@ -23,16 +23,19 @@
  */
 
 /**
- * アカウントのリストを取得する。
+ * アカウント検索用配列を初期化する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_List
+class VizualizerTwitter_Module_Account_Initialize extends Vizualizer_Plugin_Module
 {
 
     function execute($params)
     {
-        $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
+        $post = Vizualizer::request();
+        $search = $post["search"];
+        $search["in:account_id"] = null;
+        $post->set("search", $search);
     }
 }
