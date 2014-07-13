@@ -393,7 +393,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     {
         // フォロワーが1818人以下の場合、フレンドが2000人に達している場合は設定に関係なくアンフォローを行うようにする。
         if($this->follower_count <= 1819 && $this->friend_count >= 2000){
-            Vizualizer_Logger::writeInfo("Unfollow for over 2000 friends in ".$account->screen_name);
+            Vizualizer_Logger::writeInfo("Unfollow for over 2000 friends in ".$this->screen_name);
             return true;
         }
         // 24時間以内にアンフォローが存在するか上限に達している場合で、リフォロー期限を超えているフォローが存在している場合はアンフォロー可能
@@ -401,7 +401,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $follow = $loader->loadModel("Follow");
         $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => Vizualizer::now()->strTotime("-3 hour")->date("Y-m-d 00:00:00")));
         $refollowCount = $follow->countBy(array("account_id" => $this->account_id, "follow_date" => null, "le:friend_date" => Vizualizer::now()->strTotime("-" . $this->followSetting()->refollow_timeout . " hour")->date("Y-m-d H:i:s")));
-        Vizualizer_Logger::writeInfo("Account check for ".$this->followLimit()."  < ".$this->friend_count." and ".$unfollowCount." unfollows and ".$refollowCount." refollows in ".$account->screen_name);
+        Vizualizer_Logger::writeInfo("Account check for ".$this->followLimit()."  < ".$this->friend_count." and ".$unfollowCount." unfollows and ".$refollowCount." refollows in ".$this->screen_name);
         if (($this->followLimit() < $this->friend_count || $unfollowCount > 0) && $refollowCount > 0) {
             return true;
         }
