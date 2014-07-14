@@ -75,8 +75,15 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
             $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
             $update->addWhere($follows->friend_date." IS NULL");
             $update->execute();
-        // エラーが無かった場合、処理をコミットする。
-        Vizualizer_Database_Factory::commit($connection);
+
+            $update = new Vizualizer_Query_Update($follows);
+            $update->joinInner($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
+            $update->addSets($follows->friend_cancel_date." = NULL");
+            $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
+            $update->execute();
+
+            // エラーが無かった場合、処理をコミットする。
+            Vizualizer_Database_Factory::commit($connection);
         } catch (Exception $e) {
             Vizualizer_Database_Factory::rollback($connection);
             throw new Vizualizer_Exception_Database($e);
