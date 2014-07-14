@@ -33,11 +33,12 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
 
     function execute($params)
     {
+        $post = Vizualizer::request();
         $loader = new Vizualizer_Plugin("Twitter");
 
         // 該当のグループのアカウントを取得する。
         $model = $loader->loadModel("AccountGroup");
-        $models = $model->findAllBy(array("group_id" => $post["group_id"]));
+        $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
         $accountIds = array();
         foreach($models as $model){
             $accountIds[$model->account_id] = $model->account_id;
@@ -52,15 +53,19 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
             $screenName = $params[1];
             $tweetId = $params[2];
         }
+        $tweet = $loader->loadModel("TweetLog");
+        $tweet->findBy(array("twitter_id" => $tweetId));
 
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         try {
             foreach($accountIds as $accountId){
-                $model = $loader->loadModel("Retweet");
-                $model->account_id = $accountId;
-                $model->tweet_id = $tweetId;
-                $model->save();
+                if($accountId != $tweet->account_id){
+                    $model = $loader->loadModel("Retweet");
+                    $model->account_id = $accountId;
+                    $model->tweet_id = $tweetId;
+                    $model->save();
+                }
             }
 
             // エラーが無かった場合、処理をコミットする。
