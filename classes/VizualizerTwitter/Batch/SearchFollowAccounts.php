@@ -86,6 +86,9 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             if ($searched < $setting->daily_follows * 2) {
                 // ユーザー情報を検索
                 foreach($keywords as $keyword){
+                    if(empty($keyword)){
+                        continue;
+                    }
                     $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
                     unset($users["httpstatus"]);
                     Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
