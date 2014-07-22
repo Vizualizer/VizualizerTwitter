@@ -33,6 +33,19 @@ class VizualizerTwitter_Module_Tweet_Save extends Vizualizer_Plugin_Module_Save
 
     function execute($params)
     {
+        $post = Vizualizer::request();
+        if($post["original_image_url"] != ""){
+            $parsedUrl = parse_url($post["original_image_url"]);
+            $info = pathinfo($parsedUrl["path"]);
+
+            $image = VIZUALIZER_SITE_ROOT.Vizualizer_Configure::get("twitter_image_savepath")."/".$info["basename"];
+            if(($fp = fopen($image, "w+")) !== FALSE){
+                fwrite($fp, file_get_contents($post["original_image_url"]));
+                fclose($fp);
+                $post->set("media_url", $post["original_image_url"]);
+                $post->set("media_filename", $info["basename"]);
+            }
+        }
         $this->executeImpl("Twitter", "Tweet", "tweet_id");
     }
 }

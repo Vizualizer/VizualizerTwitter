@@ -22,14 +22,8 @@ class VizualizerTwitter_Json_SearchTweet
             // アカウントを取得
             $account->findByPrimaryKey($post["account_id"]);
 
-            // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id, "api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
-
             // ツイートを検索
+            $twitter = $account->getTwitter();
             $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
             $tweets = $tweetsTemp->statuses;
 

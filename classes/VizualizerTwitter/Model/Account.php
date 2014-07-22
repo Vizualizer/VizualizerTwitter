@@ -537,11 +537,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return ツイートログのリスト
      */
-    public function limitedTweetLogs($limit, $sort = "tweet_time", $reverse = true)
+    public function limitedTweetLogs($limit, $offset = 0, $sort = "tweet_time", $reverse = true)
     {
         $loader = new Vizualizer_Plugin("twitter");
         $tweetLog = $loader->loadModel("TweetLog");
-        $tweetLog->limit($limit);
+        $tweetLog->limit($limit, $offset);
         $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
         return $tweetLogs;
     }

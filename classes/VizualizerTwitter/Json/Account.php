@@ -11,6 +11,7 @@ class VizualizerTwitter_Json_Account
         $account->followSetting = $account->followSetting()->toArray();
         $account->status = $account->status()->toArray();
         $account->isUnfollowable = $account->isUnfollowable();
+        $account->preTweetCount = $account->getPreTweetCount();
         $accounts = $account->findAllBy(array());
         $attributes = array();
         foreach($accounts as $acc){
