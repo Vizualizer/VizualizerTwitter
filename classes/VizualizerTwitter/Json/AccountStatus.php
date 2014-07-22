@@ -18,6 +18,7 @@ class VizualizerTwitter_Json_AccountStatus extends VizualizerTwitter_Json_Accoun
                 $account->findByPrimaryKey($post["account_id"]);
                 $status = $account->status();
                 switch ($p[1]) {
+                    case "bot_status":
                     case "follow_status":
                     case "tweet_status":
                     case "original_status":
