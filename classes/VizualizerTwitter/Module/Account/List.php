@@ -33,6 +33,21 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
 
     function execute($params)
     {
+        $attr = Vizualizer::attr();
+        $post = Vizualizer::request();
+        if($params->get("operator", "single") == "list"){
+            if($attr[VizualizerAdmin::KEY]->role()->role_code != ""){
+                $loader = new Vizualizer_Plugin("twitter");
+                $accountOperator = $loader->loadModel("AccountOperator");
+                $accountOperators = $accountOperator->findAllByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
+                $search = $post["search"];
+                $search["in:account_id"] = array();
+                foreach($accountOperators as $account){
+                    $search["in:account_id"][] = $account->account_id;
+                }
+                $post->set("search", $search);
+            }
+        }
         $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
     }
 }
