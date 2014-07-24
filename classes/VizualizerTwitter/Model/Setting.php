@@ -94,7 +94,7 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
         $account = $this->account();
         for ($i = 2; $i < 10; $i ++) {
             $key = "follower_limit_" . $i;
-            if ($setting->$key > 0 && $this->$key <= $account->follower_count) {
+            if ($this->$key > 0 && $this->$key <= $account->follower_count) {
                 $key = "follow_ratio_" . $i;
                 $this->follow_ratio = $this->$key;
                 $key = "daily_follows_" . $i;
