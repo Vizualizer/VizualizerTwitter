@@ -30,6 +30,16 @@
  */
 class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
 {
+    public function getDaemonName()
+    {
+        return "update_tweets";
+    }
+
+    public function getDaemonInterval()
+    {
+        return 900;
+    }
+
     public function getName(){
         return "Twitter Tweet Updater";
     }
