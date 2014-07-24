@@ -56,18 +56,17 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
     protected function postRetweets($params, $data)
     {
         $loader = new Vizualizer_Plugin("Twitter");
-        $model = $loader->loadModel("Retweets");
+        $model = $loader->loadModel("Retweet");
 
         // 本体の処理を実行
-        $retweets = $model->findAllBy(array("le:scheduled_retweet_time" => Vizualizer::now()->date("Y-m-d H:i:s")), "scheduled_retweet_time", false);
+        $retweets = $model->findAllBy(array("le:scheduled_retweet_time" => Vizualizer::now()->date("Y-m-d H:i:s"), "retweet_time" => "0000-00-00 00:00:00"), "scheduled_retweet_time", false);
 
         foreach ($retweets as $retweet) {
-            $loader = new Vizualizer_Plugin("Twitter");
             $account = $retweet->account();
 
             // リツイートを実施
             $twitter = $account->getTwitter();
-            $reuslt = $twitter->statuses_retweet(array("id" => $retweet->tweet_id));
+            $result = $twitter->statuses_retweet_ID(array("id" => $retweet->tweet_id));
 
             // リツイートを更新
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -82,6 +81,29 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
                 throw new Vizualizer_Exception_Database($e);
             }
         }
+
+        // キャンセルの本体の処理を実行
+        $retweets = $model->findAllBy(array("le:scheduled_cancel_retweet_time" => Vizualizer::now()->date("Y-m-d H:i:s"), "ne:retweet_tweet_id" => "0", "cancel_retweet_time" => "0000-00-00 00:00:00"), "scheduled_retweet_time", false);
+        foreach ($retweets as $retweet) {
+            $account = $retweet->account();
+
+            // リツイートを実施
+            $twitter = $account->getTwitter();
+            $result = $twitter->statuses_destroy_ID(array("id" => $retweet->retweet_tweet_id));
+
+            // リツイートを更新
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $retweet->cancel_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                $retweet->save();
+
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+        }
+
 
         return $data;
     }
