@@ -36,7 +36,12 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
         $attr = Vizualizer::attr();
         $post = Vizualizer::request();
         if($params->get("operator", "single") == "list"){
-            if($attr[VizualizerAdmin::KEY]->role()->role_code != "administrator"){
+            if ($params->check("admin_roles")) {
+                $adminRoles = explode(",", $params->get("admin_roles"));
+            }else{
+                $adminRoles = array();
+            }
+            if(!in_array($attr[VizualizerAdmin::KEY]->role()->role_code, $adminRoles)){
                 $loader = new Vizualizer_Plugin("twitter");
                 $accountOperator = $loader->loadModel("AccountOperator");
                 $accountOperators = $accountOperator->findAllByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
