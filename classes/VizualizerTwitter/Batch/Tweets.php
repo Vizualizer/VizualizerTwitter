@@ -149,6 +149,26 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                         }
                         $tweetLog->save();
 
+                        if($status->retweet_status == "1" && $tweetSetting->retweet_group_id > 0){
+                            // 強化アカウントで、対象グループが設定されている場合は、リツイートの登録も併せて行う。
+                            $group = $loader->loadModel("AccountGroup");
+                            $groups = $group->findAllBy(array("group_id" => $tweetSetting->retweet_group_id));
+                            foreach($groups as $group){
+                                $model = $loader->loadModel("Retweet");
+                                $model->account_id = $group->account_id;
+                                $model->tweet_id = $result->id;
+                                if($tweetSetting->retweet_delay > 0){
+                                    $model->scheduled_retweet_time = date("Y-m-d H:i:s", strtotime("+" . $tweetSetting->retweet_delay . "minute"));
+                                }else{
+                                    $model->scheduled_retweet_time = date("Y-m-d H:i:s");
+                                }
+                                if($tweetSetting->retweet_duration > 0){
+                                    $model->scheduled_cancel_retweet_time = date("Y-m-d H:i:s", strtotime("+" . $tweetSetting->retweet_duration . "hour"));
+                                }
+                                $model->save();
+                            }
+                        }
+
                         $interval = $tweetSetting->tweet_interval;
                         if ($tweetSetting->wavy_flg == "1") {
                             $interval = mt_rand(0, $interval) + floor($interval / 2);
