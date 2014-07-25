@@ -36,8 +36,8 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
         $attr = Vizualizer::attr();
         $post = Vizualizer::request();
         if($params->get("operator", "single") == "list"){
-            if ($params->check("admin_roles")) {
-                $adminRoles = explode(",", $params->get("admin_roles"));
+            if ($params->check("adminRoles")) {
+                $adminRoles = explode(",", $params->get("adminRoles"));
             }else{
                 $adminRoles = array();
             }
