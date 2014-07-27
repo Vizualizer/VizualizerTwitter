@@ -64,6 +64,14 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
                     $model = $loader->loadModel("Retweet");
                     $model->account_id = $accountId;
                     $model->tweet_id = $tweetId;
+                    if($post["retweet_delay"] > 0){
+                        $model->scheduled_retweet_time = date("Y-m-d H:i:s", strtotime("+" . $post["retweet_delay"] . "minute"));
+                    }else{
+                        $model->scheduled_retweet_time = date("Y-m-d H:i:s");
+                    }
+                    if($post["retweet_duration"] > 0){
+                        $model->scheduled_cancel_retweet_time = date("Y-m-d H:i:s", strtotime("+" . $post["retweet_duration"] . "hour"));
+                    }
                     $model->save();
                 }
             }
