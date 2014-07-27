@@ -95,6 +95,12 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             }
 
             $setting = $account->followSetting();
+            if(!($setting->unfollow_interval > 0)){
+                $setting->unfollow_interval = $setting->follow_interval;
+            }
+            if(!($setting->daily_unfollows > 0)){
+                $setting->daily_unfollows = $setting->daily_follows;
+            }
 
             // 本日のフォロー状況を取得
             $history = $loader->loadModel("FollowHistory");
@@ -125,7 +131,7 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
             if($result){
                 if($status->follow_count < $setting->follow_unit - 1){
-                    $status->updateFollow(2, Vizualizer::now()->strToTime("+".$setting->follow_interval." second")->date("Y-m-d H:i:s"));
+                    $status->updateFollow(2, Vizualizer::now()->strToTime("+".$setting->unfollow_interval." second")->date("Y-m-d H:i:s"));
                 }else{
                     $status->updateFollow(1, Vizualizer::now()->strToTime("+".$setting->follow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
                 }
