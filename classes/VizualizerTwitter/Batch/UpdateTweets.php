@@ -91,10 +91,29 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
                             }
                             $model->tweet_text = $tweet->text;
                         }
+
+                        // ツイートの更新の際にフォローしていないユーザーがリツイートしていた場合はフォロー対象に加える。
+                        if($model->retweet_count != $tweet->retweet_count){
+                            // リツイートに変動があったものの対象とする。
+                            $retweets = $account->getTwitter()->statuses_retweets_ID(array("id" => $tweet->id_str, "count" => 100));
+                            foreach($retweets as $retweet){
+                                print_r($retweet);
+                                $follower = $retweet->user;
+                                if(isset($follower->id) && $follower->id > 0){
+                                    print_r($account->toArray());
+                                    print_r($follower);
+                                    $account->addFollowUser($follower);
+                                    print_r($account->toArray());
+                                }
+                            }
+                        }
+
                         $model->retweet_count = $tweet->retweet_count;
                         $model->favorite_count = $tweet->favorite_count;
                         echo "Update Tweet for ".$model->twitter_id."  : \r\n";
                         $model->save();
+
+
 
                         // エラーが無かった場合、処理をコミットする。
                         Vizualizer_Database_Factory::commit($connection);
