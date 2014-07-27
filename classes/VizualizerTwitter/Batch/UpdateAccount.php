@@ -52,11 +52,7 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
         foreach($accounts as $account){
 
             // Twitterへのアクセスを初期化
-            $application = $account->application();
-            $twitterInfo = array("application_id" => $application->application_id,"api_key" => $application->api_key, "api_secret" => $application->api_secret);
-            \Codebird\Codebird::setConsumerKey($twitterInfo["api_key"], $twitterInfo["api_secret"]);
-            $twitter = \Codebird\Codebird::getInstance();
-            $twitter->setToken($account->access_token, $account->access_token_secret);
+            $twitter = $account->getTwitter();
 
             // ユーザー情報を取得
             $user = $twitter->users_show(array("user_id" => $account->twitter_id));
