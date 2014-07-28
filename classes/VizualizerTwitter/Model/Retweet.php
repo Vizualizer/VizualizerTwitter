@@ -53,6 +53,17 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントIDでデータを取得する。
+     *
+     * @param $account_id アカウントID
+     * @return 設定のリスト
+     */
+    public function findAllByAccountId($account_id, $sort = "", $reverse = false)
+    {
+        return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
+    }
+
+    /**
      * 設定に紐づいたアカウントを取得する
      *
      * @return アカウント
@@ -63,5 +74,15 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
         $account = $loader->loadModel("Account");
         $account->findByPrimaryKey($this->account_id);
         return $account;
+    }
+
+    /**
+     * リツイートした元のツイートを取得する。
+     */
+    public function tweet(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweet = $loader->loadModel("TweetLog");
+        $tweet->findByTwitterId($this->tweet_id);
+        return $tweet;
     }
 }
