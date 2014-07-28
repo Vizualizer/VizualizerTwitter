@@ -53,6 +53,15 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
     }
 
     /**
+     * TwitterのIDでデータを取得する。
+     *
+     * @param string $twitter_id
+     */
+    public function findByTwitterId($twitter_id){
+        $this->findBy(array("twitter_id" => $twitter_id));
+    }
+
+    /**
      * アカウントIDでデータを取得する。
      *
      * @param $account_id アカウントID
