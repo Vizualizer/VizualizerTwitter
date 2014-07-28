@@ -30,6 +30,19 @@
  */
 class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_List
 {
+    private function sortByRetweet($data){
+        usort($data, function($small, $large){
+            return $small->retweet_count < $large->retweet_count;
+        });
+        return $data;
+    }
+
+    private function sortByFavorite($data){
+        usort($data, function($small, $large){
+            return $small->favorite_count < $large->favorite_count;
+        });
+        return $data;
+    }
 
     function execute($params)
     {
@@ -48,11 +61,22 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                 // ツイートを検索
                 $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
                 $tweets = $tweetsTemp->statuses;
+                if($post["sort"] == "retweet"){
+                    $tweets = $this->sortByRetweet($tweets);
+                }elseif($post["sort"] == "favorite"){
+                    $tweets = $this->sortByFavorite($tweets);
+                }
                 $attr = Vizualizer::attr();
                 $attr["tweets"] = $tweets;
             }elseif(!empty($post["screen_name"])){
                 // ツイートを検索
-                $tweets = $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200"));
+                $tweets = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200"));
+                unset($tweets["httpstatus"]);
+                if($post["sort"] == "retweet"){
+                    $tweets = $this->sortByRetweet($tweets);
+                }elseif($post["sort"] == "favorite"){
+                    $tweets = $this->sortByFavorite($tweets);
+                }
                 $attr = Vizualizer::attr();
                 $attr["tweets"] = $tweets;
             }else{
