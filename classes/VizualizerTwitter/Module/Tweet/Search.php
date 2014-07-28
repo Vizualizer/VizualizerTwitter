@@ -52,7 +52,8 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                 $attr["tweets"] = $tweets;
             }elseif(!empty($post["screen_name"])){
                 // ツイートを検索
-                $tweets = $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200"));
+                $tweets = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200"));
+                unset($tweets["httpstatus"]);
                 $attr = Vizualizer::attr();
                 $attr["tweets"] = $tweets;
             }else{
