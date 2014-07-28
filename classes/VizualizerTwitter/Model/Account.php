@@ -533,6 +533,19 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントに紐づいたリツイートログを取得する
+     *
+     * @return リツイートログのリスト
+     */
+    public function retweets($sort = "retweet_time", $reverse = true)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $retweet = $loader->loadModel("Retweet");
+        $retweets = $retweet->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $retweets;
+    }
+
+    /**
      * アカウントに紐づいたツイートログを件数制限して取得する
      *
      * @return ツイートログのリスト
