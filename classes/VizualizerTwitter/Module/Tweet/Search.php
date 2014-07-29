@@ -59,8 +59,25 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
             }
             if(!empty($post["keyword"])){
                 // ツイートを検索
-                $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
-                $tweets = $tweetsTemp->statuses;
+                $maxId = 0;
+                $tweets = array();
+                for($i = 0; $i < 10; $i ++){
+                    if($maxId > 0){
+                        $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed", "max_id" => $maxId));
+                    }else{
+                        $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
+                    }
+                    foreach($tweetsTemp->statuses as $status){
+                        if($status->retweet_count > 0 || $status->favorite_count > 0){
+                            $tweets[$status->id_str] = $status;
+                        }
+                    }
+                    if(!isset($tweetsTemp->search_metadata->next_results) || preg_match("/max_id=([0-9]+)/", $tweetsTemp->search_metadata->next_results, $p) == 0){
+                        break;
+                    }
+                    $maxId = $p[1];
+                }
+                $tweets = array_values($tweets);
                 if($post["sort"] == "retweet"){
                     $tweets = $this->sortByRetweet($tweets);
                 }elseif($post["sort"] == "favorite"){
@@ -70,8 +87,26 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                 $attr["tweets"] = $tweets;
             }elseif(!empty($post["screen_name"])){
                 // ツイートを検索
-                $tweets = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200"));
-                unset($tweets["httpstatus"]);
+                $maxId = 0;
+                $tweets = array();
+                for($i = 0; $i < 5; $i ++){
+                    if($maxId > 0){
+                        $tweetsTemp = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200", "max_id" => $maxId));
+                    }else{
+                        $tweetsTemp = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200"));
+                    }
+                    unset($tweetsTemp["httpstatus"]);
+                    if(count($tweetsTemp) == 0){
+                        break;
+                    }
+                    foreach($tweetsTemp as $status){
+                        if($status->retweet_count > 0 || $status->favorite_count > 0){
+                            $maxId = $status->id_str;
+                            $tweets[$status->id_str] = $status;
+                        }
+                    }
+                }
+                $tweets = array_values($tweets);
                 if($post["sort"] == "retweet"){
                     $tweets = $this->sortByRetweet($tweets);
                 }elseif($post["sort"] == "favorite"){
