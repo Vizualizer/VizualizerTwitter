@@ -89,7 +89,7 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                 // ツイートを検索
                 $maxId = 0;
                 $tweets = array();
-                for($i = 0; $i < 5; $i ++){
+                for($i = 0; $i < 2; $i ++){
                     if($maxId > 0){
                         $tweetsTemp = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200", "max_id" => $maxId));
                     }else{
