@@ -124,10 +124,10 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             }
 
             if($result){
-                if($status->follow_count < $setting->follow_unit - 1){
+                if($status->follow_count < $setting->unfollow_unit - 1){
                     $status->updateFollow(2, Vizualizer::now()->strToTime("+".$setting->follow_interval." second")->date("Y-m-d H:i:s"));
                 }else{
-                    $status->updateFollow(1, Vizualizer::now()->strToTime("+".$setting->follow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
+                    $status->updateFollow(1, Vizualizer::now()->strToTime("+".$setting->unfollow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
                 }
             }
         }
