@@ -206,7 +206,40 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     }
 
     /**
-     * フォローを追加する。
+     * フレンドでもフォロワーでもないユーザーを追加する。
+     */
+    public function addUser($user){
+        // 追加可能かチェック
+        if($this->checkAddUser($user)){
+
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+
+            try {
+                // フォロー対象に追加
+                $loader = new Vizualizer_Plugin("Twitter");
+
+                // フォローのデータを追加
+                $follow = $loader->loadModel("Follow");
+                // フレンドやフォローでないとして追加する場合はレコードが無いことが条件
+                if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $user->id)) == 0){
+                    // 更新対象を取得する場合はアンフォローのレコードを除外
+                    $follow->account_id = $this->account_id;
+                    $follow->user_id = $user->id;
+                    $follow->save();
+                }
+
+                // エラーが無かった場合、処理をコミットする。
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+        }
+    }
+
+    /**
+     * フレンドとしてユーザーを追加する。
      */
     public function addFriend($user){
         // 追加可能かチェック
@@ -219,7 +252,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 // フォロー対象に追加
                 $loader = new Vizualizer_Plugin("Twitter");
 
-                // アカウントフレンドのデータを更新
+                // 対象がアカウントのフレンドであることを確認したとして最終確認日時を更新
                 $follow = $loader->loadModel("AccountFriend");
                 $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
                 $follow->account_id = $this->account_id;
@@ -229,10 +262,15 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 
                 // フォローのデータを追加
                 $follow = $loader->loadModel("Follow");
-                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
-                if(!($follow->follow_id > 0)){
-                    $follow->account_id = $this->account_id;
-                    $follow->user_id = $user->id;
+                // フレンドとして追加する場合はフォロー済みor相互フォローのレコードが無いことが条件
+                if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $user->id, "ne:friend_date" => null, "friend_cancel_date" => null)) == 0){
+                    // 更新対象を取得する場合はアンフォローのレコードを除外
+                    $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id, "friend_cancel_date" => null));
+                    if(!($follow->follow_id > 0)){
+                        $follow->account_id = $this->account_id;
+                        $follow->user_id = $user->id;
+                    }
+                    $follow->friend_date = Vizualizer::now()->date("Y-m-d H:i:s");
                     $follow->save();
                 }
 
@@ -257,7 +295,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             try {
                 $loader = new Vizualizer_Plugin("Twitter");
 
-                // アカウントフォローワーを更新
+                // 対象がアカウントのフォロワーであることを確認したとして、最終確認日時を更新
                 $follow = $loader->loadModel("AccountFollower");
                 $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
                 $follow->account_id = $this->account_id;
@@ -267,10 +305,15 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 
                 // フォローのデータを追加
                 $follow = $loader->loadModel("Follow");
-                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
-                if(!($follow->follow_id > 0)){
-                    $follow->account_id = $this->account_id;
-                    $follow->user_id = $user->id;
+                // フォロワーとして追加する場合は被フォローor相互フォローのレコードが無いことが条件
+                if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $user->id, "ne:follow_date" => null)) == 0){
+                    // 更新対象を取得する場合はアンフォローのレコードを除外
+                    $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id, "friend_cancel_date" => null));
+                    if(!($follow->follow_id > 0)){
+                        $follow->account_id = $this->account_id;
+                        $follow->user_id = $user->id;
+                    }
+                    $follow->follow_date = Vizualizer::now()->date("Y-m-d H:i:s");
                     $follow->save();
                 }
 
@@ -281,93 +324,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 throw new Vizualizer_Exception_Database($e);
             }
         }
-    }
-
-    /**
-     * フォローデータを登録する。
-     */
-    public function addFollowUser($user, $asFriend = false, $asFollower = false) {
-        // ユーザーの形式で無い場合はスキップ
-        if(is_numeric($user) || !isset($user->id)){
-            return false;
-        }
-
-        // ユーザーのIDが取得できない場合はスキップ
-        if(!($user->id > 0)){
-            echo "Skipped invalid ID : ".$user->id." in ".$index."\r\n";
-            return false;
-        }
-
-        // 日本語チェックに引っかかる場合はスキップ
-        $setting = $this->followSetting();
-        if ($setting->japanese_flg == "1" && $user->lang != "ja") {
-            Vizualizer_Logger::writeInfo("Skipped invalid not Japanese : ".$user->screen_name);
-            return false;
-        }
-
-        // デフォルト画像チェックに引っかかる場合はスキップ
-        if ($setting->unique_icon_flg == "1" && $user->default_profile_image) {
-            Vizualizer_Logger::writeInfo("Skipped invalid Default icon : ".$user->screen_name);
-            return false;
-        }
-
-        // ボットチェックに引っかかる場合はスキップ
-        if ($setting->non_bot_flg == "1" && preg_match("/BOT|ボット|ﾎﾞｯﾄ/ui", $user->description) > 0) {
-            Vizualizer_Logger::writeInfo("Skipped invalid Bot : ".$user->screen_name);
-            return false;
-        }
-
-        // 拒絶キーワードを含む場合はスキップ
-        if (!empty($setting->ignore_keywords) && preg_match("/" . implode("|", explode("\r\n", $setting->ignore_keywords)) . "/u", $user->description) > 0) {
-            Vizualizer_Logger::writeInfo("Skipped invalid Profile : ".$user->screen_name);
-            return false;
-        }
-
-        // フォロー対象に追加済みの場合はスキップ
-        $loader = new Vizualizer_Plugin("Twitter");
-        $follow = $loader->loadModel("Follow");
-        $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
-
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-
-        try {
-            // フォロー対象に追加
-            $follow->account_id = $this->account_id;
-            $follow->user_id = $user->id;
-
-            if ($follow->follow_id > 0) {
-                if ($asFriend && empty($follow->friend_date)) {
-                    // フレンドとして登録する場合は、既存のデータを更新する。
-                    $follow->friend_date = Vizualizer::now()->date("Y-m-d H:i:s");
-                } elseif ($asFollower && empty($follow->follow_date)) {
-                    if (!empty($follow->friend_date) && !empty($follow->friend_cancel_date)) {
-                        // フォロワーとして登録する場合で、フォローとキャンセルが両方とも設定されている場合は一旦削除する。
-                        $follow->delete();
-                        $follow = $loader->loadModel("Follow");
-                    }
-                    $follow->follow_date = Vizualizer::now()->date("Y-m-d H:i:s");
-                } else {
-                    // フレンドとしてもフォロワーとしても無い形で登録する場合は、既に登録済みとしてスキップする。
-                    Vizualizer_Logger::writeInfo("Skipped targeted : ".$user->screen_name." was followed");
-                    return false;
-                }
-            }
-            $follow->save();
-            Vizualizer_Logger::writeInfo("Add follow target : ".$user->screen_name."(".$user->lang.")");
-
-            // エラーが無かった場合、処理をコミットする。
-            Vizualizer_Database_Factory::commit($connection);
-
-            // リスト無しステータスの場合は待機中ステータスに移行
-            if ($this->status()->follow_status == "4") {
-                $this->status()->updateFollow(1);
-            }
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
-        }
-
     }
 
     /**
