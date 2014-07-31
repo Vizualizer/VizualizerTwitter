@@ -94,7 +94,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
                     foreach ($users as $index => $user) {
                         if($setting->follow_type == "1" || $setting->follow_type == "3"){
-                            $account->addFollowUser($user);
+                            $account->addUser($user);
                         }
 
                         // フォロワーを追加
@@ -117,7 +117,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
 
                             foreach($followers as $follower){
                                 if(isset($follower->id) && $follower->id > 0){
-                                    $account->addFollowUser($follower);
+                                    $account->addUser($follower);
                                 }
                             }
                         }
