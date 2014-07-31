@@ -229,7 +229,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 
                 // フォローのデータを追加
                 $follow = $loader->loadModel("Follow");
-                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id, "friend_cancel_date" => null));
                 if(!($follow->follow_id > 0)){
                     $follow->account_id = $this->account_id;
                     $follow->user_id = $user->id;
@@ -267,7 +267,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 
                 // フォローのデータを追加
                 $follow = $loader->loadModel("Follow");
-                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id, "friend_cancel_date" => null));
                 if(!($follow->follow_id > 0)){
                     $follow->account_id = $this->account_id;
                     $follow->user_id = $user->id;
