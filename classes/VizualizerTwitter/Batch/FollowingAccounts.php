@@ -72,6 +72,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
             $cursor = 0;
             $allFriends = array();
             $friendIds = array();
+            $followSetting = $account->followSetting();
             while (true) {
                 if ($cursor > 0) {
                     $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
@@ -83,10 +84,14 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     break;
                 }
 
+                $follow = $loader->loadModel("AccountFriend");
+                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => $friends->ids));
+                $followIds = array();
+                foreach($follows as $follow){
+                    $followIds[] = $follow->use_id;
+                }
                 foreach ($friends->ids as $userId) {
-                    $follow = $loader->loadModel("AccountFriend");
-                    $follow->findBy(array("account_id" => $account->account_id, "user_id" => $userId));
-                    if($follow->account_friend_id > 0){
+                    if(in_array($userId, $followIds)){
                         $item = (object) array("id" => $userId);
                         $account->addFriend($item);
                     }else{
