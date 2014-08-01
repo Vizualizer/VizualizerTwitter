@@ -84,7 +84,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                 }
 
                 $follow = $loader->loadModel("AccountFriend");
-                $follows = $follow->findBy(array("account_id" => $account->account_id, "in:user_id" => $friends->ids));
+                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => $friends->ids));
                 $followIds = array();
                 foreach($follows as $follow){
                     $followIds[] = $follow->use_id;
