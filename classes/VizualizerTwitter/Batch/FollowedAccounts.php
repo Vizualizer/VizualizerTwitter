@@ -72,6 +72,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
         foreach ($accounts as $account) {
             $cursor = 0;
             $followerIds = array();
+            $followSetting = $account->followSetting();
             while (true) {
                 if ($cursor > 0) {
                     $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
@@ -97,7 +98,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                         if(!property_exists($list, "errors") || !is_array($list->errors) || empty($list->errors)){
                             $followerIds = array();
                             foreach($list as $item){
-                                if($account->checkAddUser($item)){
+                                if($account->checkAddUser($item, $followSetting)){
                                     $account->addFollower($item);
                                 }
                             }
@@ -113,7 +114,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                     if(!property_exists($list, "errors") || !is_array($list->errors) || empty($list->errors)){
                         $followerIds = array();
                         foreach($list as $item){
-                            if($account->checkAddUser($item)){
+                            if($account->checkAddUser($item, $followSetting)){
                                 $account->addFollower($item);
                             }
                         }
