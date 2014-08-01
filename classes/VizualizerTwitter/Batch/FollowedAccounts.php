@@ -94,7 +94,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                     }
                     if(count($followerIds) == 100){
                         $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
-                        if(!is_array($list->errors) || empty($list->errors)){
+                        if(!property_exists($list, "errors") || !is_array($list->errors) || empty($list->errors)){
                             $followerIds = array();
                             foreach($list as $item){
                                 if($account->checkAddUser($item)){
@@ -110,7 +110,7 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                 }
                 if(count($followerIds) > 0){
                     $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
-                    if(!is_array($list->errors) || empty($list->errors)){
+                    if(!property_exists($list, "errors") || !is_array($list->errors) || empty($list->errors)){
                         $followerIds = array();
                         foreach($list as $item){
                             if($account->checkAddUser($item)){
