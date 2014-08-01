@@ -117,7 +117,9 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
 
                             foreach($followers as $follower){
                                 if(isset($follower->id) && $follower->id > 0){
-                                    $account->addUser($follower);
+                                    if($account->checkAddUser($follower)){
+                                        $account->addUser($follower);
+                                    }
                                 }
                             }
                         }

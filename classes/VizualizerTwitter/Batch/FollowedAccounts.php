@@ -84,13 +84,22 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                 }
 
                 foreach ($followers->ids as $userId) {
-                    $followerIds[$userId] = $userId;
+                    $follow = $loader->loadModel("AccountFollower");
+                    $follow->findBy(array("account_id" => $account->account_id, "user_id" => $userId));
+                    if($follow->account_follower_id > 0){
+                        $item = (object) array("id" => $userId);
+                        $account->addFollower($item);
+                    }else{
+                        $followerIds[$userId] = $userId;
+                    }
                     if(count($followerIds) == 100){
                         $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $followerIds)));
                         if(!is_array($list->errors) || empty($list->errors)){
                             $followerIds = array();
                             foreach($list as $item){
-                                $account->addFollower($item);
+                                if($account->checkAddUser($item)){
+                                    $account->addFollower($item);
+                                }
                             }
                         }else{
                             $followerIds = array();
@@ -104,7 +113,9 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
                     if(!is_array($list->errors) || empty($list->errors)){
                         $followerIds = array();
                         foreach($list as $item){
-                            $account->addFollower($item);
+                            if($account->checkAddUser($item)){
+                                $account->addFollower($item);
+                            }
                         }
                     }else{
                         Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);

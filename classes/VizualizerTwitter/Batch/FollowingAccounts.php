@@ -84,13 +84,22 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                 }
 
                 foreach ($friends->ids as $userId) {
-                    $friendIds[$userId] = $userId;
+                    $follow = $loader->loadModel("AccountFriend");
+                    $follow->findBy(array("account_id" => $account->account_id, "user_id" => $userId));
+                    if($follow->account_friend_id > 0){
+                        $item = (object) array("id" => $userId);
+                        $account->addFriend($item);
+                    }else{
+                        $friendIds[$userId] = $userId;
+                    }
                     if(count($friendIds) == 100){
                         $list = $account->getTwitter()->users_lookup(array("user_id" => implode(",", $friendIds)));
                         if(!is_array($list->errors) || empty($list->errors)){
                             $friendIds = array();
                             foreach($list as $item){
-                                $account->addFriend($item);
+                                if($account->checkAddUser($item)){
+                                    $account->addFriend($item);
+                                }
                             }
                         }else{
                             $friendIds = array();
@@ -104,7 +113,9 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     if(!is_array($list->errors) || empty($list->errors)){
                         $friendIds = array();
                         foreach($list as $item){
-                            $account->addFriend($item);
+                            if($account->checkAddUser($item)){
+                                $account->addFriend($item);
+                            }
                         }
                     }else{
                         Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
