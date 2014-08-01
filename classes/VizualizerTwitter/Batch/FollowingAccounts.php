@@ -72,6 +72,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
             $cursor = 0;
             $allFriends = array();
             $friendIds = array();
+            $followSetting = $account->followSetting();
             while (true) {
                 if ($cursor > 0) {
                     $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
