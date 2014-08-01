@@ -166,7 +166,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * 追加可能かどうかのチェックを行う。
      */
-    public function checkAddUser($user){
+    public function checkAddUser($user, $followSetting = null){
         // ユーザーの形式で無い場合はスキップ
         if(is_numeric($user) || !isset($user->id)){
             return false;
@@ -179,7 +179,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         }
 
         // 日本語チェックに引っかかる場合はスキップ
-        $setting = $this->followSetting();
+        if($followSetting == null){
+            $setting = $this->followSetting();
+        }else{
+            $setting = $followSetting;
+        }
         if ($setting->japanese_flg == "1" && $user->lang != "ja") {
             Vizualizer_Logger::writeInfo("Skipped invalid not Japanese : ".$user->screen_name);
             return false;

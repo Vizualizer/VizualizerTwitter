@@ -97,7 +97,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                         if(!property_exists($list, "errors") || !is_array($list->errors) || empty($list->errors)){
                             $friendIds = array();
                             foreach($list as $item){
-                                if($account->checkAddUser($item)){
+                                if($account->checkAddUser($item, $followSetting)){
                                     $account->addFriend($item);
                                 }
                             }
@@ -113,7 +113,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                     if(!property_exists($list, "errors") || !is_array($list->errors) || empty($list->errors)){
                         $friendIds = array();
                         foreach($list as $item){
-                            if($account->checkAddUser($item)){
+                            if($account->checkAddUser($item, $followSetting)){
                                 $account->addFriend($item);
                             }
                         }
