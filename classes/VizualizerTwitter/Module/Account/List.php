@@ -59,7 +59,7 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
                     $search["in:account_id"][] = $account->account_id;
                 }
                 if(is_array($accountIds) && !empty($accountIds)){
-                    $search["in:account_id"] = array_intersect($search["in:account_id"], $accoundIds);
+                    $search["in:account_id"] = array_intersect($search["in:account_id"], $accountIds);
                 }
                 $post->set("search", $search);
             }
