@@ -46,13 +46,20 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
                 $accountOperator = $loader->loadModel("AccountOperator");
                 $accountOperators = $accountOperator->findAllByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
                 $search = $post["search"];
-                $accoundIds = $search["in:account_id"];
+                if(!is_array($search)){
+                    $search = array();
+                }
+                if(array_key_exists("in:account_id", $search)){
+                    $accountIds = $search["in:account_id"];
+                }else{
+                    $accountIds = array();
+                }
                 $search["in:account_id"] = array("0");
                 foreach($accountOperators as $account){
                     $search["in:account_id"][] = $account->account_id;
                 }
-                if(is_array($accoundIds)){
-                    $search["in:account_id"] = array_intersect($search["in:account_id"], $accoundIds);
+                if(is_array($accountIds) && !empty($accountIds)){
+                    $search["in:account_id"] = array_intersect($search["in:account_id"], $accountIds);
                 }
                 $post->set("search", $search);
             }
