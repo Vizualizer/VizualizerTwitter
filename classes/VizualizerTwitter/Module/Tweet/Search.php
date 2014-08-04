@@ -68,9 +68,7 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                         $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
                     }
                     foreach($tweetsTemp->statuses as $status){
-                        if($status->retweet_count > 0 || $status->favorite_count > 0){
-                            $tweets[$status->id_str] = $status;
-                        }
+                        $tweets[$status->id_str] = $status;
                     }
                     if(!isset($tweetsTemp->search_metadata->next_results) || preg_match("/max_id=([0-9]+)/", $tweetsTemp->search_metadata->next_results, $p) == 0){
                         break;
@@ -89,7 +87,7 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                 // ツイートを検索
                 $maxId = 0;
                 $tweets = array();
-                for($i = 0; $i < 2; $i ++){
+                for($i = 0; $i < 5; $i ++){
                     if($maxId > 0){
                         $tweetsTemp = (array) $twitter->statuses_userTimeline(array("screen_name" => $post["screen_name"], "count" => "200", "max_id" => $maxId));
                     }else{
@@ -100,10 +98,8 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                         break;
                     }
                     foreach($tweetsTemp as $status){
-                        if($status->retweet_count > 0 || $status->favorite_count > 0){
-                            $maxId = $status->id_str;
-                            $tweets[$status->id_str] = $status;
-                        }
+                        $maxId = $status->id_str;
+                        $tweets[$status->id_str] = $status;
                     }
                 }
                 $tweets = array_values($tweets);
