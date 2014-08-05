@@ -9,8 +9,6 @@ class VizualizerTwitter_Json_SaveTweet
 
         // 商品プラグインの初期化
         $loader = new Vizualizer_Plugin("twitter");
-        $account = $loader->loadModel("Account");
-
         $result = array();
 
         if ($post["account_id"] > 0) {
