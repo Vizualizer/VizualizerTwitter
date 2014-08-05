@@ -137,15 +137,15 @@ class VizualizerTwitter_Model_Tweet extends Vizualizer_Plugin_Model
         // ツイートを取得
         $account = $this->account();
         $status = $account->status();
-        $tweetOrder = "(1 - first_tweeted_flg) * 10000000 + ".(($account->tweetSetting()->tweet_order == "1") ? "retweet_count" : "RAND()");
+        $tweetOrder = "first_tweeted_flg * 10000000 + ".(($account->tweetSetting()->tweet_order == "1") ? "UNIX_TIMESTAMP(create_time)" : "RAND()");
         if ($status->tweet_status > 0 && $status->original_status > 0) {
-            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, false);
         } elseif ($status->tweet_status > 0) {
-            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "gt:user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "gt:user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, false);
         } elseif ($status->original_status > 0) {
-            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "user_id" => "0", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, false);
         } else {
-            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "user_id" => "-1", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, true);
+            $tweets = $this->findAllBy(array("account_id" => $this->account_id, "user_id" => "-1", "tweeted_flg" => "0", "nin:tweet_text" => $ignoreTweets), $tweetOrder, false);
         }
         // ツイートが1件以上ある場合は該当のツイートを取得する。
         if ($tweets->count() > 0) {
