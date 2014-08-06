@@ -97,13 +97,12 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
                             // リツイートに変動があったものの対象とする。
                             $retweets = $account->getTwitter()->statuses_retweets_ID(array("id" => $tweet->id_str, "count" => 100));
                             foreach($retweets as $retweet){
-                                print_r($retweet);
-                                $follower = $retweet->user;
-                                if(isset($follower->id) && $follower->id > 0){
-                                    print_r($account->toArray());
-                                    print_r($follower);
-                                    $account->addFriend($follower);
-                                    print_r($account->toArray());
+                                if(is_object($retweet) && property_exists($retweet, "user")){
+                                    print_r($retweet);
+                                    $follower = $retweet->user;
+                                    if(isset($follower->id) && $follower->id > 0){
+                                        $account->addFriend($follower);
+                                    }
                                 }
                             }
                         }
