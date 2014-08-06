@@ -55,6 +55,7 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
             if(!empty($post["url"])){
                 if(preg_match("/^https:\\/\\/twitter.com\\/([a-zA-Z0-9_-]+)\\/?$/", $post["url"], $p) > 0){
                     $post->set("screen_name", $p[1]);
+                    $post->remove("url");
                 }
             }
             if(!empty($post["keyword"])){
