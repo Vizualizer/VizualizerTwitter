@@ -102,7 +102,7 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
                                 if(isset($follower->id) && $follower->id > 0){
                                     print_r($account->toArray());
                                     print_r($follower);
-                                    $account->addFollowUser($follower);
+                                    $account->addFriend($follower);
                                     print_r($account->toArray());
                                 }
                             }
