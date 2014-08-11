@@ -110,6 +110,11 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                 }
                 $attr = Vizualizer::attr();
                 $attr["tweets"] = $tweets;
+
+                // URLがあった場合はscreen_nameも併せてリセットする。
+                if(!emptyisset($post["url"])){
+                    $post->remove("screen_name");
+                }
             }else{
                 $attr["tweets"] = array();
             }
