@@ -67,9 +67,28 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetSetting = $account->tweetSetting();
 
             // 日中のみフラグの場合は夜間スキップ
-            if ($tweetSetting->daytime_flg == "1" && Vizualizer::now()->date("H") > 0 && Vizualizer::now()->date("H") < 7) {
-                echo $account->screen_name . " : Skip tweet for daytime\r\n";
-                continue;
+            if ($tweetSetting->daytime_flg == "1"){
+                // 数値が設定されていない場合は7時から24時に設定
+                if(!is_numeric($tweetSetting->daytime_start) || !is_numeric($tweetSetting->daytime_end)){
+                    $tweetSetting->daytime_start = 7;
+                    $tweetSetting->daytime_end = 0;
+                }
+                // 時間の指定が0時から23時の間に無い場合は0時に変更
+                if(!($tweetSetting->daytime_start >= 0 && $tweetSetting->daytime_start < 24)){
+                    $tweetSetting->daytime_start = 0;
+                }
+                if(!($tweetSetting->daytime_end >= 0 && $tweetSetting->daytime_end < 24)){
+                    $tweetSetting->daytime_end = 0;
+                }
+                if($tweetSetting->daytime_start < $tweetSetting->daytime_end && (Vizualizer::now()->date("H") < $tweetSetting->daytime_start || Vizualizer::now()->date("H") >= $tweetSetting->daytime_end)){
+                    // START < ENDの場合は、その間に含まれる場合のみツイートする。
+                    echo $account->screen_name . " : Skip tweet for daytime\r\n";
+                    continue;
+                }elseif($tweetSetting->daytime_end < $tweetSetting->daytime_start && (Vizualizer::now()->date("H") >= $tweetSetting->daytime_end && Vizualizer::now()->date("H") < $tweetSetting->daytime_start)){
+                    // END < STARTの場合は、その間に含まれる場合のみツイートしない。
+                    echo $account->screen_name . " : Skip tweet for daytime\r\n";
+                    continue;
+                }
             }
 
             // アカウントのステータスが有効のアカウントのみを対象とする。
