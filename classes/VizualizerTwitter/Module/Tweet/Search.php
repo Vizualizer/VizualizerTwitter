@@ -69,7 +69,9 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                         $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
                     }
                     foreach($tweetsTemp->statuses as $status){
-                        $tweets[$status->id_str] = $status;
+                        if(!isset($status->retweeted_status)){
+                            $tweets[$status->id_str] = $status;
+                        }
                     }
                     if(!isset($tweetsTemp->search_metadata->next_results) || preg_match("/max_id=([0-9]+)/", $tweetsTemp->search_metadata->next_results, $p) == 0){
                         break;
@@ -100,7 +102,9 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                     }
                     foreach($tweetsTemp as $status){
                         $maxId = $status->id_str;
-                        $tweets[$status->id_str] = $status;
+                        if(!isset($status->retweeted_status)){
+                            $tweets[$status->id_str] = $status;
+                        }
                     }
                 }
                 $tweets = array_values($tweets);
