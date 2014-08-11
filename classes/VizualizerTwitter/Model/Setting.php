@@ -60,6 +60,7 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
      */
     public function findByOperatorAccount($operator_id, $account_id = 0)
     {
+        // 検索して該当のアカウントの設定が無い場合はデフォルト値で作成
         $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
         if (!($this->setting_id > 0)) {
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -68,21 +69,30 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
                 $this->account_id = $account_id;
                 $this->save();
                 Vizualizer_Database_Factory::commit($connection);
+                $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
             } catch (Exception $e) {
                 Vizualizer_Database_Factory::rollback($connection);
             }
         }
-        $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
-        if($account_id > 0 && $this->use_follow_setting != "1"){
-            // アカウントIDが渡されている場合には、基本の設定を呼び出す。
+        if($account_id > 0){
+            // アカウントIDが設定されている場合はデフォルトの設定を取得する。
             $loader = new Vizualizer_Plugin("twitter");
             $setting = $loader->loadModel("Setting");
-            $setting->findByOperatorAccount($operator_id, "0");
-            // 個別の設定を利用しないとしている場合には、setting_id, operator_id, account_id, account_attribute以外を基本設定の数値で上書きする
-            $keys = array_keys($setting->toArray());
-            foreach($keys as $key){
-                if($key != "setting_id" && $key != "operator_id" && $key != "account_id" && $key != "account_attribute"){
+            $setting->findByOperatorAccount($operator_id);
+            // 常にデフォルトの設定を利用する項目をコピー
+            $defaultKeys = Vizualizer_Configure::get("twitter_default_setting_keys");
+            if(is_array($defaultKeys)){
+                foreach($defaultKeys as $key){
                     $this->$key = $setting->$key;
+                }
+            }
+            if($this->use_follow_setting != "1"){
+                // 個別の設定を利用しないとしている場合には、setting_id, operator_id, account_id, account_attribute以外を基本設定の数値で上書きする
+                $keys = array_keys($setting->toArray());
+                foreach($keys as $key){
+                    if($key != "setting_id" && $key != "operator_id" && $key != "account_id" && $key != "account_attribute"){
+                        $this->$key = $setting->$key;
+                    }
                 }
             }
         }
