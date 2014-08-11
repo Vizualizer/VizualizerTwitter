@@ -77,7 +77,7 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
                         if(!($model->tweet_log_id > 0)){
                             $model->account_id = $account->account_id;
                             $model->twitter_id = $tweet->id_str;
-                            $model->tweet_time = date("Y-m-d H:i:s", strtotime($tweet->created_at));
+                            $model->tweet_time = Vizualizer::now()->strToTime($tweet->created_at)->date("Y-m-d H:i:s");
                             $model->tweet_type = 3;
                             if(is_array($tweet->entities->media)){
                                 foreach($tweet->entities->media as $media){
