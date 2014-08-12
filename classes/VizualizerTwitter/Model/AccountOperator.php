@@ -140,7 +140,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("AccountOperetor");
+        $model = $loader->loadModel("AccountOperator");
         $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
         if($model->account_operator_id > 0){
             try {
@@ -201,7 +201,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountOperator");
         $model->findByAccountOperator($account_id, $new_operator_id);
-        if($model->accoung_operator_id > 0){
+        if($model->account_operator_id > 0){
             return false;
         }
 
@@ -210,7 +210,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
             $model = $loader->loadModel("AccountOperator");
             $model->findBy(array("account_id" => $account_id, "operator_index" => $operator_index));
 
-            if($model->accoung_operator_id > 0 && $new_operator_id > 0){
+            if($model->account_operator_id > 0 && $new_operator_id > 0){
                 $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
                     $model->operator_id = $new_operator_id;
@@ -222,7 +222,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
                 }
             }elseif($new_operator_id > 0){
                 $this->addAccountOperator($account_id, $new_operator_id, $operator_index);
-            }elseif($model->accoung_operator_id > 0){
+            }elseif($model->account_operator_id > 0){
                 $this->removeAccountOperator($account_id, $model->operator_id);
             }
         }
