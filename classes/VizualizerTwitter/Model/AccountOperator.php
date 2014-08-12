@@ -201,7 +201,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountOperator");
         $model->findByAccountOperator($account_id, $new_operator_id);
-        if($model->accoung_operator_id > 0){
+        if($model->account_operator_id > 0){
             return false;
         }
 
