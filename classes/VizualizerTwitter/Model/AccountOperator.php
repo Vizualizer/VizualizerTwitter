@@ -210,7 +210,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
             $model = $loader->loadModel("AccountOperator");
             $model->findBy(array("account_id" => $account_id, "operator_index" => $operator_index));
 
-            if($model->accoung_operator_id > 0 && $new_operator_id > 0){
+            if($model->account_operator_id > 0 && $new_operator_id > 0){
                 $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
                     $model->operator_id = $new_operator_id;
@@ -222,7 +222,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
                 }
             }elseif($new_operator_id > 0){
                 $this->addAccountOperator($account_id, $new_operator_id, $operator_index);
-            }elseif($model->accoung_operator_id > 0){
+            }elseif($model->account_operator_id > 0){
                 $this->removeAccountOperator($account_id, $model->operator_id);
             }
         }
