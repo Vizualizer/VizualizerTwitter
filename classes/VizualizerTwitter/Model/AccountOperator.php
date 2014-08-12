@@ -140,7 +140,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("AccountOperetor");
+        $model = $loader->loadModel("AccountOperator");
         $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
         if($model->account_operator_id > 0){
             try {
