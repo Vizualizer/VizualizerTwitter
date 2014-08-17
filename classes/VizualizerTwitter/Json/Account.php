@@ -12,14 +12,7 @@ class VizualizerTwitter_Json_Account
         $account->status = $account->status()->toArray();
         $account->isUnfollowable = $account->isUnfollowable();
         $account->preTweetCount = $account->getPreTweetCount();
-        $accounts = $account->findAllBy(array());
-        $attributes = array();
-        foreach($accounts as $acc){
-            if(!empty($acc->attribute)){
-                $attributes[$acc->attribute] = $acc->attribute;
-            }
-        }
-        $account->attributes = $attributes;
+        $account->attributes = $account->attributes();
         $accountGroups = $account->accountGroups();
         $groups = array();
         foreach($accountGroups as $accountGroup){
