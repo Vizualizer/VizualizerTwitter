@@ -50,7 +50,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * 属性をキャッシュするための変数
      */
-    private $attributes;
+    private static $attributes;
 
     /**
      * コンストラクタ
@@ -148,8 +148,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * 属性のリストを取得するための変数
      */
-    public function attributes(){
-        if(isset($this->attributes)){
+    public static function attributes(){
+        if(isset(self::$attributes)){
             $accounts = $this->findAllBy(array());
             $attributes = array();
             foreach($accounts as $acc){
@@ -157,9 +157,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                     $attributes[$acc->attribute] = $acc->attribute;
                 }
             }
-            $this->attributes = $attributes;
+            self::$attributes = $attributes;
         }
-        return $this->attributes;
+        return self::$attributes;
     }
 
     /**
