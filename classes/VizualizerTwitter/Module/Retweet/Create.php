@@ -35,13 +35,23 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
     {
         $post = Vizualizer::request();
         $loader = new Vizualizer_Plugin("Twitter");
+        $accountIds = array();
 
         // 該当のグループのアカウントを取得する。
-        $model = $loader->loadModel("AccountGroup");
-        $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
-        $accountIds = array();
-        foreach($models as $model){
-            $accountIds[$model->account_id] = $model->account_id;
+        if(!empty($post["target_group_id"])){
+            $model = $loader->loadModel("AccountGroup");
+            $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
+            foreach($models as $model){
+                $accountIds[$model->account_id] = $model->account_id;
+            }
+        }
+        if(!empty($post["account_attribute"])){
+            $loader = new Vizualizer_Plugin("Twitter");
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
+            foreach($settings as $setting){
+                $accountIds[$setting->account_id] = $setting->account_id;
+            }
         }
         shuffle($accountIds);
         if($post["max_accounts"] > 0 && $post["max_accounts"] < count($accountIds)){
