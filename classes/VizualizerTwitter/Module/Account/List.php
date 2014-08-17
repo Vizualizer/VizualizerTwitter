@@ -64,6 +64,19 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
                 $post->set("search", $search);
             }
         }
+        // account_attributeで検索する処理を追加
+        if(!empty($post["account_attribute"])){
+            $loader = new Vizualizer_Plugin("Twitter");
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
+            $accountIds = array();
+            foreach($settings as $setting){
+                $accountIds[] = $setting->account_id;
+            }
+            $post->set("search", array("in:account_id" => $accountIds));
+        }else{
+            $post->remove("search");
+        }
         $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
     }
 }
