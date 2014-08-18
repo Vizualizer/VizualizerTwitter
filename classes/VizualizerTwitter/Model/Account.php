@@ -148,13 +148,15 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * 属性のリストを取得するための変数
      */
-    public static function attributes(){
-        if(isset(self::$attributes)){
-            $accounts = $this->findAllBy(array());
+    public function attributes(){
+        if(!isset(self::$attributes)){
+            $loader = new Vizualizer_Plugin("twitter");
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array());
             $attributes = array();
-            foreach($accounts as $acc){
-                if(!empty($acc->attribute)){
-                    $attributes[$acc->attribute] = $acc->attribute;
+            foreach($settings as $setting){
+                if(!empty($setting->account_attribute)){
+                    $attributes[$setting->account_attribute] = $setting->account_attribute;
                 }
             }
             self::$attributes = $attributes;
