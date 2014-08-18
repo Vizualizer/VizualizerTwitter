@@ -43,6 +43,22 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
     }
 
     /**
+     * アカウントIDとオペレータIDでデータを取得する。
+     * @param int $account_id
+     */
+    public function findByAccountOperator($account_id, $operator_id){
+        $this->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+    }
+
+    /**
+     * アカウントIDとグループIDでデータを取得する。
+     * @param int $account_id
+     */
+    public function findByAccountIndex($account_id, $operator_index){
+        $this->findBy(array("account_id" => $account_id, "operator_index" => $operator_index));
+    }
+
+    /**
      * 主キーでデータを取得する。
      *
      * @param $account_operator_id アカウントオペレータID
@@ -54,97 +70,161 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
 
     /**
      * アカウントIDでデータを取得する。
-     *
-     * @param $account_id アカウントID
+     * @param int $account_id
      */
-    public function findByAccountId($account_id = 0)
-    {
-        $this->findBy(array("account_id" => $account_id));
+    public function findAllByAccountId($account_id){
+        return $this->findAllBy(array("account_id" => $account_id));
     }
 
     /**
-     * ステータスに紐づいたアカウントを取得する
-     *
-     * @return アカウント
+     * オペレータIDでデータを取得する。
+     * @param int $operator_id
      */
-    public function account()
-    {
+    public function findAllByOperatorId($operator_id){
+        return $this->findAllBy(array("operator_id" => $operator_id));
+    }
+
+    /**
+     * 関連するアカウントを取得する。
+     */
+    public function account(){
         $loader = new Vizualizer_Plugin("twitter");
-        $account = $loader->loadModel("Account");
-        $account->findByPrimaryKey($this->account_id);
-        return $account;
+        $model = $loader->loadModel("Account");
+        $model->findByPrimaryKey($this->account_id);
+        return $model;
     }
 
+    /**
+     * 関連するオペレータを取得する。
+     */
+    public function group(){
+        $loader = new Vizualizer_Plugin("admin");
+        $model = $loader->loadModel("Operator");
+        $model->findByPrimaryKey($this->operator_id);
+        return $model;
+    }
 
     /**
-     * アカウントステータスを更新する
-     *
-     * @param int $status アカウントステータス
+     * アカウントオペレータのレコードを追加する。
+     * @param int $account_id
+     * @param int $operator_id
+     * @throws Vizualizer_Exception_Database
      */
-    public function updateStatus($statusId)
-    {
+    public function addAccountOperator($account_id, $operator_id, $index = 0){
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
-        try {
-            $this->account_status = $statusId;
-            $this->save();
-            Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountOperator");
+        $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+        if(!($model->account_operator_id > 0)){
+            try {
+                $model->account_id = $account_id;
+                $model->operator_id = $operator_id;
+                $model->operator_index = $index;
+                $model->save();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
         }
     }
 
     /**
-     * フォローステータスを更新する
-     *
-     * @param int $status フォローステータス
-     * @param int $next 次回のフォロー実行時間
-     * @param boolean $reset
-     *            フォローカウントのリセットフラグ（$nextが設定された場合、trueならカウントを0に、falseならカウントを1加算）
+     * アカウントオペレータのレコードをする。
+     * @param int $account_id
+     * @param int $operator_id
+     * @throws Vizualizer_Exception_Database
      */
-    public function updateFollow($statusId, $next = "", $reset = false)
-    {
+    public function removeAccountOperator($account_id, $operator_id){
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
-        try {
-            $this->follow_status = $statusId;
-            if (!empty($next)) {
-                $this->next_follow_time = $next;
-                if ($reset) {
-                    $this->follow_count = 0;
-                } else {
-                    $this->follow_count ++;
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountOperator");
+        $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+        if($model->account_operator_id > 0){
+            try {
+                $model->delete();
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+        }
+    }
+
+    /**
+     * オペレータを置き換える
+     * @param int $account_id
+     * @param int $operator_id
+     * @param int $new_operator_id
+     */
+    public function changeAccountOperator($account_id, $operator_id, $new_operator_id){
+        // 設定する組み合わせが存在する場合には処理を行わない
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountOperator");
+        $model->findByAccountOperator($account_id, $new_operator_id);
+        if($model->accoung_operator_id > 0){
+            return false;
+        }
+
+        if($operator_id > 0 && $new_operator_id > 0){
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            $model = $loader->loadModel("AccountOperator");
+            $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+            if($model->account_operator_id > 0){
+                try {
+                    $model->operator_id = $new_operator_id;
+                    $model->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
                 }
             }
-            $this->save();
-            Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
+        }elseif($operator_id > 0){
+            $this->removeAccountOperator($account_id, $operator_id);
+        }elseif($new_operator_id > 0){
+            $this->addAccountOperator($account_id, $new_operator_id);
         }
     }
 
     /**
-     * ツイートステータスを更新する
-     *
-     * @param int $status ツイートステータス
-     * @param int $next 次回のツイート実行時間
+     * オペレータを置き換える
+     * @param int $account_id
+     * @param int $operator_index
+     * @param int $new_operator_id
      */
-    public function updateTweet($statusId, $next = "")
-    {
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-        try {
-            $this->tweet_status = $statusId;
-            if (!empty($next)) {
-                $this->next_tweet_time = $next;
+    public function updateAccountOperator($account_id, $operator_index, $new_operator_id){
+        // 設定する組み合わせが存在する場合には処理を行わない
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountOperator");
+        $model->findByAccountOperator($account_id, $new_operator_id);
+        if($model->account_operator_id > 0){
+            return false;
+        }
+
+        // Operator Indexが指定された場合のみ処理を実行
+        if($operator_index > 0){
+            $model = $loader->loadModel("AccountOperator");
+            $model->findBy(array("account_id" => $account_id, "operator_index" => $operator_index));
+
+            if($model->account_operator_id > 0 && $new_operator_id > 0){
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $model->operator_id = $new_operator_id;
+                    $model->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+            }elseif($new_operator_id > 0){
+                $this->addAccountOperator($account_id, $new_operator_id, $operator_index);
+            }elseif($model->account_operator_id > 0){
+                $this->removeAccountOperator($account_id, $model->operator_id);
             }
-            $this->save();
-            Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
         }
     }
 }

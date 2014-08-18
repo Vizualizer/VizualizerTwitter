@@ -1,6 +1,6 @@
 <?php
 
-class VizualizerTwitter_Json_AccountText
+class VizualizerTwitter_Json_AccountText extends VizualizerTwitter_Json_Account
 {
 
     public function execute()
@@ -43,17 +43,7 @@ class VizualizerTwitter_Json_AccountText
             $post->remove("target");
         }
 
-        $accounts = $account->findAllBy(array());
-        $attributes = array();
-        foreach($accounts as $acc){
-            if(!empty($acc->attribute)){
-                $attributes[$acc->attribute] = $acc->attribute;
-            }
-        }
-
-        $account->findByPrimaryKey($post["account_id"]);
-        $account->attributes = $attributes;
-
+        $account = $this->getAccountInfo($post["account_id"]);
         return $account->toArray();
     }
 }

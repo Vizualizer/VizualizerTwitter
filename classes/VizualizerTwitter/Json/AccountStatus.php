@@ -1,6 +1,6 @@
 <?php
 
-class VizualizerTwitter_Json_AccountStatus
+class VizualizerTwitter_Json_AccountStatus extends VizualizerTwitter_Json_Account
 {
 
     public function execute()
@@ -18,6 +18,7 @@ class VizualizerTwitter_Json_AccountStatus
                 $account->findByPrimaryKey($post["account_id"]);
                 $status = $account->status();
                 switch ($p[1]) {
+                    case "bot_status":
                     case "follow_status":
                     case "tweet_status":
                     case "original_status":
@@ -56,9 +57,7 @@ class VizualizerTwitter_Json_AccountStatus
             $post->remove("target");
         }
 
-        $status = $account->status();
-        $status->isUnfollowable = $account->isUnfollowable();
-
-        return $status->toArray();
+        $account = $this->getAccountInfo($post["account_id"]);
+        return $account->toArray();
     }
 }

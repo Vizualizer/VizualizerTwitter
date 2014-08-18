@@ -67,9 +67,28 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetSetting = $account->tweetSetting();
 
             // 日中のみフラグの場合は夜間スキップ
-            if ($tweetSetting->daytime_flg == "1" && Vizualizer::now()->date("H") > 0 && Vizualizer::now()->date("H") < 7) {
-                echo $account->screen_name . " : Skip tweet for daytime\r\n";
-                continue;
+            if ($tweetSetting->daytime_flg == "1"){
+                // 数値が設定されていない場合は7時から24時に設定
+                if(!is_numeric($tweetSetting->daytime_start) || !is_numeric($tweetSetting->daytime_end)){
+                    $tweetSetting->daytime_start = 7;
+                    $tweetSetting->daytime_end = 0;
+                }
+                // 時間の指定が0時から23時の間に無い場合は0時に変更
+                if(!($tweetSetting->daytime_start >= 0 && $tweetSetting->daytime_start < 24)){
+                    $tweetSetting->daytime_start = 0;
+                }
+                if(!($tweetSetting->daytime_end >= 0 && $tweetSetting->daytime_end < 24)){
+                    $tweetSetting->daytime_end = 0;
+                }
+                if($tweetSetting->daytime_start < $tweetSetting->daytime_end && (Vizualizer::now()->date("H") < $tweetSetting->daytime_start || Vizualizer::now()->date("H") >= $tweetSetting->daytime_end)){
+                    // START < ENDの場合は、その間に含まれる場合のみツイートする。
+                    echo $account->screen_name . " : Skip tweet for daytime\r\n";
+                    continue;
+                }elseif($tweetSetting->daytime_end < $tweetSetting->daytime_start && (Vizualizer::now()->date("H") >= $tweetSetting->daytime_end && Vizualizer::now()->date("H") < $tweetSetting->daytime_start)){
+                    // END < STARTの場合は、その間に含まれる場合のみツイートしない。
+                    echo $account->screen_name . " : Skip tweet for daytime\r\n";
+                    continue;
+                }
             }
 
             // アカウントのステータスが有効のアカウントのみを対象とする。
@@ -139,7 +158,37 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                         echo $account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text . "\r\n";
                         $tweetLog->twitter_id = $result->id;
                         $tweetlog->tweet_text = $result->text;
+                        if(count($result->entities->media) > 0){
+                            $media = $result->entities->media[0];
+                            $tweetLog->media_url = $media->url;
+                            $tweetLog->media_link = $media->media_url;
+                        }else{
+                            $tweetLog->media_url = "";
+                            $tweetLog->media_link = "";
+                        }
                         $tweetLog->save();
+
+                        if($status->retweet_status == "1" && $tweetSetting->retweet_group_id > 0){
+                            // 強化アカウントで、対象グループが設定されている場合は、リツイートの登録も併せて行う。
+                            $group = $loader->loadModel("AccountGroup");
+                            $groups = $group->findAllBy(array("group_id" => $tweetSetting->retweet_group_id));
+                            foreach($groups as $group){
+                                if($account->account_id != $group->account_id){
+                                    $model = $loader->loadModel("Retweet");
+                                    $model->account_id = $group->account_id;
+                                    $model->tweet_id = $result->id;
+                                    if($tweetSetting->retweet_delay > 0){
+                                        $model->scheduled_retweet_time = Vizualizer::now()->strToTime("+" . $tweetSetting->retweet_delay . "minute")->date("Y-m-d H:i:s");
+                                    }else{
+                                        $model->scheduled_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                                    }
+                                    if($tweetSetting->retweet_duration > 0){
+                                        $model->scheduled_cancel_retweet_time = Vizualizer::now()->strToTime("+" . $tweetSetting->retweet_duration . "hour")->date("Y-m-d H:i:s");
+                                    }
+                                    $model->save();
+                                }
+                            }
+                        }
 
                         $interval = $tweetSetting->tweet_interval;
                         if ($tweetSetting->wavy_flg == "1") {

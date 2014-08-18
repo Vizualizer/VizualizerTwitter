@@ -33,9 +33,39 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
 
     function execute($params)
     {
+        $attr = Vizualizer::attr();
         $post = Vizualizer::request();
+        $loader = new Vizualizer_Plugin("twitter");
+        if($params->get("operator", "single") == "list"){
+            if ($params->check("adminRoles")) {
+                $adminRoles = explode(",", $params->get("adminRoles"));
+            }else{
+                $adminRoles = array();
+            }
+            if(!in_array($attr[VizualizerAdmin::KEY]->role()->role_code, $adminRoles)){
+                $accountOperator = $loader->loadModel("AccountOperator");
+                $accountOperators = $accountOperator->findAllByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
+                $search = $post["search"];
+                if(!is_array($search)){
+                    $search = array();
+                }
+                if(array_key_exists("in:account_id", $search)){
+                    $accountIds = $search["in:account_id"];
+                }else{
+                    $accountIds = array();
+                }
+                $search["in:account_id"] = array("0");
+                foreach($accountOperators as $account){
+                    $search["in:account_id"][] = $account->account_id;
+                }
+                if(is_array($accountIds) && !empty($accountIds)){
+                    $search["in:account_id"] = array_intersect($search["in:account_id"], $accountIds);
+                }
+                $post->set("search", $search);
+            }
+        }
+        // account_attributeで検索する処理を追加
         if(!empty($post["account_attribute"])){
-            $loader = new Vizualizer_Plugin("Twitter");
             $setting = $loader->loadModel("Setting");
             $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
             $accountIds = array();
@@ -47,5 +77,8 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
             $post->remove("search");
         }
         $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
+        // 結果に属性一覧を追加する。
+        $account = $loader->loadModel("Account");
+        $attr["account_attributes"] = $account->attributes();
     }
 }

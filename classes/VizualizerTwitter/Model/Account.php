@@ -48,6 +48,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private $twitter;
 
     /**
+     * 属性をキャッシュするための変数
+     */
+    private static $attributes;
+
+    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -138,6 +143,25 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $server = $loader->loadModel("Server");
         $server->findByPrimaryKey($this->server_id);
         return $server;
+    }
+
+    /**
+     * 属性のリストを取得するための変数
+     */
+    public function attributes(){
+        if(!isset(self::$attributes)){
+            $loader = new Vizualizer_Plugin("twitter");
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array());
+            $attributes = array();
+            foreach($settings as $setting){
+                if(!empty($setting->account_attribute)){
+                    $attributes[$setting->account_attribute] = $setting->account_attribute;
+                }
+            }
+            self::$attributes = $attributes;
+        }
+        return self::$attributes;
     }
 
     /**
@@ -380,7 +404,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function accountGroups(){
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountGroup");
-        return $model->findAllByGroupId($this->account_id);
+        return $model->findAllByAccountId($this->account_id);
+    }
+
+    /**
+     * アカウントオペレータを取得
+     */
+    public function accountOperators(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("AccountOperator");
+        return $model->findAllByAccountId($this->account_id);
     }
 
     /**
@@ -470,6 +503,45 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $tweetLog = $loader->loadModel("TweetLog");
         $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
         return $tweetLogs;
+    }
+
+    /**
+     * アカウントに紐づいたリツイートログを取得する
+     *
+     * @return リツイートログのリスト
+     */
+    public function retweets($sort = "retweet_time", $reverse = true)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $retweet = $loader->loadModel("Retweet");
+        $retweets = $retweet->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $retweets;
+    }
+
+    /**
+     * アカウントに紐づいたツイートログを件数制限して取得する
+     *
+     * @return ツイートログのリスト
+     */
+    public function limitedTweetLogs($limit, $offset = 0, $sort = "tweet_time", $reverse = true)
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("TweetLog");
+        $tweetLog->limit($limit, $offset);
+        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
+        return $tweetLogs;
+    }
+
+    /**
+     * 一度もツイートしていないツイートデータの件数を取得する。
+     * @return int ツイートの件数
+     */
+    public function getPreTweetCount(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $tweetLog = $loader->loadModel("Tweet");
+        $count = $tweetLog->countBy(array("account_id" => $this->account_id, "first_tweeted_flg" => "0"));
+        return $count;
+
     }
 
     /**

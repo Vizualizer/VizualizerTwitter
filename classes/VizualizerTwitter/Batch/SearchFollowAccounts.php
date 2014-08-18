@@ -82,7 +82,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
 
             // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
             $follow = $loader->loadModel("Follow");
-            $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => date("Y-m-d")));
+            $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => Vizualizer::now()->date("Y-m-d")));
             if ($searched < $setting->daily_follows * 2) {
                 // ユーザー情報を検索
                 foreach($keywords as $keyword){

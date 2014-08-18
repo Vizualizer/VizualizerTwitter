@@ -23,12 +23,12 @@
  */
 
 /**
- * ツイートログのモデルです。
+ * リツイートのモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,26 +39,17 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("TweetLogs"), $values);
+        parent::__construct($loader->loadTable("Retweets"), $values);
     }
 
     /**
      * 主キーでデータを取得する。
      *
-     * @param $tweet_log_id ツイートログID
+     * @param $retweet_id ツイートID
      */
-    public function findByPrimaryKey($tweet_log_id)
+    public function findByPrimaryKey($retweet_id)
     {
-        $this->findBy(array("tweet_log_id" => $tweet_log_id));
-    }
-
-    /**
-     * TwitterのIDでデータを取得する。
-     *
-     * @param string $twitter_id
-     */
-    public function findByTwitterId($twitter_id){
-        $this->findBy(array("twitter_id" => $twitter_id));
+        $this->findBy(array("retweet_id" => $retweet_id));
     }
 
     /**
@@ -70,17 +61,6 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
     public function findAllByAccountId($account_id, $sort = "", $reverse = false)
     {
         return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
-    }
-
-    /**
-     * ツイートIDでデータを取得する。
-     *
-     * @param $tweet_id ツイートID
-     * @return 設定のリスト
-     */
-    public function findAllByTweetId($tweet_id, $sort = "", $reverse = false)
-    {
-        return $this->findAllBy(array("tweet_id" => $tweet_id), $sort, $reverse);
     }
 
     /**
@@ -97,33 +77,12 @@ class VizualizerTwitter_Model_TweetLog extends Vizualizer_Plugin_Model
     }
 
     /**
-     * 設定に紐づいたツイートを取得する
-     *
-     * @return ツイート
+     * リツイートした元のツイートを取得する。
      */
-    public function tweet()
-    {
+    public function tweet(){
         $loader = new Vizualizer_Plugin("twitter");
-        $group = $loader->loadModel("Tweet");
-        $group->findByPrimaryKey($this->tweet_id);
-        return $group;
-    }
-
-    /**
-     * ツイートのテキストを取得する
-     */
-    public function getText(){
-        if($this->media_url != ""){
-            return str_replace($this->media_url, "", $this->tweet_text);
-        }
-        return $this->tweet_text;
-    }
-
-    /**
-     * ツイートのURLを取得する。
-     * @return string ツイートに含まれるURL
-     */
-    public function getUrl(){
-        return $this->media_link;
+        $tweet = $loader->loadModel("TweetLog");
+        $tweet->findByTwitterId($this->tweet_id);
+        return $tweet;
     }
 }
