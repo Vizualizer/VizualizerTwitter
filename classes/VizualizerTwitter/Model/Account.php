@@ -48,6 +48,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private $twitter;
 
     /**
+     * 属性をキャッシュするための変数
+     */
+    private static $attributes;
+
+    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -138,6 +143,25 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         $server = $loader->loadModel("Server");
         $server->findByPrimaryKey($this->server_id);
         return $server;
+    }
+
+    /**
+     * 属性のリストを取得するための変数
+     */
+    public function attributes(){
+        if(!isset(self::$attributes)){
+            $loader = new Vizualizer_Plugin("twitter");
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array());
+            $attributes = array();
+            foreach($settings as $setting){
+                if(!empty($setting->account_attribute)){
+                    $attributes[$setting->account_attribute] = $setting->account_attribute;
+                }
+            }
+            self::$attributes = $attributes;
+        }
+        return self::$attributes;
     }
 
     /**

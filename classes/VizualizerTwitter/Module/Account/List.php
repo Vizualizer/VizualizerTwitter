@@ -35,6 +35,7 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
     {
         $attr = Vizualizer::attr();
         $post = Vizualizer::request();
+        $loader = new Vizualizer_Plugin("twitter");
         if($params->get("operator", "single") == "list"){
             if ($params->check("adminRoles")) {
                 $adminRoles = explode(",", $params->get("adminRoles"));
@@ -42,7 +43,6 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
                 $adminRoles = array();
             }
             if(!in_array($attr[VizualizerAdmin::KEY]->role()->role_code, $adminRoles)){
-                $loader = new Vizualizer_Plugin("twitter");
                 $accountOperator = $loader->loadModel("AccountOperator");
                 $accountOperators = $accountOperator->findAllByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
                 $search = $post["search"];
@@ -64,6 +64,21 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
                 $post->set("search", $search);
             }
         }
+        // account_attributeで検索する処理を追加
+        if(!empty($post["account_attribute"])){
+            $setting = $loader->loadModel("Setting");
+            $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
+            $accountIds = array();
+            foreach($settings as $setting){
+                $accountIds[] = $setting->account_id;
+            }
+            $post->set("search", array("in:account_id" => $accountIds));
+        }else{
+            $post->remove("search");
+        }
         $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
+        // 結果に属性一覧を追加する。
+        $account = $loader->loadModel("Account");
+        $attr["account_attributes"] = $account->attributes();
     }
 }
