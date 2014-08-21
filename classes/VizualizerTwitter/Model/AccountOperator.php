@@ -97,7 +97,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
     /**
      * 関連するオペレータを取得する。
      */
-    public function group(){
+    public function operator(){
         $loader = new Vizualizer_Plugin("admin");
         $model = $loader->loadModel("Operator");
         $model->findByPrimaryKey($this->operator_id);
