@@ -34,33 +34,42 @@ class VizualizerTwitter_Module_Account_SaveGroups extends Vizualizer_Plugin_Modu
     function execute($params)
     {
         $post = Vizualizer::request();
-        $loader = new Vizualizer_Plugin("Twitter");
-        $groupIds = $post["group_id"];
-
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-        try {
-            // 登録済みのグループを取得
-            $group = $loader->loadModel("AccountGroup");
-            $groups = $group->findAllByAccountId($post["account_id"]);
-
-            // 登録から外れたグループを削除
-            foreach($groups as $group){
-                if(in_array($group->group_id, $groupIds)){
-                    $group->remove();
+        if ($post["add"] || $post["save"]) {
+            $loader = new Vizualizer_Plugin("Twitter");
+            $groupIds = array();
+            if(is_array($post["group_id"])){
+                foreach($post["group_id"] as $groupId){
+                    if($groupId > 0){
+                        $groupIds[] = $groupId;
+                    }
                 }
             }
-        // エラーが無かった場合、処理をコミットする。
-        Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
-        }
 
-        // 指定されたグループを追加
-        $group = $loader->loadModel("AccountGroup");
-        foreach($groupIds as $groupId){
-            $group->addAccountGroup($post["account_id"], $groupId);
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                // 登録済みのグループを取得
+                $group = $loader->loadModel("AccountGroup");
+                $groups = $group->findAllByAccountId($post["account_id"]);
+
+                // 登録から外れたグループを削除
+                foreach($groups as $group){
+                    if(!in_array($group->group_id, $groupIds)){
+                        $group->delete();
+                    }
+                }
+            // エラーが無かった場合、処理をコミットする。
+            Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+
+            // 指定されたグループを追加
+            $group = $loader->loadModel("AccountGroup");
+            foreach($groupIds as $groupId){
+                $group->addAccountGroup($post["account_id"], $groupId);
+            }
         }
     }
 }

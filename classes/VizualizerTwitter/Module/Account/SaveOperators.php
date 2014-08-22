@@ -28,40 +28,49 @@
  * @package VizualizerAdmin
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Account_SaveGroups extends Vizualizer_Plugin_Module_Save
+class VizualizerTwitter_Module_Account_SaveOperators extends Vizualizer_Plugin_Module_Save
 {
 
     function execute($params)
     {
         $post = Vizualizer::request();
-        $loader = new Vizualizer_Plugin("Twitter");
-        $operatorIds = $post["operator_id"];
-
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-        try {
-            // 登録済みのグループを取得
-            $operator = $loader->loadModel("AccountOperator");
-            $operators = $operator->findAllByAccountId($post["account_id"]);
-
-            // 登録から外れたグループを削除
-            foreach($operators as $operator){
-                if(in_array($operator->operator_id, $operatorIds)){
-                    $operator->remove();
+        if ($post["add"] || $post["save"]) {
+            $loader = new Vizualizer_Plugin("Twitter");
+            $operatorIds = array();
+            if(is_array($post["operator_id"])){
+                foreach($post["operator_id"] as $operatorId){
+                    if($operatorId > 0){
+                        $operatorIds[] = $operatorId;
+                    }
                 }
             }
 
-            // エラーが無かった場合、処理をコミットする。
-            Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
-        }
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                // 登録済みのグループを取得
+                $operator = $loader->loadModel("AccountOperator");
+                $operators = $operator->findAllByAccountId($post["account_id"]);
 
-        // 指定されたグループを追加
-        $operator = $loader->loadModel("AccountOperator");
-        foreach($operatorIds as $operatorId){
-            $operator->addAccountOperator($post["account_id"], $operatorId);
+                // 登録から外れたグループを削除
+                foreach($operators as $operator){
+                    if(!in_array($operator->operator_id, $operatorIds)){
+                        $operator->delete();
+                    }
+                }
+
+                // エラーが無かった場合、処理をコミットする。
+                Vizualizer_Database_Factory::commit($connection);
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+
+            // 指定されたグループを追加
+            $operator = $loader->loadModel("AccountOperator");
+            foreach($operatorIds as $operatorId){
+                $operator->addAccountOperator($post["account_id"], $operatorId);
+            }
         }
     }
 }
