@@ -99,7 +99,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
      */
     public function operator(){
         $loader = new Vizualizer_Plugin("admin");
-        $model = $loader->loadModel("Operator");
+        $model = $loader->loadModel("CompanyOperator");
         $model->findByPrimaryKey($this->operator_id);
         return $model;
     }
