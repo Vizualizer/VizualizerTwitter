@@ -53,6 +53,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private static $attributes;
 
     /**
+     * 実行用のキャッシュ
+     */
+    private $setting;
+
+    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -423,10 +428,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function followSetting()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        return $setting;
+        if(!$this->setting){
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->setting = $loader->loadModel("Setting");
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        }
+        return $this->setting;
     }
 
     /**
@@ -436,10 +443,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetSetting()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        return $setting;
+        if(!$this->setting){
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->setting = $loader->loadModel("Setting");
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        }
+        return $this->setting;
     }
 
     /**
