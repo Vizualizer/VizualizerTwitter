@@ -53,6 +53,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private static $attributes;
 
     /**
+     * ステータスをキャッシュするための変数
+     */
+    private static $statuses;
+
+    /**
+     * 実行用のキャッシュ
+     */
+    private $setting;
+
+    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -171,10 +181,16 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function status()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $accountStatus = $loader->loadModel("AccountStatus");
-        $accountStatus->findByAccountId($this->account_id);
-        if (!($accountStatus->account_status_id > 0)) {
+        if(!self::$statuses){
+            $loader = new Vizualizer_Plugin("twitter");
+            $accountStatus = $loader->loadModel("AccountStatus");
+            $statuses = $accountStatus->findAllBy(array());
+            self::$statuses = array();
+            foreach($statuses as $status){
+                self::$statuses[$status->account_id] = $status;
+            }
+        }
+        if(!array_key_exists($this->account_id, self::$statuses)){
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $accountStatus->account_id = $this->account_id;
@@ -183,8 +199,10 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             } catch (Exception $e) {
                 Vizualizer_Database_Factory::rollback($connection);
             }
+            self::$statuses[$this->account_id] = $accountStatus;
         }
-        return $accountStatus;
+
+        return self::$statuses[$this->account_id];
     }
 
     /**
@@ -423,10 +441,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function followSetting()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        return $setting;
+        if(!$this->setting){
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->setting = $loader->loadModel("Setting");
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        }
+        return $this->setting;
     }
 
     /**
@@ -436,10 +456,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetSetting()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        return $setting;
+        if(!$this->setting){
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->setting = $loader->loadModel("Setting");
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        }
+        return $this->setting;
     }
 
     /**

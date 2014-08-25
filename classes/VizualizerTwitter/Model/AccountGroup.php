@@ -30,6 +30,10 @@
  */
 class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
 {
+    /**
+     * アカウントグループのキャッシュ
+     */
+    private static $groups;
 
     /**
      * コンストラクタ
@@ -98,10 +102,16 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * 関連するグループを取得する。
      */
     public function group(){
-        $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("Group");
-        $model->findByPrimaryKey($this->group_id);
-        return $model;
+        if(!self::$groups){
+            $loader = new Vizualizer_Plugin("twitter");
+            $model = $loader->loadModel("Group");
+            $groups = $model->findAllBy(array());
+            self::$groups = array();
+            foreach($groups as $group){
+                self::$groups[$group->group_id] = $group;
+            }
+        }
+        return self::$groups[$this->group_id];
     }
 
     /**

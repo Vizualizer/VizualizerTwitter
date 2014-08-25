@@ -32,6 +32,11 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
 {
 
     /**
+     * アカウント共通の設定
+     */
+    private static $baseSetting;
+
+    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -76,9 +81,12 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
         }
         if($account_id > 0){
             // アカウントIDが設定されている場合はデフォルトの設定を取得する。
-            $loader = new Vizualizer_Plugin("twitter");
-            $setting = $loader->loadModel("Setting");
-            $setting->findByOperatorAccount($operator_id);
+            if(!self::$baseSetting){
+                $loader = new Vizualizer_Plugin("twitter");
+                self::$baseSetting = $loader->loadModel("Setting");
+                self::$baseSetting->findByOperatorAccount($operator_id);
+            }
+            $setting = self::$baseSetting;
             // 常にデフォルトの設定を利用する項目をコピー
             $defaultKeys = Vizualizer_Configure::get("twitter_default_setting_keys");
             if(is_array($defaultKeys)){
