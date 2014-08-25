@@ -179,7 +179,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             $accountStatuses = $accountStatus->findAllBy(array());
             $statuses = array();
             foreach($accountStatuses as $accountStatus){
-                $statuses[$accountStatuses->account_id] = $accountStatus;
+                $statuses[$accountStatus->account_id] = $accountStatus;
             }
             $statuses = parent::cacheData("statuses", $statuses);
         }

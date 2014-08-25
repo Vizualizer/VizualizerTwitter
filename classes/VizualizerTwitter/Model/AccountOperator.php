@@ -31,11 +31,6 @@
 class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
 {
     /**
-     * オペレータのキャッシュ
-     */
-    private static $operators;
-
-    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
