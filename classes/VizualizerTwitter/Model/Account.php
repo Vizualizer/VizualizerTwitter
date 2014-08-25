@@ -48,16 +48,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private $twitter;
 
     /**
-     * 属性をキャッシュするための変数
-     */
-    private static $attributes;
-
-    /**
-     * ステータスをキャッシュするための変数
-     */
-    private static $statuses;
-
-    /**
      * 実行用のキャッシュ
      */
     private $setting;
@@ -159,7 +149,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * 属性のリストを取得するための変数
      */
     public function attributes(){
-        if(!isset(self::$attributes)){
+        $attributes = parent::cacheData("attributes");
+        if($attributes === null){
             $loader = new Vizualizer_Plugin("twitter");
             $setting = $loader->loadModel("Setting");
             $settings = $setting->findAllBy(array());
@@ -169,9 +160,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                     $attributes[$setting->account_attribute] = $setting->account_attribute;
                 }
             }
-            self::$attributes = $attributes;
+            $attributes = parent::cacheData("attributes", $attributes);
         }
-        return self::$attributes;
+        return $attributes;
     }
 
     /**
@@ -181,16 +172,18 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function status()
     {
-        if(!self::$statuses){
+        $statuses = parent::cacheData("statuses");
+        if($statuses === null){
             $loader = new Vizualizer_Plugin("twitter");
             $accountStatus = $loader->loadModel("AccountStatus");
-            $statuses = $accountStatus->findAllBy(array());
-            self::$statuses = array();
-            foreach($statuses as $status){
-                self::$statuses[$status->account_id] = $status;
+            $accountStatuses = $accountStatus->findAllBy(array());
+            $statuses = array();
+            foreach($accountStatuses as $accountStatus){
+                $statuses[$accountStatuses->account_id] = $accountStatus;
             }
+            $statuses = parent::cacheData("statuses", $statuses);
         }
-        if(!array_key_exists($this->account_id, self::$statuses)){
+        if(!array_key_exists($this->account_id, $statuses)){
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $accountStatus->account_id = $this->account_id;
@@ -199,10 +192,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             } catch (Exception $e) {
                 Vizualizer_Database_Factory::rollback($connection);
             }
-            self::$statuses[$this->account_id] = $accountStatus;
+            $statuses[$this->account_id] = $accountStatus;
+            $statuses = parent::cacheData("statuses", $statuses);
         }
 
-        return self::$statuses[$this->account_id];
+        return $statuses[$this->account_id];
     }
 
     /**
