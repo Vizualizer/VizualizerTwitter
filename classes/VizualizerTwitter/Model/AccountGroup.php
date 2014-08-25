@@ -31,11 +31,6 @@
 class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
 {
     /**
-     * アカウントグループのキャッシュ
-     */
-    private static $groups;
-
-    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -102,16 +97,18 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * 関連するグループを取得する。
      */
     public function group(){
-        if(!self::$groups){
+        $cachedGroups = parent::cacheData(get_class($this)."::groups");
+        if($cachedGroups === null){
             $loader = new Vizualizer_Plugin("twitter");
             $model = $loader->loadModel("Group");
             $groups = $model->findAllBy(array());
-            self::$groups = array();
+            $cachedGroups = array();
             foreach($groups as $group){
-                self::$groups[$group->group_id] = $group;
+                $cachedGroups[$group->group_id] = $group;
             }
+            $cachedGroups = parent::cacheData(get_class($this)."::groups", $cachedGroups);
         }
-        return self::$groups[$this->group_id];
+        return $cachedGroups[$this->group_id];
     }
 
     /**

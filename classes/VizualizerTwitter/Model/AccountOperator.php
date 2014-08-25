@@ -31,11 +31,6 @@
 class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
 {
     /**
-     * オペレータのキャッシュ
-     */
-    private static $operators;
-
-    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -102,16 +97,18 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
      * 関連するオペレータを取得する。
      */
     public function operator(){
-        if(!self::$operators){
+        $cachedOperators = parent::cacheData(get_class($this)."::operators");
+        if($cachedOperators === null){
             $loader = new Vizualizer_Plugin("admin");
             $model = $loader->loadModel("CompanyOperator");
             $operators = $model->findAllBy(array());
-            self::$operators = array();
+            $cachedOperators = array();
             foreach($operators as $operator){
-                self::$operators[$operator->operator_id] = $operator;
+                $cachedOperators[$operator->operator_id] = $operator;
             }
+            $cachedOperators = parent::cacheData(get_class($this)."::operators", $cachedOperators);
         }
-        return self::$operators[$this->operator_id];
+        return $cachedOperators[$this->operator_id];
     }
 
     /**
