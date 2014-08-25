@@ -108,8 +108,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
             }
             $cachedOperators = parent::cacheData(get_class($this)."::operators", $cachedOperators);
         }
-        print_r($cachedOperators);
-        return $cachedOperators;
+        return $cachedOperators[$this->operator_id];
     }
 
     /**
