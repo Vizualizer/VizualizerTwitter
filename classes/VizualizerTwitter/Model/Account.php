@@ -149,7 +149,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * 属性のリストを取得するための変数
      */
     public function attributes(){
-        $attributes = parent::cacheData("attributes");
+        $attributes = parent::cacheData(get_class($this)."::attributes");
         if($attributes === null){
             $loader = new Vizualizer_Plugin("twitter");
             $setting = $loader->loadModel("Setting");
@@ -160,7 +160,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                     $attributes[$setting->account_attribute] = $setting->account_attribute;
                 }
             }
-            $attributes = parent::cacheData("attributes", $attributes);
+            $attributes = parent::cacheData(get_class($this)."::attributes", $attributes);
         }
         return $attributes;
     }
@@ -172,7 +172,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function status()
     {
-        $statuses = parent::cacheData("statuses");
+        $statuses = parent::cacheData(get_class($this)."::statuses");
         if($statuses === null){
             $loader = new Vizualizer_Plugin("twitter");
             $accountStatus = $loader->loadModel("AccountStatus");
@@ -181,7 +181,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             foreach($accountStatuses as $accountStatus){
                 $statuses[$accountStatus->account_id] = $accountStatus;
             }
-            $statuses = parent::cacheData("statuses", $statuses);
+            $statuses = parent::cacheData(get_class($this)."::statuses", $statuses);
         }
         if(!array_key_exists($this->account_id, $statuses)){
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -193,7 +193,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 Vizualizer_Database_Factory::rollback($connection);
             }
             $statuses[$this->account_id] = $accountStatus;
-            $statuses = parent::cacheData("statuses", $statuses);
+            $statuses = parent::cacheData(get_class($this)."::statuses", $statuses);
         }
 
         return $statuses[$this->account_id];

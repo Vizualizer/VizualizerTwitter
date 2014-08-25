@@ -97,7 +97,7 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * 関連するグループを取得する。
      */
     public function group(){
-        $cachedGroups = parent::cacheData("groups");
+        $cachedGroups = parent::cacheData(get_class($this)."::groups");
         if($cachedGroups === null){
             $loader = new Vizualizer_Plugin("twitter");
             $model = $loader->loadModel("Group");
@@ -106,7 +106,7 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
             foreach($groups as $group){
                 $cachedGroups[$group->group_id] = $group;
             }
-            $cachedGroups = parent::cacheData("groups", $cachedGroups);
+            $cachedGroups = parent::cacheData(get_class($this)."::groups", $cachedGroups);
         }
         return $cachedGroups[$this->group_id];
     }
