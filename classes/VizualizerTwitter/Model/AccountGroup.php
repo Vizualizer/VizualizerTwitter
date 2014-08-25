@@ -106,6 +106,7 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
             foreach($groups as $group){
                 $cachedGroups[$group->group_id] = $group;
             }
+            $cachedGroups = parent::cacheData("groups", $cachedGroups);
         }
         return $cachedGroups[$this->group_id];
     }

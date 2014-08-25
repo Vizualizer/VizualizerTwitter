@@ -97,7 +97,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
      * 関連するオペレータを取得する。
      */
     public function operator(){
-        $cachedOperators = parent::cachedData("operators");
+        $cachedOperators = parent::cacheData("operators");
         if($cachedOperators === null){
             $loader = new Vizualizer_Plugin("admin");
             $model = $loader->loadModel("CompanyOperator");
@@ -106,7 +106,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
             foreach($operators as $operator){
                 $cachedOperators[$operator->operator_id] = $operator;
             }
-            $cachedOperators = parent::cachedData("operators", $cachedOperators);
+            $cachedOperators = parent::cacheData("operators", $cachedOperators);
         }
         return $cachedOperators;
     }
