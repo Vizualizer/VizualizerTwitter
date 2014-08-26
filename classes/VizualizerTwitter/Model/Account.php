@@ -172,9 +172,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function status()
     {
+        $loader = new Vizualizer_Plugin("twitter");
         $statuses = parent::cacheData(get_class($this)."::statuses");
         if($statuses === null){
-            $loader = new Vizualizer_Plugin("twitter");
             $accountStatus = $loader->loadModel("AccountStatus");
             $accountStatuses = $accountStatus->findAllBy(array());
             $statuses = array();
@@ -186,6 +186,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         if(!array_key_exists($this->account_id, $statuses)){
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
+                $accountStatus = $loader->loadModel("AccountStatus");
                 $accountStatus->account_id = $this->account_id;
                 $accountStatus->save();
                 Vizualizer_Database_Factory::commit($connection);
