@@ -30,6 +30,10 @@
  */
 class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
 {
+    /**
+     * アカウントのキャッシュインスタンス
+     */
+    private $account;
 
     /**
      * アカウント共通の設定
@@ -103,22 +107,22 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
                     }
                 }
             }
-        }
 
-        // アカウントIDが渡されている場合には、フォロワーの数に応じて利用する設定値を共通設定から取得する。
-        $this->follow_ratio = $this->follow_ratio_1;
-        $this->daily_follows = $this->daily_follows_1;
-        $this->daily_unfollows = $this->daily_unfollows_1;
-        $account = $this->account();
-        for ($i = 2; $i < 10; $i ++) {
-            $key = "follower_limit_" . $i;
-            if ($this->$key > 0 && $this->$key <= $account->follower_count) {
-                $key = "follow_ratio_" . $i;
-                $this->follow_ratio = $this->$key;
-                $key = "daily_follows_" . $i;
-                $this->daily_follows = $this->$key;
-                $key = "daily_unfollows_" . $i;
-                $this->daily_unfollows = $this->$key;
+            // アカウントIDが渡されている場合には、フォロワーの数に応じて利用する設定値を共通設定から取得する。
+            $this->follow_ratio = $this->follow_ratio_1;
+            $this->daily_follows = $this->daily_follows_1;
+            $this->daily_unfollows = $this->daily_unfollows_1;
+            $account = $this->account();
+            for ($i = 2; $i < 10; $i ++) {
+                $key = "follower_limit_" . $i;
+                if ($this->$key > 0 && $this->$key <= $account->follower_count) {
+                    $key = "follow_ratio_" . $i;
+                    $this->follow_ratio = $this->$key;
+                    $key = "daily_follows_" . $i;
+                    $this->daily_follows = $this->$key;
+                    $key = "daily_unfollows_" . $i;
+                    $this->daily_unfollows = $this->$key;
+                }
             }
         }
     }
@@ -138,11 +142,17 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
      *
      * @return アカウント
      */
-    public function account()
+    public function account(VizualizerTwitter_Model_Account &$account = null)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $account = $loader->loadModel("Account");
-        $account->findByPrimaryKey($this->account_id);
-        return $account;
+        if(!$this->account){
+            // パラメータにアカウントが設定された場合は、そのアカウントをキャッシュに入れ、そのまま返す
+            if($account !== null){
+                return $this->account = $account;
+            }
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->account = $loader->loadModel("Account");
+            $this->account->findByPrimaryKey($this->account_id);
+        }
+        return $this->account;
     }
 }

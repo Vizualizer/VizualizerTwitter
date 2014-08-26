@@ -438,6 +438,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         if(!$this->setting){
             $loader = new Vizualizer_Plugin("twitter");
             $this->setting = $loader->loadModel("Setting");
+            $this->setting->account($this);
             $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
         }
         return $this->setting;
@@ -453,6 +454,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         if(!$this->setting){
             $loader = new Vizualizer_Plugin("twitter");
             $this->setting = $loader->loadModel("Setting");
+            $this->setting->account($this);
             $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
         }
         return $this->setting;
