@@ -69,6 +69,27 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             // グループ未指定の場合は対象を無しにする。
             $accountIds = array(0);
         }
+        if($post["no_group"]){
+            // アカウントグループに存在するアカウントIDを取得
+            $loader = new Vizualizer_Plugin("Twitter");
+            $model = $loader->loadModel("AccountGroup");
+            $models = $model->findAllBy(array());
+            $exceptIds = array();
+            foreach($models as $model){
+                $exceptIds[$model->account_id] = $model->account_id;
+            }
+            $model = $loader->loadModel("Account");
+            $models = $model->findAllBy(array("nin:account_id" => array_values($exceptIds)));
+            $newAccountIds = array();
+            foreach($models as $model){
+                $newAccountIds[$model->account_id] = $model->account_id;
+            }
+            if(!is_array($accountIds)){
+                $accountIds = $newAccountIds;
+            }else{
+                $accountIds = array_intersect($accountIds, $newAccountIds);
+            }
+        }
         $search["in:account_id"] = $accountIds;
         $post->set("search", $search);
     }
