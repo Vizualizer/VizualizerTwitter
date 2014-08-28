@@ -99,6 +99,15 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                     $followHistory->unfollow_count = $unfollowed;
                     $followHistory->save();
 
+                    // フォローリストがあってフォローリスト無しのステータスの場合は、待機中に変更
+                    $followListCount = $follow->countBy(array("account_id" => $account->account_id, "friend_date" => null));
+                    if($followListCount > 0){
+                        $accountStatus = $account->status();
+                        if($accountStatus->follow_status == "4"){
+                            $accountStatus->updateFollow("1");
+                        }
+                    }
+
                     // エラーが無かった場合、処理をコミットする。
                     Vizualizer_Database_Factory::commit($connection);
                 } catch (Exception $e) {
