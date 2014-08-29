@@ -434,13 +434,13 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function followSetting($userDefault = false)
+    public function followSetting()
     {
         if(!$this->setting){
             $loader = new Vizualizer_Plugin("twitter");
             $this->setting = $loader->loadModel("Setting");
             $this->setting->account($this);
-            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id, $userDefault);
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
         }
         return $this->setting;
     }
@@ -450,13 +450,13 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function tweetSetting($userDefault = false)
+    public function tweetSetting()
     {
         if(!$this->setting){
             $loader = new Vizualizer_Plugin("twitter");
             $this->setting = $loader->loadModel("Setting");
             $this->setting->account($this);
-            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id, $userDefault);
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
             $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
         }
         return $this->setting;
