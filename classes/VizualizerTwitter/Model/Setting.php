@@ -67,13 +67,27 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
      * @param $operator_id 管理オペレータID
      * @param $account_id アカウントID
      */
-    public function findByOperatorAccount($operator_id, $account_id = 0)
+    public function findByOperatorAccount($operator_id, $account_id = 0, $userDefault = false)
     {
+        $loader = new Vizualizer_Plugin("twitter");
+
         // 検索して該当のアカウントの設定が無い場合はデフォルト値で作成
         $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
         if (!($this->setting_id > 0)) {
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
+                if($userDefault){
+                    $setting = $loader->loadModel("Setting");
+                    $setting->findBy(array("operator_id" => $operator_id, "account_id" => "0"));
+                    $arrSetting = $setting->toArray();
+                    if($arrSetting["setting_id"] > 0){
+                        foreach($arrSetting as $key => $value){
+                            if($key != "setting_id"){
+                                $this->$key = $value;
+                            }
+                        }
+                    }
+                }
                 $this->operator_id = $operator_id;
                 $this->account_id = $account_id;
                 $this->save();
@@ -86,7 +100,6 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
         if($account_id > 0){
             // アカウントIDが設定されている場合はデフォルトの設定を取得する。
             if(!self::$baseSetting){
-                $loader = new Vizualizer_Plugin("twitter");
                 self::$baseSetting = $loader->loadModel("Setting");
                 self::$baseSetting->findByOperatorAccount($operator_id);
             }
