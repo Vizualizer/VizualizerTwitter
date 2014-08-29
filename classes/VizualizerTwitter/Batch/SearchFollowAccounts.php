@@ -95,6 +95,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     foreach ($users as $index => $user) {
                         if($setting->follow_type == "1" || $setting->follow_type == "3"){
                             $account->addUser($user);
+                            $searched ++;
                         }
 
                         // フォロワーを追加
@@ -119,10 +120,20 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                                 if(isset($follower->id) && $follower->id > 0){
                                     if($account->checkAddUser($follower)){
                                         $account->addUser($follower);
+                                        $searched ++;
                                     }
+                                }
+                                if ($searched < $setting->daily_follows * 2) {
+                                    break;
                                 }
                             }
                         }
+                        if ($searched < $setting->daily_follows * 2) {
+                            break;
+                        }
+                    }
+                    if ($searched < $setting->daily_follows * 2) {
+                        break;
                     }
                 }
             }
