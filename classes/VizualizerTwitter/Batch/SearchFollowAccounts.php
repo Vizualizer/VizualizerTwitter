@@ -64,9 +64,9 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $model = $loader->loadModel("Account");
 
         if (count($params) >= 4 && $params[3] > 0) {
-            $accounts = $model->findAllBy(array("account_id" => $params[3]));
+            $accounts = $model->findAllBy(array("account_id" => $params[3]), "account_id", true);
         } else {
-            $accounts = $model->findAllBy(array());
+            $accounts = $model->findAllBy(array(), "account_id", true);
         }
 
         if(!($this->page > 0) || $this->page > 50){
