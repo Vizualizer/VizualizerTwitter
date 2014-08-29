@@ -69,6 +69,8 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
      */
     public function findByOperatorAccount($operator_id, $account_id = 0)
     {
+        $loader = new Vizualizer_Plugin("twitter");
+
         // 検索して該当のアカウントの設定が無い場合はデフォルト値で作成
         $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
         if (!($this->setting_id > 0)) {
@@ -86,7 +88,6 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
         if($account_id > 0){
             // アカウントIDが設定されている場合はデフォルトの設定を取得する。
             if(!self::$baseSetting){
-                $loader = new Vizualizer_Plugin("twitter");
                 self::$baseSetting = $loader->loadModel("Setting");
                 self::$baseSetting->findByOperatorAccount($operator_id);
             }
@@ -99,11 +100,39 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
                 }
             }
             if($this->use_follow_setting != "1"){
-                // 個別の設定を利用しないとしている場合には、setting_id, operator_id, account_id, account_attribute以外を基本設定の数値で上書きする
+                // 個別の設定を利用しないとしている場合には、特定のキーを基本設定の数値で上書きする
                 $keys = array_keys($setting->toArray());
                 foreach($keys as $key){
-                    if($key != "setting_id" && $key != "operator_id" && $key != "account_id" && $key != "account_attribute"){
-                        $this->$key = $setting->$key;
+                    switch($key){
+                        case "follow_type":
+                        case "follow_keywords":
+                        case "follower_keywords":
+                        case "follow_interval":
+                        case "unfollow_interval":
+                        case "refollow_timeout":
+                        case "follow_unit":
+                        case "follow_unit_interval":
+                        case "unfollow_unit_interval":
+                        case "japanese_flg":
+                        case "unlock_user_flg":
+                        case "unique_icon_flg":
+                        case "non_bot_flg":
+                            $this->$key = $setting->$key;
+                            break;
+                        default:
+                        break;
+                    }
+                    if(preg_match("/^(.+)_[0-9]$/", $key, $vals) > 0){
+                        switch($vals[1]){
+                            case "follower_limit":
+                            case "follow_ratio":
+                            case "daily_follows":
+                            case "daily_unfollows":
+                                $this->$key = $setting->$key;
+                                break;
+                            default:
+                            break;
+                        }
                     }
                 }
             }

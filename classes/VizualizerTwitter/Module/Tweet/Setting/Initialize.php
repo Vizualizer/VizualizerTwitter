@@ -40,7 +40,11 @@ class VizualizerTwitter_Module_Tweet_Setting_Initialize extends Vizualizer_Plugi
 
         if ($account->account_id > 0) {
             // アカウントが存在している場合にはデータを初期化
-            $setting = $account->tweetSetting();
+            if($params->get("user_default", "0") == "1"){
+                $setting = $account->tweetSetting(true);
+            }else{
+                $setting = $account->tweetSetting();
+            }
             if ($setting->setting_id > 0) {
             }else{
                 // トランザクションの開始
