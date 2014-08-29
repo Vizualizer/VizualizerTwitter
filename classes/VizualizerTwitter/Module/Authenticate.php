@@ -92,6 +92,12 @@ class VizualizerTwitter_Module_Authenticate extends Vizualizer_Plugin_Module
 
                     // デフォルトの設定を登録する。
                     $setting = $loader->loadModel("Setting");
+                    if($params->get("uesr_default", "0") == "1"){
+                        $setting->findBy(array("operator_id" => $account->operator_id));
+                        $arrSetting = $setting->toArray();
+                        unset($arrSetting["setting_id"]);
+                        $setting = $loader->loadModel("Setting", $arrSetting);
+                    }
                     $setting->account_id = $account->account_id;
                     $setting->save();
                 }
