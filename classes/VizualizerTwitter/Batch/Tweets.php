@@ -192,7 +192,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
 
                         $interval = $tweetSetting->tweet_interval;
                         if ($tweetSetting->wavy_flg == "1") {
-                            $interval = mt_rand(0, $interval) + floor($interval / 2);
+                            $interval = mt_rand(0, 20) + $interval - 10;
                         }
 
                         echo $account->screen_name . " : Use interval : " . $interval . "\r\n";
