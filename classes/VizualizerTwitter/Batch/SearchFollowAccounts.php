@@ -64,9 +64,9 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $model = $loader->loadModel("Account");
 
         if (count($params) >= 4 && $params[3] > 0) {
-            $accounts = $model->findAllBy(array("account_id" => $params[3]));
+            $accounts = $model->findAllBy(array("account_id" => $params[3]), "account_id", true);
         } else {
-            $accounts = $model->findAllBy(array());
+            $accounts = $model->findAllBy(array(), "account_id", true);
         }
 
         if(!($this->page > 0) || $this->page > 50){
@@ -95,6 +95,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     foreach ($users as $index => $user) {
                         if($setting->follow_type == "1" || $setting->follow_type == "3"){
                             $account->addUser($user);
+                            $searched ++;
                         }
 
                         // フォロワーを追加
@@ -119,10 +120,20 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                                 if(isset($follower->id) && $follower->id > 0){
                                     if($account->checkAddUser($follower)){
                                         $account->addUser($follower);
+                                        $searched ++;
                                     }
+                                }
+                                if ($searched < $setting->daily_follows * 2) {
+                                    break;
                                 }
                             }
                         }
+                        if ($searched < $setting->daily_follows * 2) {
+                            break;
+                        }
+                    }
+                    if ($searched < $setting->daily_follows * 2) {
+                        break;
                     }
                 }
             }
