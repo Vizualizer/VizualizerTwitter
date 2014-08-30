@@ -105,7 +105,20 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                 $result = $account->getTwitter()->friendships_create(array("user_id" => $this->user_id, "follow" => true));
                 if (isset($result->errors)) {
                     if ($result->errors[0]->code == "161") {
-                        $account->status()->updateFollow(3, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
+                        // ブロックされている場合は、一番古いユーザーをアンフォローする。
+                        $connection = Vizualizer_Database_Factory::begin("twitter");
+                        try {
+                            $follow = $loader->loadModel("Follow");
+                            $follows = $follow->findAllBy(array("account_id" => $this->account_id, "follow_date" => null, "friend_cancel_date" => null), "friend_date", false);
+                            $follow = $follows->current();
+                            $follow->friend_cancel_date = Vizualizer::now()->date("Y-m-d H:i:s");
+                            $follow->save();
+                            Vizualizer_Logger::writeInfo("Following is blocked from " . $this->user_id . " in " . $account->screen_name);
+                            Vizualizer_Database_Factory::commit($connection);
+                        } catch (Exception $e) {
+                            Vizualizer_Database_Factory::rollback($connection);
+                            throw new Vizualizer_Exception_Database($e);
+                        }
                     } elseif ($result->errors[0]->code == "108" || $result->errors[0]->code == "36") {
                         // フォロー処理の際に、ユーザーが既に存在しない場合は、データ自体を削除
                         $connection = Vizualizer_Database_Factory::begin("twitter");
