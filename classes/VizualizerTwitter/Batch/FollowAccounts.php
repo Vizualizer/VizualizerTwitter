@@ -115,9 +115,9 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             $follow->limit(1, 0);
             if(Vizualizer_Configure::get("refollow_enabled") === false){
                 // リフォローを行わない設定にしている場合、自分をフォローしているユーザーは対象外とする。
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "follow_date" => null), "follow_date", true);
+                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "follow_date" => null, "friend_cancel_date" => null), "follow_date", true);
             }else{
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null), "follow_date", true);
+                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "friend_cancel_date" => null), "follow_date", true);
             }
 
             // 結果が0件の場合はリスト無しにしてスキップ
