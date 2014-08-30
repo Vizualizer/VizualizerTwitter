@@ -177,6 +177,8 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                     }
                     return true;
                 }
+            }else{
+                Vizualizer_Logger::writeInfo("Skipped Follow to " . $this->user_id . " for not ".$account->friend_count." < ".$account->followLimit()." in " . $account->screen_name);
             }
         }
         return false;
