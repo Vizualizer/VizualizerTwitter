@@ -84,8 +84,8 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                     $today = Vizualizer::now()->date("Y-m-d");
                     $follow = $loader->loadModel("Follow");
                     $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => $today));
-                    $followed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_date" => $today));
-                    $refollowed = $follow->countBy(array("account_id" => $account->account_id, "back:follow_date" => $today));
+                    $followed = $account->friend_count;
+                    $refollowed = $account->follower_count;
                     $unfollowed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_cancel_date" => $today));
                     $followHistory = $loader->loadModel("FollowHistory");
                     $followHistory->findBy(array("account_id" => $account->account_id, "history_date" => $today));
