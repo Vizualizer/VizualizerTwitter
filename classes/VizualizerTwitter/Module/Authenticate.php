@@ -100,6 +100,24 @@ class VizualizerTwitter_Module_Authenticate extends Vizualizer_Plugin_Module
                     }
                     $setting->account_id = $account->account_id;
                     $setting->save();
+
+                    // 初期の履歴を前日日付で登録
+                    $today = Vizualizer::now()->strToTime("-1 day")->date("Y-m-d");
+                    $searched = "0";
+                    $followed = $account->friend_count;
+                    $refollowed = $account->follower_count;
+                    $unfollowed = "0";
+                    $followHistory = $loader->loadModel("FollowHistory");
+                    $followHistory->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+                    if(!($followHistory->follow_history_id > 0)){
+                        $followHistory->account_id = $account->account_id;
+                        $followHistory->history_date = $today;
+                    }
+                    $followHistory->target_count = $searched;
+                    $followHistory->follow_count = $followed;
+                    $followHistory->followed_count = $refollowed;
+                    $followHistory->unfollow_count = $unfollowed;
+                    $followHistory->save();
                 }
                 // エラーが無かった場合、処理をコミットする。
                 Vizualizer_Database_Factory::commit($connection);

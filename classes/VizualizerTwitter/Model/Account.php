@@ -483,7 +483,18 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     {
         $loader = new Vizualizer_Plugin("twitter");
         $follow = $loader->loadModel("FollowHistory");
-        return $follow->findAllByAccountId($this->account_id, $days);
+        $historysTemp = $follow->findAllByAccountId($this->account_id, $days + 1);
+        $historysTemp2 = array();
+        foreach($historysTemp as $temp){
+            $historysTemp2[] = $temp;
+        }
+        $historys = array();
+        for($index = 0; $index < $days; $index ++){
+            $historysTemp2[$index]->follow_count = $historysTemp2[$index]->follow_count - $historysTemp2[$index + 1]->follow_count + $historysTemp2[$index]->unfollow_count;
+            $historysTemp2[$index]->followed_count = $historysTemp2[$index]->followed_count - $historysTemp2[$index + 1]->followed_count;
+            $historys[] = $historysTemp2[$index];
+        }
+        return $historys;
     }
 
     /**
