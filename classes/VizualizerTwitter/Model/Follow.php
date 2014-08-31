@@ -108,6 +108,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                         // ブロックされている場合は、一番古いユーザーをアンフォローする。
                         $connection = Vizualizer_Database_Factory::begin("twitter");
                         try {
+                            $loader = new Vizualizer_Plugin("twitter");
                             $follow = $loader->loadModel("Follow");
                             $follows = $follow->findAllBy(array("account_id" => $this->account_id, "follow_date" => null, "friend_cancel_date" => null), "friend_date", false);
                             $follow = $follows->current();

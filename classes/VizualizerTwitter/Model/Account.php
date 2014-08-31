@@ -353,7 +353,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         // 24時間以内にアンフォローが無く、上限に達していない場合はフォロー可能
         $loader = new Vizualizer_Plugin("twitter");
         $follow = $loader->loadModel("Follow");
-        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => Vizualizer::now()->strTotime("-3 hour")->date("Y-m-d 00:00:00")));
+        $unfollowCount = $follow->countBy(array("account_id" => $this->account_id, "ge:friend_cancel_date" => Vizualizer::now()->strTotime("-2 hour")->date("Y-m-d 00:00:00")));
         if ($unfollowCount == 0 && $this->friend_count < $this->followLimit()) {
             return true;
         }
