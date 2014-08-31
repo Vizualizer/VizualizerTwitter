@@ -82,11 +82,11 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                 }
                 if($tweetSetting->daytime_start < $tweetSetting->daytime_end && (Vizualizer::now()->date("H") < $tweetSetting->daytime_start || Vizualizer::now()->date("H") >= $tweetSetting->daytime_end)){
                     // START < ENDの場合は、その間に含まれる場合のみツイートする。
-                    echo $account->screen_name . " : Skip tweet for daytime\r\n";
+                    Vizualizer_Logger::writeInfo($account->screen_name . " : Skip tweet for daytime.");
                     continue;
                 }elseif($tweetSetting->daytime_end < $tweetSetting->daytime_start && (Vizualizer::now()->date("H") >= $tweetSetting->daytime_end && Vizualizer::now()->date("H") < $tweetSetting->daytime_start)){
                     // END < STARTの場合は、その間に含まれる場合のみツイートしない。
-                    echo $account->screen_name . " : Skip tweet for daytime\r\n";
+                    Vizualizer_Logger::writeInfo($account->screen_name . " : Skip tweet for daytime.");
                     continue;
                 }
             }
@@ -94,7 +94,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             // アカウントのステータスが有効のアカウントのみを対象とする。
             if (
                 $account->status()->tweet_status != "1" && $account->status()->original_status != "1" && $account->status()->advertise_status != "1" && $account->status()->rakuten_status != "1") {
-                echo $account->screen_name . " : Account BOT is not active.\r\n";
+                Vizualizer_Logger::writeInfo($account->screen_name . " : Account BOT is not active.");
                 continue;
             }
 
@@ -124,7 +124,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
 
             $advertise = $account->tweetAdvertises()->current()->findByPrefer();
             if ($tweetSetting->advertise_interval <= $count && $advertise->advertise_id > 0) {
-                echo $account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count . ".\r\n";
+                Vizualizer_Logger::writeInfo($account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count);
                 // 広告を取得し記事を作成
                 $tweetLog->tweet_id = 0;
                 $tweetLog->tweet_type = 2;
@@ -132,7 +132,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                 if (!empty($advertise->fixed_advertise_url)) {
                     $tweetLog->tweet_text .= " " . $advertise->fixed_advertise_url;
                 }
-                echo $account->screen_name . " : prepare to Tweet advertise text.\r\n";
+                Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet advertise text.");
             } else {
                 // ツイートを取得し、記事を作成
                 $tweet = $account->tweets()->current()->findByPrefer();
@@ -141,7 +141,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                 $tweetLog->tweet_text = $tweet->tweet_text;
                 $tweetLog->media_url = $tweet->media_url;
                 $tweetLog->media_filename = $tweet->media_filename;
-                echo $account->screen_name . " : prepare to Tweet normal text.\r\n";
+                Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet normal text.");
             }
 
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -155,7 +155,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                         $result = $account->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
                     }
                     if (!empty($result->id)) {
-                        echo $account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text . "\r\n";
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text);
                         $tweetLog->twitter_id = $result->id;
                         $tweetlog->tweet_text = $result->text;
                         if(property_exists("media", $result->entities) && is_array($result->entities->media) && count($result->entities->media) > 0){
@@ -195,12 +195,12 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                             $interval = mt_rand(0, 20) + $interval - 10;
                         }
 
-                        echo $account->screen_name . " : Use interval : " . $interval . "\r\n";
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : Use interval : " . $interval);
                         $status->next_tweet_time = Vizualizer::now()->strToTime("+" . $interval . " minute")->date("Y-m-d H:i:s");
-                        echo $account->screen_name . " : Next tweet at : " . $status->next_tweet_time . "\r\n";
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : Next tweet at : " . $status->next_tweet_time);
                         $status->save();
                     } else {
-                        echo $account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text . "\r\n";
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
                         print_r($result);
                     }
                 }
