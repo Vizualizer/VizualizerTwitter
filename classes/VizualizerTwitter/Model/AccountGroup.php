@@ -30,7 +30,6 @@
  */
 class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
 {
-
     /**
      * コンストラクタ
      *
@@ -98,10 +97,18 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * 関連するグループを取得する。
      */
     public function group(){
-        $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("Group");
-        $model->findByPrimaryKey($this->group_id);
-        return $model;
+        $cachedGroups = parent::cacheData(get_class($this)."::groups");
+        if($cachedGroups === null){
+            $loader = new Vizualizer_Plugin("twitter");
+            $model = $loader->loadModel("Group");
+            $groups = $model->findAllBy(array());
+            $cachedGroups = array();
+            foreach($groups as $group){
+                $cachedGroups[$group->group_id] = $group;
+            }
+            $cachedGroups = parent::cacheData(get_class($this)."::groups", $cachedGroups);
+        }
+        return $cachedGroups[$this->group_id];
     }
 
     /**
@@ -111,12 +118,12 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * @throws Vizualizer_Exception_Database
      */
     public function addAccountGroup($account_id, $group_id, $index = 0){
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountGroup");
         $model->findBy(array("account_id" => $account_id, "group_id" => $group_id));
         if(!($model->account_group_id > 0)){
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $model->account_id = $account_id;
                 $model->group_id = $group_id;
@@ -137,12 +144,12 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
      * @throws Vizualizer_Exception_Database
      */
     public function removeAccountGroup($account_id, $group_id){
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountGroup");
         $model->findBy(array("account_id" => $account_id, "group_id" => $group_id));
         if($model->account_group_id > 0){
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $model->delete();
                 Vizualizer_Database_Factory::commit($connection);
@@ -169,11 +176,11 @@ class VizualizerTwitter_Model_AccountGroup extends Vizualizer_Plugin_Model
         }
 
         if($group_id > 0 && $new_group_id > 0){
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
             $model = $loader->loadModel("AccountGroup");
             $model->findBy(array("account_id" => $account_id, "group_id" => $group_id));
             if($model->account_group_id > 0){
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
                     $model->group_id = $new_group_id;
                     $model->save();

@@ -30,6 +30,15 @@
  */
 class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
 {
+    /**
+     * アカウントのキャッシュインスタンス
+     */
+    private $account;
+
+    /**
+     * アカウント共通の設定
+     */
+    private static $baseSetting;
 
     /**
      * コンストラクタ
@@ -60,6 +69,8 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
      */
     public function findByOperatorAccount($operator_id, $account_id = 0)
     {
+        $loader = new Vizualizer_Plugin("twitter");
+
         // 検索して該当のアカウントの設定が無い場合はデフォルト値で作成
         $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
         if (!($this->setting_id > 0)) {
@@ -76,9 +87,11 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
         }
         if($account_id > 0){
             // アカウントIDが設定されている場合はデフォルトの設定を取得する。
-            $loader = new Vizualizer_Plugin("twitter");
-            $setting = $loader->loadModel("Setting");
-            $setting->findByOperatorAccount($operator_id);
+            if(!self::$baseSetting){
+                self::$baseSetting = $loader->loadModel("Setting");
+                self::$baseSetting->findByOperatorAccount($operator_id);
+            }
+            $setting = self::$baseSetting;
             // 常にデフォルトの設定を利用する項目をコピー
             $defaultKeys = Vizualizer_Configure::get("twitter_default_setting_keys");
             if(is_array($defaultKeys)){
@@ -87,30 +100,58 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
                 }
             }
             if($this->use_follow_setting != "1"){
-                // 個別の設定を利用しないとしている場合には、setting_id, operator_id, account_id, account_attribute以外を基本設定の数値で上書きする
+                // 個別の設定を利用しないとしている場合には、特定のキーを基本設定の数値で上書きする
                 $keys = array_keys($setting->toArray());
                 foreach($keys as $key){
-                    if($key != "setting_id" && $key != "operator_id" && $key != "account_id" && $key != "account_attribute"){
-                        $this->$key = $setting->$key;
+                    switch($key){
+                        case "follow_type":
+                        case "follow_keywords":
+                        case "follower_keywords":
+                        case "follow_interval":
+                        case "unfollow_interval":
+                        case "refollow_timeout":
+                        case "follow_unit":
+                        case "follow_unit_interval":
+                        case "unfollow_unit_interval":
+                        case "japanese_flg":
+                        case "unlock_user_flg":
+                        case "unique_icon_flg":
+                        case "non_bot_flg":
+                            $this->$key = $setting->$key;
+                            break;
+                        default:
+                        break;
+                    }
+                    if(preg_match("/^(.+)_[0-9]$/", $key, $vals) > 0){
+                        switch($vals[1]){
+                            case "follower_limit":
+                            case "follow_ratio":
+                            case "daily_follows":
+                            case "daily_unfollows":
+                                $this->$key = $setting->$key;
+                                break;
+                            default:
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        // アカウントIDが渡されている場合には、フォロワーの数に応じて利用する設定値を共通設定から取得する。
-        $this->follow_ratio = $this->follow_ratio_1;
-        $this->daily_follows = $this->daily_follows_1;
-        $this->daily_unfollows = $this->daily_unfollows_1;
-        $account = $this->account();
-        for ($i = 2; $i < 10; $i ++) {
-            $key = "follower_limit_" . $i;
-            if ($this->$key > 0 && $this->$key <= $account->follower_count) {
-                $key = "follow_ratio_" . $i;
-                $this->follow_ratio = $this->$key;
-                $key = "daily_follows_" . $i;
-                $this->daily_follows = $this->$key;
-                $key = "daily_unfollows_" . $i;
-                $this->daily_unfollows = $this->$key;
+            // アカウントIDが渡されている場合には、フォロワーの数に応じて利用する設定値を共通設定から取得する。
+            $this->follow_ratio = $this->follow_ratio_1;
+            $this->daily_follows = $this->daily_follows_1;
+            $this->daily_unfollows = $this->daily_unfollows_1;
+            $account = $this->account();
+            for ($i = 2; $i < 10; $i ++) {
+                $key = "follower_limit_" . $i;
+                if ($this->$key > 0 && $this->$key <= $account->follower_count) {
+                    $key = "follow_ratio_" . $i;
+                    $this->follow_ratio = $this->$key;
+                    $key = "daily_follows_" . $i;
+                    $this->daily_follows = $this->$key;
+                    $key = "daily_unfollows_" . $i;
+                    $this->daily_unfollows = $this->$key;
+                }
             }
         }
     }
@@ -130,11 +171,17 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
      *
      * @return アカウント
      */
-    public function account()
+    public function account(VizualizerTwitter_Model_Account &$account = null)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $account = $loader->loadModel("Account");
-        $account->findByPrimaryKey($this->account_id);
-        return $account;
+        if(!$this->account){
+            // パラメータにアカウントが設定された場合は、そのアカウントをキャッシュに入れ、そのまま返す
+            if($account !== null){
+                return $this->account = $account;
+            }
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->account = $loader->loadModel("Account");
+            $this->account->findByPrimaryKey($this->account_id);
+        }
+        return $this->account;
     }
 }

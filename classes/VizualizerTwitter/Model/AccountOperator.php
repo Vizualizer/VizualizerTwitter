@@ -30,7 +30,6 @@
  */
 class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
 {
-
     /**
      * コンストラクタ
      *
@@ -98,10 +97,18 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
      * 関連するオペレータを取得する。
      */
     public function operator(){
-        $loader = new Vizualizer_Plugin("admin");
-        $model = $loader->loadModel("CompanyOperator");
-        $model->findByPrimaryKey($this->operator_id);
-        return $model;
+        $cachedOperators = parent::cacheData(get_class($this)."::operators");
+        if($cachedOperators === null){
+            $loader = new Vizualizer_Plugin("admin");
+            $model = $loader->loadModel("CompanyOperator");
+            $operators = $model->findAllBy(array());
+            $cachedOperators = array();
+            foreach($operators as $operator){
+                $cachedOperators[$operator->operator_id] = $operator;
+            }
+            $cachedOperators = parent::cacheData(get_class($this)."::operators", $cachedOperators);
+        }
+        return $cachedOperators[$this->operator_id];
     }
 
     /**
@@ -111,12 +118,12 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
      * @throws Vizualizer_Exception_Database
      */
     public function addAccountOperator($account_id, $operator_id, $index = 0){
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountOperator");
         $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
         if(!($model->account_operator_id > 0)){
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $model->account_id = $account_id;
                 $model->operator_id = $operator_id;
@@ -137,12 +144,12 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
      * @throws Vizualizer_Exception_Database
      */
     public function removeAccountOperator($account_id, $operator_id){
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountOperator");
         $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
         if($model->account_operator_id > 0){
+            // トランザクションの開始
+            $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 $model->delete();
                 Vizualizer_Database_Factory::commit($connection);
@@ -169,11 +176,11 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
         }
 
         if($operator_id > 0 && $new_operator_id > 0){
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
             $model = $loader->loadModel("AccountOperator");
             $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
             if($model->account_operator_id > 0){
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
                     $model->operator_id = $new_operator_id;
                     $model->save();

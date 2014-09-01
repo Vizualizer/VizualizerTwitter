@@ -48,9 +48,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private $twitter;
 
     /**
-     * 属性をキャッシュするための変数
+     * 実行用のキャッシュ
      */
-    private static $attributes;
+    private $setting;
 
     /**
      * コンストラクタ
@@ -149,7 +149,8 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * 属性のリストを取得するための変数
      */
     public function attributes(){
-        if(!isset(self::$attributes)){
+        $attributes = parent::cacheData(get_class($this)."::attributes");
+        if($attributes === null){
             $loader = new Vizualizer_Plugin("twitter");
             $setting = $loader->loadModel("Setting");
             $settings = $setting->findAllBy(array());
@@ -159,9 +160,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                     $attributes[$setting->account_attribute] = $setting->account_attribute;
                 }
             }
-            self::$attributes = $attributes;
+            $attributes = parent::cacheData(get_class($this)."::attributes", $attributes);
         }
-        return self::$attributes;
+        return $attributes;
     }
 
     /**
@@ -172,19 +173,31 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function status()
     {
         $loader = new Vizualizer_Plugin("twitter");
-        $accountStatus = $loader->loadModel("AccountStatus");
-        $accountStatus->findByAccountId($this->account_id);
-        if (!($accountStatus->account_status_id > 0)) {
+        $statuses = parent::cacheData(get_class($this)."::statuses");
+        if($statuses === null){
+            $accountStatus = $loader->loadModel("AccountStatus");
+            $accountStatuses = $accountStatus->findAllBy(array());
+            $statuses = array();
+            foreach($accountStatuses as $accountStatus){
+                $statuses[$accountStatus->account_id] = $accountStatus;
+            }
+            $statuses = parent::cacheData(get_class($this)."::statuses", $statuses);
+        }
+        if(!array_key_exists($this->account_id, $statuses)){
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
+                $accountStatus = $loader->loadModel("AccountStatus");
                 $accountStatus->account_id = $this->account_id;
                 $accountStatus->save();
                 Vizualizer_Database_Factory::commit($connection);
             } catch (Exception $e) {
                 Vizualizer_Database_Factory::rollback($connection);
             }
+            $statuses[$this->account_id] = $accountStatus;
+            $statuses = parent::cacheData(get_class($this)."::statuses", $statuses);
         }
-        return $accountStatus;
+
+        return $statuses[$this->account_id];
     }
 
     /**
@@ -423,10 +436,13 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function followSetting()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        return $setting;
+        if(!$this->setting){
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->setting = $loader->loadModel("Setting");
+            $this->setting->account($this);
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        }
+        return $this->setting;
     }
 
     /**
@@ -436,10 +452,14 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetSetting()
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        return $setting;
+        if(!$this->setting){
+            $loader = new Vizualizer_Plugin("twitter");
+            $this->setting = $loader->loadModel("Setting");
+            $this->setting->account($this);
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
+        }
+        return $this->setting;
     }
 
     /**
