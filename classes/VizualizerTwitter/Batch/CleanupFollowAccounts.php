@@ -53,8 +53,8 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
         $loader = new Vizualizer_Plugin("Twitter");
         $account = $loader->loadModel("Account");
 
-        if (count($params) >= 4 && $params[3] > 0) {
-            $account->findBy(array("account_id" => $params[3]));
+        $accounts = $account->findAllBy(array());
+        foreach($accounts as $account){
             $cursor = 0;
             $friendIds = array();
             while (true) {
