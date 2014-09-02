@@ -87,6 +87,28 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
         return $account;
     }
 
+    /**
+     * 指定のフォローをリセットする。
+     */
+    public function reset()
+    {
+        // フォローをリセットするには、フォロー中でなければいけない。
+        if($this->friend_date != null && $this->friend_cancel_date == null){
+            $connection = Vizualizer_Database_Factory::begin("twitter");
+            try {
+                $this->friend_date = null;
+                $this->save();
+                Vizualizer_Logger::writeInfo("Follow is reseted from " . $this->user_id . " in " . $this->account()->screen_name);
+                Vizualizer_Database_Factory::commit($connection);
+
+                return true;
+            } catch (Exception $e) {
+                Vizualizer_Database_Factory::rollback($connection);
+                throw new Vizualizer_Exception_Database($e);
+            }
+        }
+        return false;
+    }
 
     /**
      * 指定のフォロー処理を実施する。

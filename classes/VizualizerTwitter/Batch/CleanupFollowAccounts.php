@@ -31,16 +31,6 @@
 class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Batch
 {
 
-    public function getDaemonName()
-    {
-        return "cleanup_follow_accounts";
-    }
-
-    public function getDaemonInterval()
-    {
-        return 900;
-    }
-
     public function getName()
     {
         return "Cleanup Follow Account";
@@ -48,7 +38,7 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
 
     public function getFlows()
     {
-        return array("cleanupFollows", "cleanupFollowers");
+        return array("getCleanupFollows");
     }
 
     /**
@@ -58,142 +48,43 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
      * @param $data バッチで引き回すデータ
      * @return バッチで引き回すデータ
      */
-    protected function cleanupFollows($params, $data)
+    protected function getCleanupFollows($params, $data)
     {
         $loader = new Vizualizer_Plugin("Twitter");
-        $follows = $loader->loadTable("Follows");
-        $friends = $loader->loadTable("AccountFriends");
+        $account = $loader->loadModel("Account");
 
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
+        if (count($params) >= 4 && $params[3] > 0) {
+            $account->findBy(array("account_id" => $params[3]));
+            $cursor = 0;
+            $friendIds = array();
+            while (true) {
+                if ($cursor > 0) {
+                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
+                } else {
+                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000));
+                }
+                if($friends->httpstatus != "200"){
+                    break;
+                }
+                foreach($friends->ids as $id){
+                    $friendIds[$id] = $id;
+                }
+                if($friends->next_cursor == 0){
+                    break;
+                }
+                $cursor = $friends->next_cursor;
+            }
 
-        try {
-            $loader = new Vizualizer_Plugin("Twitter");
-            $update = new Vizualizer_Query_Update($follows);
-            $update->joinLeft($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
-            $update->addSets($follows->friend_date." = ".$friends->checked_time);
-            $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
-            $update->addWhere($follows->friend_date." IS NULL");
-            $update->execute();
-
-            $update = new Vizualizer_Query_Update($follows);
-            $update->joinInner($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
-            $update->addSets($follows->friend_cancel_date." = NULL");
-            $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
-            $update->execute();
-
-            // エラーが無かった場合、処理をコミットする。
-            Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
+            $follow = $loader->loadModel("Follow");
+            $follows = $follow->findAllBy(array("account_id" => $account->account_id, "ne:friend_date" => null, "friend_cancel_date" => null), "friend_date", false);
+            foreach($follows as $follow){
+                if(!in_array($follow->user_id, $friendIds)){
+                    if(!$follow->reset()){
+                        Vizualizer_Logger::error("Failed to reset follow to ".$follow->user_id." in ".$account->screen_name);
+                    }
+                }
+            }
         }
-
-        return $data;
-    }
-
-    /**
-     * フォロワー状態を整理する。
-     *
-     * @param $params バッチ自体のパラメータ
-     * @param $data バッチで引き回すデータ
-     * @return バッチで引き回すデータ
-     */
-    protected function cleanupFollowers($params, $data)
-    {
-        $loader = new Vizualizer_Plugin("Twitter");
-        $follows = $loader->loadTable("Follows");
-        $followers = $loader->loadTable("AccountFollowers");
-
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-
-        try {
-            $loader = new Vizualizer_Plugin("Twitter");
-            $update = new Vizualizer_Query_Update($follows);
-            $update->joinLeft($followers, array($follows->account_id." = ".$followers->account_id, $follows->user_id." = ".$followers->user_id, $followers->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
-            $update->addSets($follows->follow_date." = ".$followers->checked_time);
-            $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
-            $update->addWhere($follows->follow_date." IS NULL OR ".$followers->checked_time." IS NULL");
-            $update->execute();
-        // エラーが無かった場合、処理をコミットする。
-        Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
-        }
-
-        return $data;
-    }
-
-    /**
-     * フォロワー状態を整理する。
-     *
-     * @param $params バッチ自体のパラメータ
-     * @param $data バッチで引き回すデータ
-     * @return バッチで引き回すデータ
-     */
-    protected function cleanupCancelFollows($params, $data)
-    {
-        $loader = new Vizualizer_Plugin("Twitter");
-        $follows = $loader->loadTable("Follows");
-        $friends = $loader->loadTable("AccountFriends");
-
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-
-        try {
-            $loader = new Vizualizer_Plugin("Twitter");
-            $update = new Vizualizer_Query_Update($follows);
-            $update->joinLeft($friends, array($follows->account_id." = ".$friends->account_id, $follows->user_id." = ".$friends->user_id, $friends->checked_time." > ?"), array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
-            $update->addSets($follows->friend_cancel_date." = ?", array(Vizualizer::now()->strToTime("-72 hour")->date("Y-m-d H:i:s")));
-            $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
-            $update->addWhere($follows->friend_date." IS NOT NULL");
-            $update->addWhere($follows->friend_cancel_date." IS NULL");
-            $update->addWhere($friends->checked_time." IS NULL");
-            $update->execute();
-        // エラーが無かった場合、処理をコミットする。
-        Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
-        }
-
-        return $data;
-    }
-
-    /**
-     * フォロー整合性状態を整理する。
-     *
-     * @param $params バッチ自体のパラメータ
-     * @param $data バッチで引き回すデータ
-     * @return バッチで引き回すデータ
-     */
-    protected function cleanupFollowStatus($params, $data)
-    {
-        $loader = new Vizualizer_Plugin("Twitter");
-        $follows = $loader->loadTable("Follows");
-
-        // トランザクションの開始
-        $connection = Vizualizer_Database_Factory::begin("twitter");
-
-        try {
-            $loader = new Vizualizer_Plugin("Twitter");
-            $update = new Vizualizer_Query_Update($follows);
-            $update->addSets($follows->friend_date." = NULL");
-            $update->addSets($follows->friend_cancel_date." = NULL");
-            $update->addSets($follows->update_time." = ?", array(Vizualizer::now()->date("Y-m-d H:i:s")));
-            $update->addWhere($follows->friend_date." IS NOT NULL");
-            $update->addWhere($follows->follow_date." IS NOT NULL");
-            $update->addWhere($follows->friend_cancel_date." IS NOT NULL");
-            $update->execute();
-        // エラーが無かった場合、処理をコミットする。
-        Vizualizer_Database_Factory::commit($connection);
-        } catch (Exception $e) {
-            Vizualizer_Database_Factory::rollback($connection);
-            throw new Vizualizer_Exception_Database($e);
-        }
-
         return $data;
     }
 }
