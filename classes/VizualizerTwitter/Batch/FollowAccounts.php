@@ -96,15 +96,13 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             // フォロー設定を取得
             $setting = $account->followSetting();
 
-            // 本日のフォロー状況を取得
+            // 前日のフォロー状況を取得
             $history = $loader->loadModel("FollowHistory");
-            $today = Vizualizer::now()->date("Y-m-d");
-            $history->findBy(array("account_id" => $account->account_id, "history_date" => $today));
+            $yesterday = Vizualizer::now()->strToTime("-1 day")->date("Y-m-d");
+            $history->findBy(array("account_id" => $account->account_id, "history_date" => $yesterday));
 
             // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
-            $follow = $loader->loadModel("Follow");
-            $followed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_date" => $today));
-            if ($setting->daily_follows <= $followed) {
+            if ($setting->daily_follows <= $account->friend_count - $history->follow_count) {
                 $status->updateFollow(3, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
                 Vizualizer_Logger::writeInfo("Over daily follows for ".$followed." to ".$setting->daily_follows." in ".$account->screen_name);
                 continue;
