@@ -104,7 +104,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
             if ($setting->daily_follows <= $account->friend_count - $history->follow_count) {
                 $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_FINISHED, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
-                Vizualizer_Logger::writeInfo("Over daily follows for ".$followed." to ".$setting->daily_follows." in ".$account->screen_name);
+                Vizualizer_Logger::writeInfo("Over daily follows for ".($account->friend_count - $history->follow_count)." to ".$setting->daily_follows." in ".$account->screen_name);
                 continue;
             }
 
