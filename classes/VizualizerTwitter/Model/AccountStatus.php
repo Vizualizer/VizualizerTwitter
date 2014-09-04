@@ -30,6 +30,26 @@
  */
 class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
 {
+    // アカウントステータス
+    const ACCOUNT_OK = 0;
+    const ACCOUNT_SUSPENDED = 1;
+
+    // フォローステータス
+    const FOLLOW_SUSPENDED = 0;
+    const FOLLOW_STANDBY = 1;
+    const FOLLOW_RUNNING = 2;
+    const FOLLOW_FINISHED = 3;
+    const FOLLOW_NODATA = 4;
+    const UNFOLLOW_RUNNING = 5;
+    const UNFOLLOW_FINISHED = 6;
+
+    // ツイートステータス
+    const TWEET_SUSPENDED = 0;
+    const TWEET_RUNNING = 1;
+
+    // BOTステータス
+    const TWEET_BOT_DISABLED = 0;
+    const TWEET_BOT_ENABLED = 1;
 
     /**
      * コンストラクタ

@@ -82,13 +82,13 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($status->follow_status == "3") {
+            if ($status->follow_status == VizualizerTwitter_Model_AccountStatus::FOLLOW_FINISHED || $status->follow_status == VizualizerTwitter_Model_AccountStatus::UNFOLLOW_FINISHED) {
                 Vizualizer_Logger::writeInfo("Account reactivated by end status in ".$account->screen_name);
-                $status->updateFollow(1);
+                $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($status->follow_status != "1" && $status->follow_status != "2") {
+            if ($status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY && $status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_RUNNING) {
                 Vizualizer_Logger::writeInfo("Account is not ready in ".$account->screen_name);
                 continue;
             }
@@ -103,8 +103,8 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             // アカウントのフォロー数が1日のフォロー数を超えた場合はステータスを終了にしてスキップ
             if ($setting->daily_follows <= $account->friend_count - $history->follow_count) {
-                $status->updateFollow(3, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
-                Vizualizer_Logger::writeInfo("Over daily follows for ".$followed." to ".$setting->daily_follows." in ".$account->screen_name);
+                $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_FINISHED, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
+                Vizualizer_Logger::writeInfo("Over daily follows for ".($account->friend_count - $history->follow_count)." to ".$setting->daily_follows." in ".$account->screen_name);
                 continue;
             }
 
@@ -120,13 +120,13 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             // 結果が0件の場合はリスト無しにしてスキップ
             if ($follows->count() == 0) {
-                $status->updateFollow(4);
+                $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_NODATA);
                 Vizualizer_Logger::writeInfo("No List in ".$account->screen_name);
                 continue;
             }
 
             // ステータスを実行中に変更
-            $status->updateFollow(2);
+            $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_RUNNING);
 
             $result = false;
             foreach ($follows as $follow) {
@@ -135,9 +135,9 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
 
             if($result){
                 if ($status->follow_count < $setting->follow_unit - 1) {
-                    $status->updateFollow(2, Vizualizer::now()->strToTime("+".$setting->follow_interval." second")->date("Y-m-d H:i:s"));
+                    $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_RUNNING, Vizualizer::now()->strToTime("+".$setting->follow_interval." second")->date("Y-m-d H:i:s"));
                 } else {
-                    $status->updateFollow(1, Vizualizer::now()->strToTime("+".$setting->follow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
+                    $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY, Vizualizer::now()->strToTime("+".$setting->follow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
                 }
             }
         }
