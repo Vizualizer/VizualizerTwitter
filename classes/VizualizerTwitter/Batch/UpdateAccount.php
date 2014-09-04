@@ -104,7 +104,6 @@ class VizualizerTwitter_Batch_UpdateAccount extends Vizualizer_Plugin_Batch
                     if($followListCount > 0){
                         $accountStatus = $account->status();
                         if($accountStatus->follow_status == VizualizerTwitter_Model_AccountStatus::FOLLOW_NODATA) {
-                    ){
                             $accountStatus->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY);
                         }
                     }
