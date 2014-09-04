@@ -71,17 +71,17 @@ class VizualizerTwitter_Json_Account
                         }
                         break;
                     case "follow_status":
-                        if ($account->follow_status == "0") {
-                            $account->follow_status = "1";
-                        } elseif ($account->follow_status == "1") {
-                            $account->follow_status = "0";
+                        if ($account->follow_status == VizualizerTwitter_Model_AccountStatus::FOLLOW_SUSPENDED) {
+                            $account->follow_status = VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY;
+                        } elseif ($account->follow_status == VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY) {
+                            $account->follow_status = VizualizerTwitter_Model_AccountStatus::FOLLOW_SUSPENDED;
                         }
                         break;
                     case "tweet_status":
-                        if ($account->tweet_status == "0") {
-                            $account->tweet_status = "1";
-                        } elseif ($account->tweet_status == "1") {
-                            $account->tweet_status = "0";
+                        if ($account->tweet_status == VizualizerTwitter_Model_AccountStatus::TWEET_SUSPENDED) {
+                            $account->tweet_status = VizualizerTwitter_Model_AccountStatus::TWEET_RUNNING;
+                        } elseif ($account->tweet_status == VizualizerTwitter_Model_AccountStatus::TWEET_RUNNING) {
+                            $account->tweet_status = VizualizerTwitter_Model_AccountStatus::TWEET_SUSPENDED;
                         }
                         break;
                     case "follow_keyword":

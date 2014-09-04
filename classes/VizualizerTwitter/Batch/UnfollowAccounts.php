@@ -84,12 +84,12 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             $loader = new Vizualizer_Plugin("Twitter");
 
             // 終了ステータスでここに来た場合は日付が変わっているため、待機中に遷移
-            if ($status->follow_status == "3") {
-                $status->updateFollow(1);
+            if ($status->follow_status == VizualizerTwitter_Model_AccountStatus::FOLLOW_FINISHED || $status->follow_status == VizualizerTwitter_Model_AccountStatus::UNFOLLOW_FINISHED) {
+                $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY);
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($status->follow_status != "1" && $status->follow_status != "2") {
+            if ($status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY && $status->follow_status != VizualizerTwitter_Model_AccountStatus::UNFOLLOW_RUNNING) {
                 Vizualizer_Logger::writeInfo("Account is not ready in ".$account->screen_name);
                 continue;
             }
@@ -111,7 +111,7 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             $follow = $loader->loadModel("Follow");
             $unfollowed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_cancel_date" => $today));
             if ($setting->daily_unfollows <= $unfollowed) {
-                $status->updateFollow(3, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
+                $status->updateFollow(VizualizerTwitter_Model_AccountStatus::UNFOLLOW_FINISHED, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
                 Vizualizer_Logger::writeInfo("Over daily unfollows for ".$unfollowed." to ".$setting->daily_unfollows." in ".$account->screen_name);
                 continue;
             }
@@ -122,7 +122,7 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
             $follows = $follow->findAllBy(array("account_id" => $account->account_id, "le:friend_date" => Vizualizer::now()->strToTime("-".$setting->refollow_timeout." hour")->date("Y-m-d H:i:s"), "follow_date" => null, "friend_cancel_date" => null), "friend_date", false);
 
             // ステータスを実行中に変更
-            $status->updateFollow(2);
+            $status->updateFollow(VizualizerTwitter_Model_AccountStatus::UNFOLLOW_RUNNING);
 
             $result = false;
             foreach ($follows as $follow) {
@@ -131,9 +131,9 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
 
             if($result){
                 if($status->follow_count < $setting->unfollow_unit - 1){
-                    $status->updateFollow(2, Vizualizer::now()->strToTime("+".$setting->unfollow_interval." second")->date("Y-m-d H:i:s"));
+                    $status->updateFollow(VizualizerTwitter_Model_AccountStatus::UNFOLLOW_RUNNING, Vizualizer::now()->strToTime("+".$setting->unfollow_interval." second")->date("Y-m-d H:i:s"));
                 }else{
-                    $status->updateFollow(1, Vizualizer::now()->strToTime("+".$setting->unfollow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
+                    $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY, Vizualizer::now()->strToTime("+".$setting->unfollow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
                 }
             }
         }
