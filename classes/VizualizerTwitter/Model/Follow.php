@@ -179,10 +179,10 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                         return true;
                     } elseif ($result->errors[0]->code == "64") {
                         // アカウントのステータスを凍結中に変更
-                        $account->status()->updateStatus(1);
+                        $account->status()->updateStatus(VizualizerTwitter_Model_AccountStatus::ACCOUNT_SUSPENDED);
                     }else{
                         // アカウント凍結中を解除
-                        $account->status()->updateStatus(0);
+                        $account->status()->updateStatus(VizualizerTwitter_Model_AccountStatus::ACCOUNT_OK);
                     }
                     Vizualizer_Logger::writeError("Failed to Follow on " . $this->user_id . " in " . $account->screen_name . " by " . print_r($result->errors, true));
                     return false;
@@ -224,7 +224,7 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
 
             if (isset($result->errors)) {
                 if ($result->errors[0]->code == "161" || $result->errors[0]->code == "162") {
-                    $account->status()->updateFollow(3, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
+                    $account->status()->updateFollow(VizualizerTwitter_Model_AccountStatus::UNFOLLOW_FINISHED, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
                 } elseif ($result->errors[0]->code == "108" || $result->errors[0]->code == "34") {
                     try {
                         $this->delete();
