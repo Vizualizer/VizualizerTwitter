@@ -64,7 +64,7 @@ class VizualizerTwitter_Batch_RecoveryRetweet extends Vizualizer_Plugin_Batch
             $result = (array) $twitter->statuses_retweets_ID(array("id" => $retweet->tweet_id));
 
             foreach ($result as $index => $item) {
-                if (is_numeric($index) && $item->user->id == $accout->twitter_id) {
+                if (is_numeric($index) && $item->user->id == $account->twitter_id) {
                     // リツイートを更新
                     $connection = Vizualizer_Database_Factory::begin("twitter");
                     try {
