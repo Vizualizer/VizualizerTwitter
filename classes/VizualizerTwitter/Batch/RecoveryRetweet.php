@@ -28,7 +28,7 @@
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
+class VizualizerTwitter_Batch_RecoveryRetweets extends Vizualizer_Plugin_Batch
 {
 
     public function getName()
