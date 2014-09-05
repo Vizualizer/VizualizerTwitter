@@ -88,10 +88,13 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
         if($account_id > 0){
             // アカウントIDが設定されている場合はデフォルトの設定を取得する。
             if(!self::$baseSetting){
-                self::$baseSetting = $loader->loadModel("Setting");
-                self::$baseSetting->findByOperatorAccount($operator_id);
+                self::$baseSetting = array();
             }
-            $setting = self::$baseSetting;
+            if(!array_key_exists($operator_id, self::$baseSetting)){
+                self::$baseSetting[$operator_id] = $loader->loadModel("Setting");
+                self::$baseSetting[$operator_id]->findByOperatorAccount($operator_id);
+            }
+            $setting = self::$baseSetting[$operator_id];
             // 常にデフォルトの設定を利用する項目をコピー
             $defaultKeys = Vizualizer_Configure::get("twitter_default_setting_keys");
             if(is_array($defaultKeys)){
