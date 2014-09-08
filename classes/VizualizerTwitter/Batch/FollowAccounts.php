@@ -88,7 +88,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             }
 
             // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
-            if ($status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY && $status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_RUNNING) {
+            if ($status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY && $status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_RUNNING && $status->follow_status != VizualizerTwitter_Model_AccountStatus::UNFOLLOW_RUNNING) {
                 Vizualizer_Logger::writeInfo("Account is not ready in ".$account->screen_name);
                 continue;
             }
