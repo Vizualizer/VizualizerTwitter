@@ -75,33 +75,64 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $page = $this->page ++;
 
         foreach ($accounts as $account) {
-            // 検索キーワードを取得する。
-            $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
             $setting = $account->followSetting();
-            $keywords = explode("\r\n", str_replace(" ", "\r\n", str_replace("　", " ", $setting->follow_keywords)));
-            // キーワードのリストをシャッフルする
-            shuffle($keywords);
+            if($setting->follow_type == "1" || $setting->follow_type == "3"){
+                // 検索キーワードを取得する。
+                $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
+                $keywords = explode("\r\n", str_replace(" ", "\r\n", str_replace("　", " ", $setting->follow_keywords)));
+                // キーワードのリストをシャッフルする
+                shuffle($keywords);
 
-            // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
-            $follow = $loader->loadModel("Follow");
-            $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => Vizualizer::now()->date("Y-m-d")));
-            if ($searched < $setting->daily_follows * 2) {
-                // ユーザー情報を検索
-                foreach($keywords as $keyword){
-                    if(empty($keyword)){
-                        continue;
-                    }
-                    $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
-                    unset($users["httpstatus"]);
-                    Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
-                    foreach ($users as $index => $user) {
-                        if($setting->follow_type == "1" || $setting->follow_type == "3"){
+                // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
+                $follow = $loader->loadModel("Follow");
+                $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => Vizualizer::now()->date("Y-m-d")));
+                if ($searched < $setting->daily_follows * 2) {
+                    // ユーザー情報を検索
+                    foreach($keywords as $keyword){
+                        if(empty($keyword)){
+                            continue;
+                        }
+                        $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
+                        unset($users["httpstatus"]);
+                        Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
+                        foreach ($users as $index => $user) {
                             $account->addUser($user);
                             $searched ++;
+                            if ($searched < $setting->daily_follows * 2) {
+                                break;
+                            }
                         }
+                        if ($searched < $setting->daily_follows * 2) {
+                            break;
+                        }
+                    }
+                    if ($searched < $setting->daily_follows * 2) {
+                        break;
+                    }
+                }
+            }
 
-                        // フォロワーを追加
-                        if($setting->follow_type == "2" || $setting->follow_type == "3"){
+            // フォロワーを追加
+            if($setting->follow_type == "2" || $setting->follow_type == "3"){
+                // 検索キーワードを取得する。
+                $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
+                $keywords = explode("\r\n", str_replace(" ", "\r\n", str_replace("　", " ", $setting->follower_keywords)));
+                // キーワードのリストをシャッフルする
+                shuffle($keywords);
+
+                // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
+                $follow = $loader->loadModel("Follow");
+                $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => Vizualizer::now()->date("Y-m-d")));
+                if ($searched < $setting->daily_follows * 2) {
+                    // ユーザー情報を検索
+                    foreach($keywords as $keyword){
+                        if(empty($keyword)){
+                            continue;
+                        }
+                        $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
+                        unset($users["httpstatus"]);
+                        Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
+                        foreach ($users as $index => $user) {
                             // ユーザーのフォロワーを取得
                             $followers = $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "5000"));
 
@@ -128,6 +159,9 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                                 if ($searched < $setting->daily_follows * 2) {
                                     break;
                                 }
+                            }
+                            if ($searched < $setting->daily_follows * 2) {
+                                break;
                             }
                         }
                         if ($searched < $setting->daily_follows * 2) {
