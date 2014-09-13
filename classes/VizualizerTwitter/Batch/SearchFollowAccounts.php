@@ -75,10 +75,10 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $page = $this->page ++;
 
         foreach ($accounts as $account) {
+            $setting = $account->followSetting();
             if($setting->follow_type == "1" || $setting->follow_type == "3"){
                 // 検索キーワードを取得する。
                 $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
-                $setting = $account->followSetting();
                 $keywords = explode("\r\n", str_replace(" ", "\r\n", str_replace("　", " ", $setting->follow_keywords)));
                 // キーワードのリストをシャッフルする
                 shuffle($keywords);
@@ -116,7 +116,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             if($setting->follow_type == "2" || $setting->follow_type == "3"){
                 // 検索キーワードを取得する。
                 $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
-                $setting = $account->followSetting();
                 $keywords = explode("\r\n", str_replace(" ", "\r\n", str_replace("　", " ", $setting->follower_keywords)));
                 // キーワードのリストをシャッフルする
                 shuffle($keywords);
