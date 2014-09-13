@@ -79,6 +79,8 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             $admin = Vizualizer_Session::get(VizualizerAdmin::SESSION_KEY);
             $setting = $account->followSetting();
             $keywords = explode("\r\n", str_replace(" ", "\r\n", str_replace("　", " ", $setting->follow_keywords)));
+            // キーワードのリストをシャッフルする
+            shuffle($keywords);
 
             // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
             $follow = $loader->loadModel("Follow");
