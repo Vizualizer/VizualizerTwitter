@@ -75,6 +75,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $page = $this->page ++;
 
         foreach ($accounts as $account) {
+            Vizualizer_Logger::writeInfo("Seach start : " . $account->screen_name);
             $setting = $account->followSetting();
             if($setting->follow_type == "1" || $setting->follow_type == "3"){
                 // 検索キーワードを取得する。
@@ -105,9 +106,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         if ($searched < $setting->daily_follows * 2) {
                             break;
                         }
-                    }
-                    if ($searched < $setting->daily_follows * 2) {
-                        break;
                     }
                 }
             }
@@ -167,9 +165,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         if ($searched < $setting->daily_follows * 2) {
                             break;
                         }
-                    }
-                    if ($searched < $setting->daily_follows * 2) {
-                        break;
                     }
                 }
             }
