@@ -99,11 +99,11 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         foreach ($users as $index => $user) {
                             $account->addUser($user);
                             $searched ++;
-                            if ($searched < $setting->daily_follows * 2) {
+                            if ($searched > $setting->daily_follows * 2) {
                                 break;
                             }
                         }
-                        if ($searched < $setting->daily_follows * 2) {
+                        if ($searched > $setting->daily_follows * 2) {
                             break;
                         }
                     }
@@ -154,16 +154,13 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                                         $searched ++;
                                     }
                                 }
-                                if ($searched < $setting->daily_follows * 2) {
+                                if ($searched > $setting->daily_follows * 2) {
                                     break;
                                 }
                             }
-                            if ($searched < $setting->daily_follows * 2) {
+                            if ($searched > $setting->daily_follows * 2) {
                                 break;
                             }
-                        }
-                        if ($searched < $setting->daily_follows * 2) {
-                            break;
                         }
                     }
                 }
