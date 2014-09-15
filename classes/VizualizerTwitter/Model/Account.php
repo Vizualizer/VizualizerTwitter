@@ -381,6 +381,10 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function isUnfollowable()
     {
+        // フォロワー数がフレンド数以上の場合は設定に関係なくアンフォローを行わないようにする。
+        if($this->friend_count <= $this->follower_count){
+            return false;
+        }
         // フォロワーが1818人以下の場合、フレンドが2000人に達している場合は設定に関係なくアンフォローを行うようにする。
         if($this->follower_count <= 1819 && $this->friend_count >= 2000){
             Vizualizer_Logger::writeInfo("Unfollow for over 2000 friends in ".$this->screen_name);
