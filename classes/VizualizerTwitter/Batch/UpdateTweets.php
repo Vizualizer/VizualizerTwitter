@@ -98,10 +98,10 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
                             $retweets = $account->getTwitter()->statuses_retweets_ID(array("id" => $tweet->id_str, "count" => 100));
                             foreach($retweets as $retweet){
                                 if(is_object($retweet) && property_exists($retweet, "user")){
-                                    print_r($retweet);
                                     $follower = $retweet->user;
                                     if(isset($follower->id) && $follower->id > 0){
-                                        $account->addFriend($follower);
+                                        Vizualizer_Logger::writeInfo("Add follow from retweeter : ".$follower->id);
+                                        $account->addUser($follower);
                                     }
                                 }
                             }
@@ -109,7 +109,7 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
 
                         $model->retweet_count = $tweet->retweet_count;
                         $model->favorite_count = $tweet->favorite_count;
-                        echo "Update Tweet for ".$model->twitter_id."  : \r\n";
+                        Vizualizer_Logger::writeInfo("Update Tweet for ".$model->twitter_id);
                         $model->save();
 
 

@@ -83,7 +83,7 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
         }
 
         // キャンセルの本体の処理を実行
-        $retweets = $model->findAllBy(array("le:scheduled_cancel_retweet_time" => Vizualizer::now()->date("Y-m-d H:i:s"), "ne:retweet_tweet_id" => "0", "cancel_retweet_time" => "0000-00-00 00:00:00"), "scheduled_retweet_time", false);
+        $retweets = $model->findAllBy(array("ne:retweet_tweet_id" => "", "le:scheduled_cancel_retweet_time" => Vizualizer::now()->date("Y-m-d H:i:s"), "cancel_retweet_time" => "0000-00-00 00:00:00"), "scheduled_retweet_time", false);
         foreach ($retweets as $retweet) {
             $account = $retweet->account();
 
