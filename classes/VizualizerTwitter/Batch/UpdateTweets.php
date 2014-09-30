@@ -101,7 +101,7 @@ class VizualizerTwitter_Batch_UpdateTweets extends Vizualizer_Plugin_Batch
                                     print_r($retweet);
                                     $follower = $retweet->user;
                                     if(isset($follower->id) && $follower->id > 0){
-                                        $account->addFriend($follower);
+                                        $account->addUser($follower);
                                     }
                                 }
                             }
