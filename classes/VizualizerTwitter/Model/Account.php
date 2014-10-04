@@ -265,7 +265,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 $follow->account_id = $this->account_id;
                 $follow->user_id = $user->id;
                 if($favorited){
-                    $follow->favoritee_date = Vizualizer::now()->date("Y-m-d H:i:s");
+                    $follow->favorited_date = Vizualizer::now()->date("Y-m-d H:i:s");
                 }
                 $follow->save();
             }
