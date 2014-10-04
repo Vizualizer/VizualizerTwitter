@@ -39,6 +39,9 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             $post->set("group_id", array());
         }
         $groupIds = $post["group_id"];
+        if(!($post["group_all"] > 0)){
+            $post->remove("group_all");
+        }
         if($post["add_group_id"] > 0){
             $groupIds[$post["add_group_id"]] = $post["add_group_id"];
             $post->remove("add_group_id");
@@ -54,7 +57,10 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
         $model = $loader->loadModel("AccountGroup");
         $search = $post["search"];
         $accountIds = $search["in:account_id"];
-        if(!empty($groupIds)){
+        if($post["group_all"] > 0){
+            // 全グループを指定した場合は全てのアカウントを対象にする。
+            $accountIds = array();
+        }elseif(!empty($groupIds)){
             $models = $model->findAllBy(array("in:group_id" => $groupIds));
             $newAccountIds = array();
             foreach($models as $model){
