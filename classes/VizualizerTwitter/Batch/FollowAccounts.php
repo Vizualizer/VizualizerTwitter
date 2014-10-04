@@ -115,7 +115,7 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                 // リフォローを行わない設定にしている場合、自分をフォローしているユーザーは対象外とする。
                 $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "follow_date" => null, "friend_cancel_date" => null), "COALESCE(follow_date, CASE WHEN favorited_date IS NOT NULL THEN DATE_SUB(favorited_date, INTERVAL 7 DAY) ELSE NULL END)", true);
             }else{
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "friend_cancel_date" => null), "COALESCE(follow_date, , CASE WHEN favorited_date IS NOT NULL THEN DATE_SUB(favorited_date, INTERVAL 7 DAY) ELSE NULL END)", true);
+                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "friend_cancel_date" => null), "COALESCE(follow_date, CASE WHEN favorited_date IS NOT NULL THEN DATE_SUB(favorited_date, INTERVAL 7 DAY) ELSE NULL END)", true);
             }
 
             // 結果が0件の場合はリスト無しにしてスキップ
