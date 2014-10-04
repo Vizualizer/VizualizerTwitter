@@ -249,7 +249,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * フレンドでもフォロワーでもないユーザーを追加する。
      */
-    public function addUser($user){
+    public function addUser($user, $favorited = false){
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
 
@@ -264,6 +264,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 // 更新対象を取得する場合はアンフォローのレコードを除外
                 $follow->account_id = $this->account_id;
                 $follow->user_id = $user->id;
+                if($favorited){
+                    $follow->favoritee_date = Vizualizer::now()->date("Y-m-d H:i:s");
+                }
                 $follow->save();
             }
 
