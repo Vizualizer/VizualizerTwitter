@@ -86,7 +86,7 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             }
             $model = $loader->loadModel("Account");
             $models = $model->findAllBy(array("nin:account_id" => array_values($exceptIds)));
-            $newAccountIds = array();
+            $newAccountIds = array(0);
             foreach($models as $model){
                 $newAccountIds[$model->account_id] = $model->account_id;
             }
