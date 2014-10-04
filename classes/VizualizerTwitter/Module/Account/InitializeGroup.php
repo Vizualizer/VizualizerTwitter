@@ -93,7 +93,7 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             if(!is_array($accountIds)){
                 $accountIds = $newAccountIds;
             }else{
-                $accountIds = array_intersect($accountIds, $newAccountIds);
+                $accountIds = array_merge($accountIds, $newAccountIds);
             }
         }
         $search["in:account_id"] = $accountIds;
