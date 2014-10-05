@@ -130,41 +130,82 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         $users = (array) $account->getTwitter()->users_search(array("q" => $keyword, "page" => $page, "count" => 20));
                         unset($users["httpstatus"]);
                         Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
-                        foreach ($users as $index => $user) {
-                            // ユーザーのフォロワーを取得
-                            $followers = $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "5000"));
+                        // ユーザーのフォロワーを取得
+                        $followers = $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "5000"));
 
-                            if (!isset($followers->ids) || !is_array($followers->ids)) {
-                                break;
-                            }
+                        if (!isset($followers->ids) || !is_array($followers->ids)) {
+                            break;
+                        }
 
-                            if(count($followers->ids) > 100){
-                                shuffle($followers->ids);
-                                $followers->ids = array_splice($followers->ids, 0, 100);
-                            }
+                        if(count($followers->ids) > 100){
+                            shuffle($followers->ids);
+                            $followers->ids = array_splice($followers->ids, 0, 100);
+                        }
 
-                            $followerIds = implode(",", $followers->ids);
-                            // ユーザーのフォロワーを取得
-                            $followers = $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
+                        $followerIds = implode(",", $followers->ids);
+                        // ユーザーのフォロワーを取得
+                        $followers = $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
 
-                            foreach($followers as $follower){
-                                if(isset($follower->id) && $follower->id > 0){
-                                    if($account->checkAddUser($follower)){
-                                        $account->addUser($follower);
-                                        $searched ++;
-                                    }
-                                }
-                                if ($searched > $setting->daily_follows * 2) {
-                                    break;
+                        foreach($followers as $follower){
+                            if(isset($follower->id) && $follower->id > 0){
+                                if($account->checkAddUser($follower)){
+                                    $account->addUser($follower);
+                                    $searched ++;
                                 }
                             }
                             if ($searched > $setting->daily_follows * 2) {
                                 break;
                             }
                         }
+                        if ($searched > $setting->daily_follows * 2) {
+                            break;
+                        }
                     }
                 }
             }
+
+            if(!empty($setting->follow_account)){
+                // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
+                Vizualizer_Logger::writeInfo("Seach target : " . $setting->follow_account);
+                $follow = $loader->loadModel("Follow");
+                $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => Vizualizer::now()->date("Y-m-d")));
+                if ($searched < $setting->daily_follows * 2) {
+                    // ユーザーのフォロワーを取得
+                    $followers = $account->getTwitter()->followers_ids(array("screen_name" => $setting->follow_account, "count" => "5000"));
+
+                    if (!isset($followers->ids) || !is_array($followers->ids)) {
+                        break;
+                    }
+
+                    if(count($followers->ids) > 100){
+                        shuffle($followers->ids);
+                        $followers->ids = array_splice($followers->ids, 0, 100);
+                    }
+
+                    $followedCount = 0;
+                    $followerIds = implode(",", $followers->ids);
+                    // ユーザーのフォロワーを取得
+                    $followers = $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
+
+                    foreach($followers as $follower){
+                        if(is_object($follower) && property_exists($follower, "status") && property_exists($follower->status, "created_at")){
+                            if(isset($follower->id) && $follower->id > 0){
+                                if($account->checkAddUser($follower)){
+                                    $account->addUser($follower);
+                                    $searched ++;
+                                }
+                            }
+                        }
+                        if ($searched > $setting->daily_follows * 2) {
+                            break;
+                        }
+                    }
+                    if ($searched > $setting->daily_follows * 2) {
+                        break;
+                    }
+                }
+            }
+
         }
 
         return $data;
