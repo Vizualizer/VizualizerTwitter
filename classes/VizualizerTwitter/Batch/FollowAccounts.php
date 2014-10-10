@@ -111,12 +111,16 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
             // リストを取得する。
             $follow = $loader->loadModel("Follow");
             $follow->limit(1, 0);
+            $searchParams = array("account_id" => $account->account_id, "friend_date" => null, "friend_cancel_date" => null);
+            $sortOrder = "COALESCE(follow_date, CASE WHEN favorited_date IS NOT NULL THEN DATE_SUB(favorited_date, INTERVAL 7 DAY) ELSE NULL END)";
             if(Vizualizer_Configure::get("refollow_enabled") === false){
                 // リフォローを行わない設定にしている場合、自分をフォローしているユーザーは対象外とする。
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "follow_date" => null, "friend_cancel_date" => null), "COALESCE(follow_date, CASE WHEN favorited_date IS NOT NULL THEN DATE_SUB(favorited_date, INTERVAL 7 DAY) ELSE NULL END)", true);
-            }else{
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "friend_date" => null, "friend_cancel_date" => null), "COALESCE(follow_date, CASE WHEN favorited_date IS NOT NULL THEN DATE_SUB(favorited_date, INTERVAL 7 DAY) ELSE NULL END)", true);
+                $searchParams["follow_date"] = null;
             }
+            if($setting->ignore_search_follow > 0){
+                $searchParams["ne:follow_date*favorited_date"] = null;
+            }
+            $follows = $follow->findAllBy($searchParams, $sortOrder, true);
 
             // 結果が0件の場合はリスト無しにしてスキップ
             if ($follows->count() == 0) {
