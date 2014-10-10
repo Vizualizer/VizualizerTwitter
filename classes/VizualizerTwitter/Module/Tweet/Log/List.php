@@ -23,7 +23,7 @@
  */
 
 /**
- * ツイートのリストを取得する。
+ * ツイートログのリストを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
@@ -33,6 +33,7 @@ class VizualizerTwitter_Module_Tweet_Log_List extends Vizualizer_Plugin_Module_L
 
     function execute($params)
     {
+        Vizualizer_Logger::writeInfo(print_r(Vizualizer::request(), true));
         $this->executeImpl($params, "Twitter", "TweetLog", $params->get("result", "tweetLogs"));
     }
 }
