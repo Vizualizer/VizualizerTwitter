@@ -62,6 +62,10 @@ class VizualizerTwitter_Model_Application extends Vizualizer_Plugin_Model
         $select->addColumn($this->access->_W);
         $accounts = $loader->loadTable("Accounts");
         $select->joinLeft($accounts, array($this->access->application_id." = ".$accounts->application_id));
+        $attr = Vizualizer::attr();
+        if ($attr[VizualizerAdmin::KEY]->operator_id > 0) {
+            $select->where($this->access->specialize_operator." IS NULL OR ".$this->access->specialize_operator." = ?", array($attr[VizualizerAdmin::KEY]->operator_id));
+        }
         $select->group($this->access->application_id)->order("COUNT(".$accounts->account_id.")")->order("RAND()");
         $select->setLimit(1, 0);
         $sqlResult = $select->fetch(1, 0);
