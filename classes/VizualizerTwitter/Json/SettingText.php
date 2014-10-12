@@ -37,10 +37,27 @@ class VizualizerTwitter_Json_SettingText
                         }else{
                             $setting->$attribute = $post["value"];
                         }
+
                         // トランザクションの開始
                         $connection = Vizualizer_Database_Factory::begin("twitter");
 
                         try {
+
+                            if ($attribute == "follow_target") {
+                                $status = $setting->account()->status();
+                                if($setting->$attribute > 0){
+                                    if(!($status->follow_status > 0)){
+                                        $status->follow_status = 1;
+                                        $status->save();
+                                    }
+                                }else{
+                                    if($status->follow_status > 0){
+                                        $status->follow_status = 0;
+                                        $status->save();
+                                    }
+                                }
+                            }
+
                             $setting->save();
 
                             // エラーが無かった場合、処理をコミットする。
