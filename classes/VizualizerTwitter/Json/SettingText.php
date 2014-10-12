@@ -44,7 +44,7 @@ class VizualizerTwitter_Json_SettingText
                         try {
 
                             if ($attribute == "follow_target") {
-                                $status = $setting->account->status();
+                                $status = $setting->account()->status();
                                 if($setting->$attribute > 0){
                                     if(!($status->follow_status > 0)){
                                         $status->follow_status = 1;
