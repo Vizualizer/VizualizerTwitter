@@ -117,9 +117,9 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
                 // リフォローを行わない設定にしている場合、自分をフォローしているユーザーは対象外とする。
                 $searchParams["follow_date"] = null;
             }
-            if($setting->follow_target == 1){
+            if($setting->follow_target == 2){
                 $searchParams["ne:follow_date*favorited_date"] = null;
-            }elseif($setting->follow_target == 2){
+            }elseif($setting->follow_target == 1){
                 $searchParams["follow_date"] = null;
                 $searchParams["ne:favorited_date"] = null;
             }
