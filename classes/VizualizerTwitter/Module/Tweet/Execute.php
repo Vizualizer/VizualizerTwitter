@@ -42,6 +42,7 @@ class VizualizerTwitter_Module_Tweet_Execute extends Vizualizer_Plugin_Module_De
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
                 if (!empty($post["tweet_text"])) {
+                    $loader = new Vizualizer_Plugin("Twitter");
                     $tweetLog = $loader->loadModel("TweetLog");
                     $tweetLog->account_id = $tweet->account_id;
                     $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
@@ -52,9 +53,9 @@ class VizualizerTwitter_Module_Tweet_Execute extends Vizualizer_Plugin_Module_De
                     if (!empty($tweetLog->media_filename)) {
                         $params = array("status" => trim(str_replace(" " . $tweetLog->media_url, "", $tweet->tweet_text)));
                         $params["media[]"] = VIZUALIZER_SITE_ROOT.Vizualizer_Configure::get("twitter_image_savepath")."/".$tweetLog->media_filename;
-                        $result = $account->getTwitter()->statuses_updateWithMedia($params);
+                        $result = $tweet->account()->getTwitter()->statuses_updateWithMedia($params);
                     } else {
-                        $result = $account->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
+                        $result = $tweet->account()->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
                     }
                     if (!empty($result->id)) {
                         Vizualizer_Logger::writeInfo($account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text);
