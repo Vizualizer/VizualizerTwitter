@@ -1,6 +1,6 @@
 <?php
 
-class VizualizerTwitter_Json_SaveTweet
+class VizualizerTwitter_Json_AddFavorite
 {
 
     public function execute()
@@ -17,7 +17,7 @@ class VizualizerTwitter_Json_SaveTweet
                 // トランザクションの開始
                 $connection = Vizualizer_Database_Factory::begin("twitter");
                 try {
-                    $tweet = $loader->loadModel("Tweet");
+                    $tweet = $loader->loadModel("TweetFavorite");
                     $tweet->findBy(array("account_id" => $post["account_id"], "twitter_id" => $post["twitter_id"]));
                     if (!($tweet->tweet_id > 0)) {
                         $tweet = $loader->loadModel("Tweet");
