@@ -34,6 +34,10 @@ class VizualizerTwitter_Module_Tweet_Save extends Vizualizer_Plugin_Module_Save
     function execute($params)
     {
         $post = Vizualizer::request();
+        if (!empty($post["tweet"])) {
+            // tweetでも保存対象になるようにする。
+            $post->set("save", $post["tweet"]);
+        }
         if($post["original_image_url"] != ""){
             $parsedUrl = parse_url($post["original_image_url"]);
             $info = pathinfo($parsedUrl["path"]);
