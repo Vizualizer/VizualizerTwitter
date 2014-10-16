@@ -33,6 +33,26 @@ class VizualizerTwitter_Module_Tweet_Log_Delete extends Vizualizer_Plugin_Module
 
     function execute($params)
     {
-        $this->executeImpl("Twitter", "TweetLog", "tweet_log_id");
+        $post = Vizualizer::request();
+        if($post["delete"]){
+            print_r($post["tweet_log_id"]);
+            if(!is_array($post["tweet_log_id"])){
+                $post->set("tweet_log_id", array($post["tweet_log_id"]));
+            }
+            $tweetLogIds = $post["tweet_log_id"];
+            print_r($post["tweet_log_id"]);
+            foreach($tweetLogIds as $tweetLogId){
+                $post->set("delete", "1");
+                $post->set("tweet_log_id", $tweetLogId);
+                $loader = new Vizualizer_Plugin("twitter");
+                $tweetLog = $loader->loadModel("TweetLog");
+                $tweetLog->findByPrimaryKey($tweetLogId);
+                $account = $tweetLog->account();
+                $twitterId = $tweetLog->twitter_id;
+                print_r($post);
+                $this->executeImpl("Twitter", "TweetLog", "tweet_log_id");
+                $account->getTwitter()->statuses_destroy_ID(array("id" => $twitterId));
+            }
+        }
     }
 }
