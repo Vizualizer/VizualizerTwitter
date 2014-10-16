@@ -20,7 +20,7 @@ class VizualizerTwitter_Json_AddFavorite
                     $tweet = $loader->loadModel("TweetFavorite");
                     $tweet->findBy(array("account_id" => $post["account_id"], "twitter_id" => $post["twitter_id"]));
                     if (!($tweet->tweet_id > 0)) {
-                        $tweet = $loader->loadModel("Tweet");
+                        $tweet = $loader->loadModel("TweetFavorite");
                         $tweet->twitter_id = $post["twitter_id"];
                     }
                     $tweet->account_id = $post["account_id"];
@@ -50,7 +50,7 @@ class VizualizerTwitter_Json_AddFavorite
                 }
             }
 
-            $tweet = $loader->loadModel("Tweet");
+            $tweet = $loader->loadModel("TweetFavorite");
             $tweets = $tweet->findAllBy(array("account_id" => $post["account_id"]));
             foreach($tweets as $tweet){
                 $result[] = $tweet->twitter_id;
