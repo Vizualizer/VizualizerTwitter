@@ -44,6 +44,7 @@ class VizualizerTwitter_Json_SaveTweet
                     $tweet->save();
 
                     if ($post["execute"] > 0) {
+                        $account = $tweet->account();
                         $tweetLog = $loader->loadModel("TweetLog");
                         $tweetLog->account_id = $tweet->account_id;
                         $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
@@ -54,16 +55,16 @@ class VizualizerTwitter_Json_SaveTweet
                         if (!empty($tweetLog->media_filename)) {
                             $params = array("status" => trim(str_replace(" " . $tweetLog->media_url, "", $tweet->tweet_text)));
                             $params["media[]"] = VIZUALIZER_SITE_ROOT.Vizualizer_Configure::get("twitter_image_savepath")."/".$tweetLog->media_filename;
-                            $result = $tweet->account()->getTwitter()->statuses_updateWithMedia($params);
+                            $tweeted = $tweet->account()->getTwitter()->statuses_updateWithMedia($params);
                         } else {
-                            $result = $tweet->account()->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
+                            $tweeted = $tweet->account()->getTwitter()->statuses_update(array("status" => $tweetLog->tweet_text));
                         }
-                        if (!empty($result->id)) {
-                            Vizualizer_Logger::writeInfo($account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text);
-                            $tweetLog->twitter_id = $result->id;
-                            $tweetlog->tweet_text = $result->text;
-                            if(property_exists("media", $result->entities) && is_array($result->entities->media) && count($result->entities->media) > 0){
-                                $media = $result->entities->media[0];
+                        if (!empty($tweeted->id)) {
+                            Vizualizer_Logger::writeInfo($account->screen_name . " : Post tweet(" . $tweeted->id . ") : " . $tweetLog->tweet_text);
+                            $tweetLog->twitter_id = $tweeted->id;
+                            $tweetlog->tweet_text = $tweeted->text;
+                            if(property_exists($tweeted->entities, "media") && is_array($tweeted->entities->media) && count($tweeted->entities->media) > 0){
+                                $media = $tweeted->entities->media[0];
                                 $tweetLog->media_url = $media->url;
                                 $tweetLog->media_link = $media->media_url;
                             }else{
@@ -72,6 +73,8 @@ class VizualizerTwitter_Json_SaveTweet
                             }
                             $tweetLog->save();
 
+                            $status = $account->status();
+                            $tweetSettng = $account->tweetSetting();
                             if($status->retweet_status == "1" && $tweetSetting->retweet_group_id > 0){
                                 // 強化アカウントで、対象グループが設定されている場合は、リツイートの登録も併せて行う。
                                 $group = $loader->loadModel("AccountGroup");
@@ -80,7 +83,7 @@ class VizualizerTwitter_Json_SaveTweet
                                     if($account->account_id != $group->account_id){
                                         $model = $loader->loadModel("Retweet");
                                         $model->account_id = $group->account_id;
-                                        $model->tweet_id = $result->id;
+                                        $model->tweet_id = $tweeted->id;
                                         if($tweetSetting->retweet_delay > 0){
                                             $model->scheduled_retweet_time = Vizualizer::now()->strToTime("+" . $tweetSetting->retweet_delay . "minute")->date("Y-m-d H:i:s");
                                         }else{

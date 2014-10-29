@@ -61,7 +61,7 @@ class VizualizerTwitter_Module_Tweet_Execute extends Vizualizer_Plugin_Module_De
                         Vizualizer_Logger::writeInfo($account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text);
                         $tweetLog->twitter_id = $result->id;
                         $tweetlog->tweet_text = $result->text;
-                        if(property_exists("media", $result->entities) && is_array($result->entities->media) && count($result->entities->media) > 0){
+                        if(property_exists($result->entities, "media") && is_array($result->entities->media) && count($result->entities->media) > 0){
                             $media = $result->entities->media[0];
                             $tweetLog->media_url = $media->url;
                             $tweetLog->media_link = $media->media_url;
