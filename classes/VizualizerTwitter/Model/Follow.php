@@ -122,7 +122,8 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
         if($this->friend_date == null && $this->friend_cancel_date == null){
             // フォロー上限に達している場合はエラーになる可能性があるため、いかなる理由であってもフォローを行わない。
             $account = $this->account();
-            if ($account->friend_count < $account->followLimit()) {
+            $application = $account->application();
+            if ($application->suspended == 0 && $account->friend_count < $account->followLimit()) {
                 // フォロー数が上限に達していない場合はフォローを実行
                 $result = $account->getTwitter()->friendships_create(array("user_id" => $this->user_id, "follow" => true));
                 if (isset($result->errors)) {
@@ -158,6 +159,19 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                         try {
                             $this->friend_cancel_date = $this->friend_date = "1900-01-01 00:00:00";
                             $this->save();
+                            Vizualizer_Logger::writeInfo("Following is blocked from " . $this->user_id . " in " . $account->screen_name);
+                            Vizualizer_Database_Factory::commit($connection);
+                        } catch (Exception $e) {
+                            Vizualizer_Database_Factory::rollback($connection);
+                            throw new Vizualizer_Exception_Database($e);
+                        }
+                    } elseif ($result->errors[0]->code == "261") {
+                        // アプリ自体が凍結中の場合は
+                        $connection = Vizualizer_Database_Factory::begin("twitter");
+                        try {
+                            $application = $account->application();
+                            $application->suspended = "1";
+                            $application->save();
                             Vizualizer_Logger::writeInfo("Following is blocked from " . $this->user_id . " in " . $account->screen_name);
                             Vizualizer_Database_Factory::commit($connection);
                         } catch (Exception $e) {
