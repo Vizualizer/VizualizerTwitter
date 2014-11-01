@@ -9,7 +9,11 @@ class VizualizerTwitter_Json_Account
         $account->friend_limit = $account->followLimit() - $account->friend_count;
         $account->setting = $account->setting()->toArray();
         $account->followSetting = $account->followSetting()->toArray();
-        $account->status = $account->status()->toArray();
+        $status = $account->status()->toArray();
+        if($account->application()->suspended != 0 && $status["account_status"] == 0){
+            $status["account_status"] = "1";
+        }
+        $account->status = $status;
         $account->isUnfollowable = $account->isUnfollowable();
         $account->preTweetCount = $account->getPreTweetCount();
         $account->attributes = $account->attributes();
