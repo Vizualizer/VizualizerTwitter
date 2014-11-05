@@ -33,6 +33,7 @@ class VizualizerTwitter_Model_AccountStatus extends Vizualizer_Plugin_Model
     // アカウントステータス
     const ACCOUNT_OK = 0;
     const ACCOUNT_SUSPENDED = 1;
+    const APPLICATION_SUSPENDED = 2;
 
     // フォローステータス
     const FOLLOW_SUSPENDED = 0;
