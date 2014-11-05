@@ -10,8 +10,8 @@ class VizualizerTwitter_Json_Account
         $account->setting = $account->setting()->toArray();
         $account->followSetting = $account->followSetting()->toArray();
         $status = $account->status()->toArray();
-        if($account->application()->suspended != 0 && $status["account_status"] == 0){
-            $status["account_status"] = "1";
+        if($account->application()->suspended != 0 && $status["account_status"] == VizualizerTwitter_Model_AccountStatus::ACCOUNT_OK){
+            $status["account_status"] = VizualizerTwitter_Model_AccountStatus::APPLICATION_SUSPENDED;
         }
         $account->status = $status;
         $account->isUnfollowable = $account->isUnfollowable();
