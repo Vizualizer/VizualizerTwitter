@@ -36,9 +36,13 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
         // 取得対象のグループIDを調整
         $post = Vizualizer::request();
         if(!is_array($post["group_id"])){
+            $groupId = $post["group_id"];
             $post->set("group_id", array());
         }
         $groupIds = $post["group_id"];
+        if(!empty($groupId)){
+            $groupIds[$groupId] = $groupId;
+        }
         if(!($post["group_all"] > 0)){
             $post->remove("group_all");
         }
