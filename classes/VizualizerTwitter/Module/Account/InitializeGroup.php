@@ -71,7 +71,7 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             }else{
                 $accountIds = array_intersect($accountIds, $newAccountIds);
             }
-        }else{
+        }elseif(!$params->check("default_all_groups")){
             // グループ未指定の場合は対象を無しにする。
             $accountIds = array(0);
         }
