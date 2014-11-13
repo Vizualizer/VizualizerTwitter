@@ -110,8 +110,8 @@ class VizualizerTwitter_Json_SaveTweet
                             Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
                         }
 
-                        Vizualizer_Database_Factory::commit($connection);
                     }
+                    Vizualizer_Database_Factory::commit($connection);
                 } catch (Exception $e) {
                     Vizualizer_Database_Factory::rollback($connection);
                     throw new Vizualizer_Exception_Database($e);
