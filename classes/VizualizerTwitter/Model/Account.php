@@ -600,7 +600,10 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function limitedTweetLogs($limit, $offset = 0, $sort = "tweet_time", $reverse = true)
     {
         $tweetLogs = $this->tweetLogs($sort, $reverse);
-        return array_slice($tweetLogs, $offset, $limit);
+        if(is_array($tweetLogs)){
+            return array_slice($tweetLogs, $offset, $limit);
+        }
+        return array();
     }
 
     /**
@@ -614,7 +617,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         if(count($tweetLogs) > 0){
             return $tweetLogs[0];
         }
-        return $loader->loadModel("TweetLog");;
+        return $loader->loadModel("TweetLog");
     }
 
     /**
