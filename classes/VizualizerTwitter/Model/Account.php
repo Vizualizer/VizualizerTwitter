@@ -617,6 +617,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         if(count($tweetLogs) > 0){
             return $tweetLogs[0];
         }
+        $loader = new Vizualizer_Plugin("twitter");
         return $loader->loadModel("TweetLog");
     }
 
