@@ -576,7 +576,10 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             }
             $tweetLogs = parent::cacheData(get_class($this)."::tweetLogs", $tweetLogs);
         }
-        return $tweetLogs[$this->account_id];
+        if(array_key_exists($this->account_id, $tweetLogs)){
+            return $tweetLogs[$this->account_id];
+        }
+        return array();
     }
 
     /**
