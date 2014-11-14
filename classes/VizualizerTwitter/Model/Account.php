@@ -562,10 +562,24 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetLogs($sort = "tweet_time", $reverse = true)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $tweetLog = $loader->loadModel("TweetLog");
-        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
-        return $tweetLogs;
+        $tweetLogs = parent::cacheData(get_class($this)."::tweetLogs");
+        if($tweetLogs == null){
+            $loader = new Vizualizer_Plugin("twitter");
+            $model = $loader->loadModel("TweetLog");
+            $models = $model->findAllBy(array(), $sort, $reverse);
+            $tweetLogs = array();
+            foreach($models as $model){
+                if(!array_key_exists($model->account_id, $tweetLogs)){
+                    $tweetLogs[$model->account_id] = array();
+                }
+                $tweetLogs[$model->account_id][] = $model;
+            }
+            $tweetLogs = parent::cacheData(get_class($this)."::tweetLogs", $tweetLogs);
+        }
+        if(array_key_exists($this->account_id, $tweetLogs)){
+            return $tweetLogs[$this->account_id];
+        }
+        return array();
     }
 
     /**
@@ -588,11 +602,26 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function limitedTweetLogs($limit, $offset = 0, $sort = "tweet_time", $reverse = true)
     {
+        $tweetLogs = $this->tweetLogs($sort, $reverse);
+        if(is_array($tweetLogs)){
+            return array_slice($tweetLogs, $offset, $limit);
+        }
+        return array();
+    }
+
+    /**
+     * アカウントに紐づいた最新のツイートログを取得する
+     *
+     * @return 最新のツイートログ
+     */
+    public function lastTweetLog()
+    {
+        $tweetLogs = $this->limitedTweetLogs(1);
+        if(count($tweetLogs) > 0){
+            return $tweetLogs[0];
+        }
         $loader = new Vizualizer_Plugin("twitter");
-        $tweetLog = $loader->loadModel("TweetLog");
-        $tweetLog->limit($limit, $offset);
-        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
-        return $tweetLogs;
+        return $loader->loadModel("TweetLog");
     }
 
     /**
