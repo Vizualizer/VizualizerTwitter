@@ -562,14 +562,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetLogs($sort = "tweet_time", $reverse = true)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("TweetLog");
-        $models = $model->findAllBy(array("account_id" => $this->account_id), $sort, $reverse);
-        $tweetLogs = array();
-        foreach($models as $model){
-            $tweetLogs[] = $model;
-        }
-        return $tweetLogs;
+        return $this->limitedTweetLogs(-1, 0, $sort, $reverse);
     }
 
     /**
@@ -594,7 +587,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     {
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("TweetLog");
-        $model->limit($limit, $offset);
+        if($limit >= 0){
+            $model->limit($limit, $offset);
+        }
         $models = $model->findAllBy(array("account_id" => $this->account_id), $sort, $reverse);
         $tweetLogs = array();
         foreach($models as $model){
