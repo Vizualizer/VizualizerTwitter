@@ -562,24 +562,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetLogs($sort = "tweet_time", $reverse = true)
     {
-        $tweetLogs = parent::cacheData(get_class($this)."::tweetLogs");
-        if($tweetLogs == null){
-            $loader = new Vizualizer_Plugin("twitter");
-            $model = $loader->loadModel("TweetLog");
-            $models = $model->findAllBy(array(), $sort, $reverse);
-            $tweetLogs = array();
-            foreach($models as $model){
-                if(!array_key_exists($model->account_id, $tweetLogs)){
-                    $tweetLogs[$model->account_id] = array();
-                }
-                $tweetLogs[$model->account_id][] = $model;
-            }
-            $tweetLogs = parent::cacheData(get_class($this)."::tweetLogs", $tweetLogs);
-        }
-        if(array_key_exists($this->account_id, $tweetLogs)){
-            return $tweetLogs[$this->account_id];
-        }
-        return array();
+        return $this->limitedTweetLogs(-1, 0, $sort, $reverse);
     }
 
     /**
@@ -602,11 +585,17 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function limitedTweetLogs($limit, $offset = 0, $sort = "tweet_time", $reverse = true)
     {
-        $tweetLogs = $this->tweetLogs($sort, $reverse);
-        if(is_array($tweetLogs)){
-            return array_slice($tweetLogs, $offset, $limit);
+        $loader = new Vizualizer_Plugin("twitter");
+        $model = $loader->loadModel("TweetLog");
+        if($limit >= 0){
+            $model->limit($limit, $offset);
         }
-        return array();
+        $models = $model->findAllBy(array("account_id" => $this->account_id), $sort, $reverse);
+        $tweetLogs = array();
+        foreach($models as $model){
+            $tweetLogs[] = $model;
+        }
+        return $tweetLogs;
     }
 
     /**
