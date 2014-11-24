@@ -23,33 +23,17 @@
  */
 
 /**
- * ツイートを保存する。
+ * ツイートログのリストを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Tweet_Save extends Vizualizer_Plugin_Module_Save
+class VizualizerTwitter_Module_Tweet_Log_List extends Vizualizer_Plugin_Module_List
 {
 
     function execute($params)
     {
-        $post = Vizualizer::request();
-        if (!empty($post["tweet"])) {
-            // tweetでも保存対象になるようにする。
-            $post->set("save", $post["tweet"]);
-        }
-        if($post["original_image_url"] != ""){
-            $parsedUrl = parse_url($post["original_image_url"]);
-            $info = pathinfo($parsedUrl["path"]);
-
-            $image = VIZUALIZER_SITE_ROOT.Vizualizer_Configure::get("twitter_image_savepath")."/".$info["basename"];
-            if(($fp = fopen($image, "w+")) !== FALSE){
-                fwrite($fp, file_get_contents($post["original_image_url"]));
-                fclose($fp);
-                $post->set("media_url", $post["original_image_url"]);
-                $post->set("media_filename", $info["basename"]);
-            }
-        }
-        $this->executeImpl("Twitter", "Tweet", "tweet_id");
+        Vizualizer_Logger::writeInfo(print_r(Vizualizer::request(), true));
+        $this->executeImpl($params, "Twitter", "TweetLog", $params->get("result", "tweetLogs"));
     }
 }

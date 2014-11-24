@@ -48,11 +48,6 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     private $twitter;
 
     /**
-     * 実行用のキャッシュ
-     */
-    private $setting;
-
-    /**
      * コンストラクタ
      *
      * @param $values モデルに初期設定する値
@@ -410,30 +405,73 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function setting()
+    public function setting($useDefault = false)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $setting = $loader->loadModel("Setting");
-        $setting->findBy(array("operator_id" => $this->operator_id, "account_id" => $this->account_id));
-        return $setting;
+        $settings = parent::cacheData(get_class($this)."::settings");
+        if ($settings == null) {
+            $loader = new Vizualizer_Plugin("twitter");
+            $model = $loader->loadModel("Setting");
+            $models = $model->findAllBy(array());
+            $settings = array();
+            foreach ($models as $model) {
+                $settings[$model->operator_id.":".$model->account_id] = $model;
+            }
+            $settings = parent::cacheData(get_class($this)."::settings", $settings);
+        }
+        if (array_key_exists($this->operator_id.":".$this->account_id, $settings)) {
+            return $settings[$this->operator_id.":".$this->account_id];
+        } elseif (array_key_exists($this->operator_id.":0", $settings)) {
+            return $settings[$this->operator_id.":0"];
+        }
+        return null;
     }
 
     /**
      * アカウントグループを取得
      */
     public function accountGroups(){
-        $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("AccountGroup");
-        return $model->findAllByAccountId($this->account_id);
+        $groups = parent::cacheData(get_class($this)."::groups");
+        if ($groups == null) {
+            $loader = new Vizualizer_Plugin("twitter");
+            $model = $loader->loadModel("AccountGroup");
+            $models = $model->findAllBy(array());
+            $groups = array();
+            foreach ($models as $model) {
+                if (!array_key_exists($model->account_id, $groups)) {
+                    $groups[$model->account_id] = array();
+                }
+                $groups[$model->account_id][] = $model;
+            }
+            $groups = parent::cacheData(get_class($this)."::groups", $groups);
+        }
+        if (array_key_exists($this->account_id, $groups)) {
+            return $groups[$this->account_id];
+        }
+        return null;
     }
 
     /**
      * アカウントオペレータを取得
      */
     public function accountOperators(){
-        $loader = new Vizualizer_Plugin("twitter");
-        $model = $loader->loadModel("AccountOperator");
-        return $model->findAllByAccountId($this->account_id);
+        $operators = parent::cacheData(get_class($this)."::operators");
+        if ($operators == null) {
+            $loader = new Vizualizer_Plugin("twitter");
+            $model = $loader->loadModel("AccountOperator");
+            $models = $model->findAllBy(array());
+            $operators = array();
+            foreach ($models as $model) {
+                if (!array_key_exists($model->account_id, $operators)) {
+                    $operators[$model->account_id] = array();
+                }
+                $operators[$model->account_id][] = $model;
+            }
+            $operators = parent::cacheData(get_class($this)."::operators", $operators);
+        }
+        if (array_key_exists($this->account_id, $operators)) {
+            return $operators[$this->account_id];
+        }
+        return null;
     }
 
     /**
@@ -443,13 +481,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function followSetting()
     {
-        if(!$this->setting){
-            $loader = new Vizualizer_Plugin("twitter");
-            $this->setting = $loader->loadModel("Setting");
-            $this->setting->account($this);
-            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        }
-        return $this->setting;
+        return $this->setting();
     }
 
     /**
@@ -459,14 +491,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetSetting()
     {
-        if(!$this->setting){
-            $loader = new Vizualizer_Plugin("twitter");
-            $this->setting = $loader->loadModel("Setting");
-            $this->setting->account($this);
-            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
-            $this->setting->findByOperatorAccount($this->operator_id, $this->account_id);
-        }
-        return $this->setting;
+        return $this->setting();
     }
 
     /**
@@ -537,10 +562,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function tweetLogs($sort = "tweet_time", $reverse = true)
     {
-        $loader = new Vizualizer_Plugin("twitter");
-        $tweetLog = $loader->loadModel("TweetLog");
-        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
-        return $tweetLogs;
+        return $this->limitedTweetLogs(-1, 0, $sort, $reverse);
     }
 
     /**
@@ -564,10 +586,31 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function limitedTweetLogs($limit, $offset = 0, $sort = "tweet_time", $reverse = true)
     {
         $loader = new Vizualizer_Plugin("twitter");
-        $tweetLog = $loader->loadModel("TweetLog");
-        $tweetLog->limit($limit, $offset);
-        $tweetLogs = $tweetLog->findAllByAccountId($this->account_id, $sort, $reverse);
+        $model = $loader->loadModel("TweetLog");
+        if($limit >= 0){
+            $model->limit($limit, $offset);
+        }
+        $models = $model->findAllBy(array("account_id" => $this->account_id), $sort, $reverse);
+        $tweetLogs = array();
+        foreach($models as $model){
+            $tweetLogs[] = $model;
+        }
         return $tweetLogs;
+    }
+
+    /**
+     * アカウントに紐づいた最新のツイートログを取得する
+     *
+     * @return 最新のツイートログ
+     */
+    public function lastTweetLog()
+    {
+        $tweetLogs = $this->limitedTweetLogs(1);
+        if(count($tweetLogs) > 0){
+            return $tweetLogs[0];
+        }
+        $loader = new Vizualizer_Plugin("twitter");
+        return $loader->loadModel("TweetLog");
     }
 
     /**

@@ -33,21 +33,75 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
 
     function execute($params)
     {
+        // 取得対象のグループIDを調整
+        $post = Vizualizer::request();
+        if(!is_array($post["operator_id"])){
+            $operatorId = $post["operator_id"];
+            $post->set("operator_id", array());
+        }
+        $operatorIds = $post["operator_id"];
+        if(!empty($operatorId)){
+            $operatorIds[$operatorId] = $operatorId;
+        }
+        if(!($post["operator_all"] > 0)){
+            $post->remove("operator_all");
+        }
+        if($post["add_operator_id"] > 0){
+            $operatorIds[$post["add_operator_id"]] = $post["add_operator_id"];
+            $post->remove("add_operator_id");
+        }
+        if($post["del_operator_id"] > 0){
+            unset($operatorIds[$post["del_operator_id"]]);
+            $post->remove("del_operator_id");
+        }
+        $post->set("operator_id", $operatorIds);
+
         // グループIDの対象となるアカウントのリストを取得
         $loader = new Vizualizer_Plugin("Twitter");
-        $model = $loader->loadModel("AccountGroup");
+        $model = $loader->loadModel("AccountOperator");
         $search = $post["search"];
         $accountIds = $search["in:account_id"];
-        if(!empty($groupIds)){
-            $models = $model->findAllBy(array("in:group_id" => $groupIds));
+        if($post["operator_all"] > 0){
+            // 全グループを指定した場合は全てのアカウントを対象にする。
+            $accountIds = array();
+        }elseif(!empty($operatorIds)){
+            $models = $model->findAllBy(array("in:operator_id" => $operatorIds));
             $newAccountIds = array();
             foreach($models as $model){
                 $newAccountIds[$model->account_id] = $model->account_id;
             }
-            $accountIds = array_intersect($accountIds, $newAccountIds);
-        }else{
+            if(!is_array($accountIds)){
+                $accountIds = $newAccountIds;
+            }else{
+                $accountIds = array_intersect($accountIds, $newAccountIds);
+                if(empty($accountIds)){
+                    $accountIds = array(0);
+                }
+            }
+        }elseif(!$params->check("default_all_operators")){
             // グループ未指定の場合は対象を無しにする。
             $accountIds = array(0);
+        }
+        if($post["no_operator"]){
+            // アカウントグループに存在するアカウントIDを取得
+            $loader = new Vizualizer_Plugin("Twitter");
+            $model = $loader->loadModel("AccountOperator");
+            $models = $model->findAllBy(array());
+            $exceptIds = array();
+            foreach($models as $model){
+                $exceptIds[$model->account_id] = $model->account_id;
+            }
+            $model = $loader->loadModel("Account");
+            $models = $model->findAllBy(array("nin:account_id" => array_values($exceptIds)));
+            $newAccountIds = array(0);
+            foreach($models as $model){
+                $newAccountIds[$model->account_id] = $model->account_id;
+            }
+            if(!is_array($accountIds)){
+                $accountIds = $newAccountIds;
+            }else{
+                $accountIds = array_merge($accountIds, $newAccountIds);
+            }
         }
         $search["in:account_id"] = $accountIds;
         $post->set("search", $search);

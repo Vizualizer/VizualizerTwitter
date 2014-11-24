@@ -36,9 +36,16 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
         // 取得対象のグループIDを調整
         $post = Vizualizer::request();
         if(!is_array($post["group_id"])){
+            $groupId = $post["group_id"];
             $post->set("group_id", array());
         }
         $groupIds = $post["group_id"];
+        if(!empty($groupId)){
+            $groupIds[$groupId] = $groupId;
+        }
+        if(!($post["group_all"] > 0)){
+            $post->remove("group_all");
+        }
         if($post["add_group_id"] > 0){
             $groupIds[$post["add_group_id"]] = $post["add_group_id"];
             $post->remove("add_group_id");
@@ -54,7 +61,10 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
         $model = $loader->loadModel("AccountGroup");
         $search = $post["search"];
         $accountIds = $search["in:account_id"];
-        if(!empty($groupIds)){
+        if($post["group_all"] > 0){
+            // 全グループを指定した場合は全てのアカウントを対象にする。
+            $accountIds = array();
+        }elseif(!empty($groupIds)){
             $models = $model->findAllBy(array("in:group_id" => $groupIds));
             $newAccountIds = array();
             foreach($models as $model){
@@ -64,10 +74,34 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
                 $accountIds = $newAccountIds;
             }else{
                 $accountIds = array_intersect($accountIds, $newAccountIds);
+                if(empty($accountIds)){
+                    $accountIds = array(0);
+                }
             }
-        }else{
+        }elseif(!$params->check("default_all_groups")){
             // グループ未指定の場合は対象を無しにする。
             $accountIds = array(0);
+        }
+        if($post["no_group"]){
+            // アカウントグループに存在するアカウントIDを取得
+            $loader = new Vizualizer_Plugin("Twitter");
+            $model = $loader->loadModel("AccountGroup");
+            $models = $model->findAllBy(array());
+            $exceptIds = array();
+            foreach($models as $model){
+                $exceptIds[$model->account_id] = $model->account_id;
+            }
+            $model = $loader->loadModel("Account");
+            $models = $model->findAllBy(array("nin:account_id" => array_values($exceptIds)));
+            $newAccountIds = array(0);
+            foreach($models as $model){
+                $newAccountIds[$model->account_id] = $model->account_id;
+            }
+            if(!is_array($accountIds)){
+                $accountIds = $newAccountIds;
+            }else{
+                $accountIds = array_merge($accountIds, $newAccountIds);
+            }
         }
         $search["in:account_id"] = $accountIds;
         $post->set("search", $search);
