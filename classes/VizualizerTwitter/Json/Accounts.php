@@ -1,6 +1,6 @@
 <?php
 
-class VizualizerTwitter_Json_Account
+class VizualizerTwitter_Json_Accounts
 {
     protected function getAccountInfos(){
         $loader = new Vizualizer_Plugin("twitter");
@@ -56,7 +56,7 @@ class VizualizerTwitter_Json_Account
 
     public function execute()
     {
-        $account = $this->getAccountInfos();
-        return $account->toArray();
+        $accounts = $this->getAccountInfos();
+        return $accounts;
     }
 }
