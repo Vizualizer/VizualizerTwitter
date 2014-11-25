@@ -64,6 +64,9 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
         foreach ($statuses as $status) {
             $loader = new Vizualizer_Plugin("Twitter");
             $account = $status->account();
+            if(!($account->account_id > 0)){
+                continue;
+            }
             $tweetSetting = $account->tweetSetting();
 
             // 日中のみフラグの場合は夜間スキップ
