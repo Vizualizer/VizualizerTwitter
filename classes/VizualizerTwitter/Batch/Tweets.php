@@ -123,18 +123,21 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
 
             $application = $account->application();
-            $advertise = $account->tweetAdvertises()->current()->findByPrefer();
+            $tweetAdvertises = $account->tweetAdvertises();
             if ($application->suspended == 0) {
-                if ($tweetSetting->advertise_interval <= $count && $advertise->advertise_id > 0) {
-                    Vizualizer_Logger::writeInfo($account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count);
-                    // 広告を取得し記事を作成
-                    $tweetLog->tweet_id = 0;
-                    $tweetLog->tweet_type = 2;
-                    $tweetLog->tweet_text = $advertise->advertise_text;
-                    if (!empty($advertise->fixed_advertise_url)) {
-                        $tweetLog->tweet_text .= " " . $advertise->fixed_advertise_url;
+                if ($tweetSetting->advertise_interval <= $count && $tweetAdvertises->count() > 0) {
+                    $advertise = $tweetAdvertises->current()->findByPrefer();
+                    if ($advertise->advertise_id > 0) {
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count);
+                        // 広告を取得し記事を作成
+                        $tweetLog->tweet_id = 0;
+                        $tweetLog->tweet_type = 2;
+                        $tweetLog->tweet_text = $advertise->advertise_text;
+                        if (!empty($advertise->fixed_advertise_url)) {
+                            $tweetLog->tweet_text .= " " . $advertise->fixed_advertise_url;
+                        }
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet advertise text.");
                     }
-                    Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet advertise text.");
                 } else {
                     // ツイートを取得し、記事を作成
                     $tweet = $account->tweets()->current()->findByPrefer();
