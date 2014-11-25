@@ -64,6 +64,9 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
         foreach ($statuses as $status) {
             $loader = new Vizualizer_Plugin("Twitter");
             $account = $status->account();
+            if(!($account->account_id > 0)){
+                continue;
+            }
             $tweetSetting = $account->tweetSetting();
 
             // 日中のみフラグの場合は夜間スキップ
@@ -123,27 +126,35 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
 
             $application = $account->application();
-            $advertise = $account->tweetAdvertises()->current()->findByPrefer();
+            $tweetAdvertises = $account->tweetAdvertises();
             if ($application->suspended == 0) {
-                if ($tweetSetting->advertise_interval <= $count && $advertise->advertise_id > 0) {
-                    Vizualizer_Logger::writeInfo($account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count);
-                    // 広告を取得し記事を作成
-                    $tweetLog->tweet_id = 0;
-                    $tweetLog->tweet_type = 2;
-                    $tweetLog->tweet_text = $advertise->advertise_text;
-                    if (!empty($advertise->fixed_advertise_url)) {
-                        $tweetLog->tweet_text .= " " . $advertise->fixed_advertise_url;
+                if ($tweetSetting->advertise_interval <= $count && $tweetAdvertises->count() > 0) {
+                    $advertise = $tweetAdvertises->current()->findByPrefer();
+                    if ($advertise->advertise_id > 0) {
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : use advertise because " . $tweetSetting->advertise_interval . " < " . $count);
+                        // 広告を取得し記事を作成
+                        $tweetLog->tweet_id = 0;
+                        $tweetLog->tweet_type = 2;
+                        $tweetLog->tweet_text = $advertise->advertise_text;
+                        if (!empty($advertise->fixed_advertise_url)) {
+                            $tweetLog->tweet_text .= " " . $advertise->fixed_advertise_url;
+                        }
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet advertise text.");
                     }
-                    Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet advertise text.");
                 } else {
                     // ツイートを取得し、記事を作成
-                    $tweet = $account->tweets()->current()->findByPrefer();
-                    $tweetLog->tweet_id = $tweet->tweet_id;
-                    $tweetLog->tweet_type = 1;
-                    $tweetLog->tweet_text = $tweet->tweet_text;
-                    $tweetLog->media_url = $tweet->media_url;
-                    $tweetLog->media_filename = $tweet->media_filename;
-                    Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet normal text.");
+                    $tweets = $account->tweets();
+                    if ($tweets->count() > 0) {
+                        $tweet = $tweets->current()->findByPrefer();
+                        if ($tweet->tweet_id > 0) {
+                            $tweetLog->tweet_id = $tweet->tweet_id;
+                            $tweetLog->tweet_type = 1;
+                            $tweetLog->tweet_text = $tweet->tweet_text;
+                            $tweetLog->media_url = $tweet->media_url;
+                            $tweetLog->media_filename = $tweet->media_filename;
+                            Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet normal text.");
+                        }
+                    }
                 }
 
                 try {
@@ -227,7 +238,6 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                             Vizualizer_Database_Factory::commit($connection);
                         } else {
                             Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
-                            print_r($result);
                         }
                     }
                 } catch (Exception $e) {
