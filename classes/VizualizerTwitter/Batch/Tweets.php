@@ -236,8 +236,9 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                             Vizualizer_Database_Factory::commit($connection);
                         } else {
                             Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
-                            print_r($result);
                         }
+                    }else{
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : Tweet text is empty : " . print_r($tweetLog->toArray(), true));
                     }
                 } catch (Exception $e) {
                     Vizualizer_Database_Factory::rollback($connection);
