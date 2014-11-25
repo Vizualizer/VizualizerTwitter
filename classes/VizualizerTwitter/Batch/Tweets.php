@@ -146,12 +146,14 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                     $tweets = $account->tweets();
                     if ($tweets->count() > 0) {
                         $tweet = $tweets->current()->findByPrefer();
-                        $tweetLog->tweet_id = $tweet->tweet_id;
-                        $tweetLog->tweet_type = 1;
-                        $tweetLog->tweet_text = $tweet->tweet_text;
-                        $tweetLog->media_url = $tweet->media_url;
-                        $tweetLog->media_filename = $tweet->media_filename;
-                        Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet normal text.");
+                        if ($tweet->tweet_id > 0) {
+                            $tweetLog->tweet_id = $tweet->tweet_id;
+                            $tweetLog->tweet_type = 1;
+                            $tweetLog->tweet_text = $tweet->tweet_text;
+                            $tweetLog->media_url = $tweet->media_url;
+                            $tweetLog->media_filename = $tweet->media_filename;
+                            Vizualizer_Logger::writeInfo($account->screen_name . " : prepare to Tweet normal text.");
+                        }
                     }
                 }
 
