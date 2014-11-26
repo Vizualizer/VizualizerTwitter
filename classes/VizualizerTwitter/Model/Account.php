@@ -481,7 +481,21 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function followSetting()
     {
-        return $this->setting();
+        $setting = $this->setting();
+        $setting->follow_ratio = $setting->follow_ratio_1;
+        $setting->daily_follows = $setting->daily_follows_1;
+        $setting->daily_unfollows = $setting->daily_unfollows_1;
+        for ($index = 0; $index < 9; $index ++) {
+            $key = "follower_limit_" . $index;
+            if ($this->$key > 0 && $this->$key < $this->account()->follower_count) {
+                $key = "follow_ratio_" . $index;
+                $setting->follow_ratio = $setting->$key;
+                $key = "daily_follows_" . $index;
+                $setting->daily_follows = $setting->$key;
+                $key = "daily_unfollows_" . $index;
+                $setting->daily_unfollows = $setting->$key;
+            }
+        }
     }
 
     /**
