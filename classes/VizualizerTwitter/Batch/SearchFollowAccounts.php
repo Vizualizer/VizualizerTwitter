@@ -77,6 +77,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         foreach ($accounts as $account) {
             Vizualizer_Logger::writeInfo("Seach start : " . $account->screen_name);
             $setting = $account->followSetting();
+            $follow = $loader->loadModel("Follow");
             $searched = $follow->countBy(array("account_id" => $account->account_id, "back:create_time" => Vizualizer::now()->date("Y-m-d")));
             if($setting->follow_type == "1" || $setting->follow_type == "3"){
                 // 検索キーワードを取得する。
@@ -86,7 +87,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                 shuffle($keywords);
 
                 // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
-                $follow = $loader->loadModel("Follow");
                 if ($searched < $setting->daily_follows * 2) {
                     // ユーザー情報を検索
                     foreach($keywords as $keyword){
@@ -119,7 +119,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                 shuffle($keywords);
 
                 // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
-                $follow = $loader->loadModel("Follow");
                 if ($searched < $setting->daily_follows * 2) {
                     // ユーザー情報を検索
                     foreach($keywords as $keyword){
@@ -166,7 +165,6 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
             if(!empty($setting->follow_account)){
                 // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
                 Vizualizer_Logger::writeInfo("Seach target : " . $setting->follow_account);
-                $follow = $loader->loadModel("Follow");
                 if ($searched < $setting->daily_follows * 2) {
                     // ユーザーのフォロワーを取得
                     $followers = $account->getTwitter()->followers_ids(array("screen_name" => $setting->follow_account, "count" => "5000"));
