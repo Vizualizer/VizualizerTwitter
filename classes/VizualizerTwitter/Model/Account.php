@@ -496,6 +496,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 $setting->daily_unfollows = $setting->$key;
             }
         }
+        return $setting;
     }
 
     /**
