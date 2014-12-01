@@ -67,6 +67,7 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
             // リツイートを実施
             $twitter = $account->getTwitter();
             $result = $twitter->statuses_retweet_ID(array("id" => $retweet->tweet_id));
+            Vizualizer_Logger::writeInfo("Retweeted for : " . $retweet->tweet_id . " with " . print_r($result, true));
 
             // リツイートを更新
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -90,6 +91,7 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
             // リツイートを実施
             $twitter = $account->getTwitter();
             $result = $twitter->statuses_destroy_ID(array("id" => $retweet->retweet_tweet_id));
+            Vizualizer_Logger::writeInfo("Deleted Retweet for : " . $retweet->retweet_tweet_id . " with " . print_r($result, true));
 
             // リツイートを更新
             $connection = Vizualizer_Database_Factory::begin("twitter");
@@ -103,7 +105,6 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
                 throw new Vizualizer_Exception_Database($e);
             }
         }
-
 
         return $data;
     }
