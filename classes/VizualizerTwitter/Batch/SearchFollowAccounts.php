@@ -177,7 +177,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                     $followers = $account->getTwitter()->followers_ids(array("screen_name" => $screen_name, "count" => "5000"));
 
                     if (!isset($followers->ids) || !is_array($followers->ids)) {
-                        break;
+                        continue;
                     }
 
                     if(count($followers->ids) > 100){
@@ -204,7 +204,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         }
                     }
                     if ($searched > $setting->daily_follows * 2) {
-                        break;
+                        continue;
                     }
                 }
             }
