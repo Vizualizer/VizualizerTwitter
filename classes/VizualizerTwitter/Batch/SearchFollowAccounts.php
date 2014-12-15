@@ -129,6 +129,7 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
                         unset($users["httpstatus"]);
                         Vizualizer_Logger::writeInfo("Search Users（".count($users)."） for ".$keyword." in page ".$page." in " . $account->screen_name);
                         // ユーザーのフォロワーを取得
+                        $user = $users[array_rand($users)];
                         $followers = $account->getTwitter()->followers_ids(array("user_id" => $user->id, "count" => "5000"));
 
                         if (!isset($followers->ids) || !is_array($followers->ids)) {
