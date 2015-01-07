@@ -71,71 +71,80 @@ class VizualizerTwitter_Model_Setting extends Vizualizer_Plugin_Model
     {
         $loader = new Vizualizer_Plugin("twitter");
 
-        // 検索して該当のアカウントの設定が無い場合はデフォルト値で作成
-        $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
-        if (!($this->setting_id > 0)) {
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $this->operator_id = $operator_id;
-                $this->account_id = $account_id;
-                $this->save();
-                Vizualizer_Database_Factory::commit($connection);
-                $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-            }
-        }
+        // アカウントIDが指定されている場合は、個別設定を取得する。
         if($account_id > 0){
-            // アカウントIDが設定されている場合はデフォルトの設定を取得する。
-            if(!self::$baseSetting){
-                self::$baseSetting = array();
-            }
-            if(!array_key_exists($operator_id, self::$baseSetting)){
-                self::$baseSetting[$operator_id] = $loader->loadModel("Setting");
-                self::$baseSetting[$operator_id]->findByOperatorAccount($operator_id);
-            }
-            $setting = self::$baseSetting[$operator_id];
-            // 常にデフォルトの設定を利用する項目をコピー
-            $defaultKeys = Vizualizer_Configure::get("twitter_default_setting_keys");
-            if(is_array($defaultKeys)){
-                foreach($defaultKeys as $key){
-                    $this->$key = $setting->$key;
+            $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
+            if (!($this->setting_id > 0)) {
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $this->operator_id = $operator_id;
+                    $this->account_id = $account_id;
+                    $this->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                    $this->findBy(array("operator_id" => $operator_id, "account_id" => $account_id));
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
                 }
             }
-            if($this->use_follow_setting != "1"){
-                // 個別の設定を利用しないとしている場合には、特定のキーを基本設定の数値で上書きする
-                $keys = array_keys($setting->toArray());
-                foreach($keys as $key){
-                    switch($key){
-                        case "follow_type":
-                        case "follow_keywords":
-                        case "follower_keywords":
-                        case "follow_interval":
-                        case "unfollow_interval":
-                        case "refollow_timeout":
-                        case "follow_unit":
-                        case "follow_unit_interval":
-                        case "unfollow_unit_interval":
-                        case "japanese_flg":
-                        case "unlock_user_flg":
-                        case "unique_icon_flg":
-                        case "non_bot_flg":
+        }
+
+        // アカウントIDが設定されている場合はデフォルトの設定を取得する。
+        if(!self::$baseSetting){
+            self::$baseSetting = array();
+        }
+        if(!array_key_exists($operator_id, self::$baseSetting)){
+            self::$baseSetting[$operator_id] = $loader->loadModel("Setting");
+            self::$baseSetting[$operator_id]->findByOperatorAccount($operator_id);
+        }
+        $setting = self::$baseSetting[$operator_id];
+
+        // 未設定の個別項目は共通設定の項目で上書きする。
+        foreach ($setting->toArray() as $key => $value) {
+            if (empty($this->key)) {
+                $this->key = $value;
+            }
+        }
+
+        // 常にデフォルトの設定を利用する項目をコピー
+        $defaultKeys = Vizualizer_Configure::get("twitter_default_setting_keys");
+        if(is_array($defaultKeys)){
+            foreach($defaultKeys as $key){
+                $this->$key = $setting->$key;
+            }
+        }
+        if($this->use_follow_setting != "1"){
+            // 個別の設定を利用しないとしている場合には、特定のキーを基本設定の数値で上書きする
+            $keys = array_keys($setting->toArray());
+            foreach($keys as $key){
+                switch($key){
+                    case "follow_type":
+                    case "follow_keywords":
+                    case "follower_keywords":
+                    case "follow_interval":
+                    case "unfollow_interval":
+                    case "refollow_timeout":
+                    case "follow_unit":
+                    case "follow_unit_interval":
+                    case "unfollow_unit_interval":
+                    case "japanese_flg":
+                    case "unlock_user_flg":
+                    case "unique_icon_flg":
+                    case "non_bot_flg":
+                        $this->$key = $setting->$key;
+                        break;
+                    default:
+                    break;
+                }
+                if(preg_match("/^(.+)_[0-9]$/", $key, $vals) > 0){
+                    switch($vals[1]){
+                        case "follower_limit":
+                        case "follow_ratio":
+                        case "daily_follows":
+                        case "daily_unfollows":
                             $this->$key = $setting->$key;
                             break;
                         default:
                         break;
-                    }
-                    if(preg_match("/^(.+)_[0-9]$/", $key, $vals) > 0){
-                        switch($vals[1]){
-                            case "follower_limit":
-                            case "follow_ratio":
-                            case "daily_follows":
-                            case "daily_unfollows":
-                                $this->$key = $setting->$key;
-                                break;
-                            default:
-                            break;
-                        }
                     }
                 }
             }

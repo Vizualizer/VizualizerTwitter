@@ -419,6 +419,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             $settings = parent::cacheData(get_class($this)."::settings", $settings);
         }
         if (array_key_exists($this->operator_id.":".$this->account_id, $settings)) {
+            foreach ($settings[$this->operator_id.":0"]->toArray() as $key => $value) {
+                if (empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$this->operator_id.":0"]->$key)) {
+                    $settings[$this->operator_id.":".$this->account_id]->$key = $settings[$this->operator_id.":0"]->$key;
+                }
+            }
             return $settings[$this->operator_id.":".$this->account_id];
         } elseif (array_key_exists($this->operator_id.":0", $settings)) {
             return $settings[$this->operator_id.":0"];
