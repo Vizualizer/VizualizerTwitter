@@ -40,7 +40,11 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
         // 該当のグループのアカウントを取得する。
         if(!empty($post["target_group_id"])){
             $model = $loader->loadModel("AccountGroup");
-            $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
+            if ($post["target_group_id"] == "all") {
+                $models = $model->findAllBy(array());
+            } else {
+                $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
+            }
             foreach($models as $model){
                 $accountIds[$model->account_id] = $model->account_id;
             }
