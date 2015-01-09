@@ -419,15 +419,21 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 }
                 $settings = parent::cacheData(get_class($this)."::settings", $settings);
             }
+            $baseOperator = $this->operator_id;
+            if (Vizualizer_Configure::get("default_setting_operaotr_id") > 0) {
+                $baseOperator = Vizualizer_Configure::get("default_setting_operaotr_id");
+            }
             if (array_key_exists($this->operator_id.":".$this->account_id, $settings)) {
-                foreach ($settings[$this->operator_id.":0"]->toArray() as $key => $value) {
-                    if (empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$this->operator_id.":0"]->$key)) {
-                        $settings[$this->operator_id.":".$this->account_id]->$key = $settings[$this->operator_id.":0"]->$key;
+                if (array_key_exists($baseOperator.":0", $settings)) {
+                    foreach ($settings[$baseOperator.":0"]->toArray() as $key => $value) {
+                        if (empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$baseOperator.":0"]->$key)) {
+                            $settings[$this->operator_id.":".$this->account_id]->$key = $settings[$baseOperator.":0"]->$key;
+                        }
                     }
                 }
                 return $settings[$this->operator_id.":".$this->account_id];
-            } elseif (array_key_exists($this->operator_id.":0", $settings)) {
-                return $settings[$this->operator_id.":0"];
+            } elseif (array_key_exists($baseOperator.":0", $settings)) {
+                return $settings[$baseOperator.":0"];
             }
         }
         return $loader->loadModel("Setting");
