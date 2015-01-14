@@ -192,8 +192,8 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
                             $connection = Vizualizer_Database_Factory::begin("twitter");
                             Vizualizer_Logger::writeInfo($account->screen_name . " : Post tweet(" . $result->id . ") : " . $tweetLog->tweet_text);
                             $tweetLog->twitter_id = $result->id;
-                            $tweetlog->tweet_text = $result->text;
-                            if(property_exists("media", $result->entities) && is_array($result->entities->media) && count($result->entities->media) > 0){
+                            $tweetLog->tweet_text = $result->text;
+                            if(property_exists($result->entities, "media") && is_array($result->entities->media) && count($result->entities->media) > 0){
                                 $media = $result->entities->media[0];
                                 $tweetLog->media_url = $media->url;
                                 $tweetLog->media_link = $media->media_url;
