@@ -415,6 +415,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                 $models = $model->findAllBy(array());
                 $settings = array();
                 foreach ($models as $model) {
+                    if ($model->account_id == 0) {
+                        $modelArray = $model->toArray();
+                        unset($modelArray["setting_id"]);
+                        $model = $loader->loadModel("Setting", $modelArray);
+                    }
                     $settings[$model->operator_id.":".$model->account_id] = $model;
                 }
                 $settings = parent::cacheData(get_class($this)."::settings", $settings);
