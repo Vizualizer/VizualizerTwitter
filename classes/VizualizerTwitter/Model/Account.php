@@ -426,6 +426,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
             if (array_key_exists($this->operator_id.":".$this->account_id, $settings)) {
                 if (array_key_exists($baseOperator.":0", $settings)) {
                     foreach ($settings[$baseOperator.":0"]->toArray() as $key => $value) {
+                        if ($key == "setting_id" || $key == "account_id") {
+                            continue;
+                        }
                         if (empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$baseOperator.":0"]->$key)) {
                             $settings[$this->operator_id.":".$this->account_id]->$key = $settings[$baseOperator.":0"]->$key;
                         }
