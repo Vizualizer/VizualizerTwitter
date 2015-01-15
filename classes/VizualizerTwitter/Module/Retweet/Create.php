@@ -65,11 +65,15 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
         $tweetIds = array();
 
         // URLから対象のツイートIDを取得する。
+        Vizualizer_Logger::writeDebug("Target URL : " . $post["retweet_target"]);
         if(preg_match("/^https?:\\/\\/twitter\\.com\\/([a-zA-Z0-9_]+)\\/status\\/([0-9]+)\\/?$/", trim($post["retweet_target"]), $p) > 0){
+            Vizualizer_Logger::writeDebug("Add Target : " . $p[2]);
             $tweetIds = array($p[2]);
         }else{
             foreach($post["retweet_targets"] as $retweetTarget){
+                Vizualizer_Logger::writeDebug("Target URL : " . $retweetTarget);
                 if(preg_match("/^https?:\\/\\/twitter\\.com\\/([a-zA-Z0-9_]+)\\/status\\/([0-9]+)\\/?$/", trim($retweetTarget), $p) > 0){
+                    Vizualizer_Logger::writeDebug("Add Target : " . $p[2]);
                     $tweetIds[] = $p[2];
                 }
             }
