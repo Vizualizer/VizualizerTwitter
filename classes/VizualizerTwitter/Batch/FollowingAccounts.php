@@ -111,6 +111,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                             Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
                             break;
                         }
+                        sleep(10);
                     }
                 }
                 if(count($friendIds) > 0){
