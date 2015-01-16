@@ -75,9 +75,9 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
             $followSetting = $account->followSetting();
             while (true) {
                 if ($cursor > 0) {
-                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 500, "cursor" => $cursor));
+                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 100, "cursor" => $cursor));
                 } else {
-                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 500));
+                    $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 100));
                 }
 
                 if (!isset($friends->ids) || !is_array($friends->ids)) {
@@ -111,6 +111,7 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                             Vizualizer_Logger::writeError("ERROR : ".$list->errors[0]->message." in ".$account->screen_name);
                             break;
                         }
+                        sleep(10);
                     }
                 }
                 if(count($friendIds) > 0){
