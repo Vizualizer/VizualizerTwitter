@@ -73,23 +73,30 @@ class VizualizerTwitter_Batch_FollowedAccounts extends Vizualizer_Plugin_Batch
             $cursor = 0;
             $followerIds = array();
             $followSetting = $account->followSetting();
+
+            // すでに登録済みのフォロー済みを取得
+            $follow = $loader->loadModel("AccountFollower");
+            $follows = $follow->findAllBy(array("account_id" => $account->account_id));
+            $followIds = array();
+            foreach ($follows as $follow) {
+                $followIds[] = $follow->user_id;
+            }
             while (true) {
+                // アンロックされている場合は強制的に処理を終了する。
+                if ($this->isUnlocked()) {
+                    return;
+                }
+
                 if ($cursor > 0) {
-                    $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 100, "cursor" => $cursor));
+                    $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
                 } else {
-                    $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 100));
+                    $followers = $account->getTwitter()->followers_ids(array("user_id" => $account->twitter_id, "count" => 5000));
                 }
 
                 if (!isset($followers->ids) || !is_array($followers->ids)) {
                     break;
                 }
 
-                $follow = $loader->loadModel("AccountFollower");
-                $follows = $follow->findAllBy(array("account_id" => $account->account_id, "in:user_id" => $followers->ids));
-                $followIds = array();
-                foreach($follows as $follow){
-                    $followIds[] = $follow->user_id;
-                }
                 foreach ($followers->ids as $userId) {
                     if(in_array($userId, $followIds)){
                         $item = (object) array("id" => $userId);
