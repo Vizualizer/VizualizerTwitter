@@ -81,6 +81,11 @@ class VizualizerTwitter_Batch_FollowingAccounts extends Vizualizer_Plugin_Batch
                 $followIds[] = $follow->use_id;
             }
             while (true) {
+                // アンロックされている場合は強制的に処理を終了する。
+                if ($this->isUnlocked()) {
+                    return;
+                }
+
                 if ($cursor > 0) {
                     $friends = $account->getTwitter()->friends_ids(array("user_id" => $account->twitter_id, "count" => 5000, "cursor" => $cursor));
                 } else {

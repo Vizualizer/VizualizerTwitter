@@ -75,6 +75,11 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $page = $this->page ++;
 
         foreach ($accounts as $account) {
+            // アンロックされている場合は強制的に処理を終了する。
+            if ($this->isUnlocked()) {
+                return;
+            }
+
             Vizualizer_Logger::writeInfo("Seach start : " . $account->screen_name);
             $setting = $account->followSetting();
             $follow = $loader->loadModel("Follow");
