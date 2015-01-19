@@ -407,23 +407,44 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      */
     public function setting($useDefault = false)
     {
-        $settings = parent::cacheData(get_class($this)."::settings");
-        if ($settings == null) {
-            $loader = new Vizualizer_Plugin("twitter");
-            $model = $loader->loadModel("Setting");
-            $models = $model->findAllBy(array());
-            $settings = array();
-            foreach ($models as $model) {
-                $settings[$model->operator_id.":".$model->account_id] = $model;
+        $loader = new Vizualizer_Plugin("twitter");
+        if ($this->account_id > 0) {
+            $settings = parent::cacheData(get_class($this)."::settings");
+            if ($settings == null) {
+                $model = $loader->loadModel("Setting");
+                $models = $model->findAllBy(array());
+                $settings = array();
+                foreach ($models as $model) {
+                    if ($model->account_id == 0) {
+                        $modelArray = $model->toArray();
+                        unset($modelArray["setting_id"]);
+                        $model = $loader->loadModel("Setting", $modelArray);
+                    }
+                    $settings[$model->operator_id.":".$model->account_id] = $model;
+                }
+                $settings = parent::cacheData(get_class($this)."::settings", $settings);
             }
-            $settings = parent::cacheData(get_class($this)."::settings", $settings);
+            $baseOperator = $this->operator_id;
+            if (Vizualizer_Configure::get("default_setting_operaotr_id") > 0) {
+                $baseOperator = Vizualizer_Configure::get("default_setting_operaotr_id");
+            }
+            if (array_key_exists($this->operator_id.":".$this->account_id, $settings)) {
+                if (array_key_exists($baseOperator.":0", $settings)) {
+                    foreach ($settings[$baseOperator.":0"]->toArray() as $key => $value) {
+                        if ($key == "setting_id" || $key == "account_id") {
+                            continue;
+                        }
+                        if (empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$baseOperator.":0"]->$key)) {
+                            $settings[$this->operator_id.":".$this->account_id]->$key = $settings[$baseOperator.":0"]->$key;
+                        }
+                    }
+                }
+                return $settings[$this->operator_id.":".$this->account_id];
+            } elseif (array_key_exists($baseOperator.":0", $settings)) {
+                return $settings[$baseOperator.":0"];
+            }
         }
-        if (array_key_exists($this->operator_id.":".$this->account_id, $settings)) {
-            return $settings[$this->operator_id.":".$this->account_id];
-        } elseif (array_key_exists($this->operator_id.":0", $settings)) {
-            return $settings[$this->operator_id.":0"];
-        }
-        return null;
+        return $loader->loadModel("Setting");
     }
 
     /**

@@ -40,7 +40,11 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
         // 該当のグループのアカウントを取得する。
         if(!empty($post["target_group_id"])){
             $model = $loader->loadModel("AccountGroup");
-            $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
+            if ($post["target_group_id"] == "all") {
+                $models = $model->findAllBy(array());
+            } else {
+                $models = $model->findAllBy(array("group_id" => $post["target_group_id"]));
+            }
             foreach($models as $model){
                 $accountIds[$model->account_id] = $model->account_id;
             }
@@ -61,12 +65,16 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
         $tweetIds = array();
 
         // URLから対象のツイートIDを取得する。
-        if(preg_match("/^https?:\\/\\/twitter\\.com\\/([a-zA-Z0-9_]+)\\/status\\/([0-9]+)\\/?$/", $post["retweet_target"], $params) > 0){
-            $tweetIds = array($params[2]);
+        Vizualizer_Logger::writeDebug("Target URL : " . $post["retweet_target"]);
+        if(preg_match("/^https?:\\/\\/twitter\\.com\\/([a-zA-Z0-9_]+)\\/status\\/([0-9]+)\\/?$/", trim($post["retweet_target"]), $p) > 0){
+            Vizualizer_Logger::writeDebug("Add Target : " . $p[2]);
+            $tweetIds = array($p[2]);
         }else{
             foreach($post["retweet_targets"] as $retweetTarget){
-                if(preg_match("/^https?:\\/\\/twitter\\.com\\/([a-zA-Z0-9_]+)\\/status\\/([0-9]+)\\/?$/", $retweetTarget, $params) > 0){
-                    $tweetIds[] = $params[2];
+                Vizualizer_Logger::writeDebug("Target URL : " . $retweetTarget);
+                if(preg_match("/^https?:\\/\\/twitter\\.com\\/([a-zA-Z0-9_]+)\\/status\\/([0-9]+)\\/?$/", trim($retweetTarget), $p) > 0){
+                    Vizualizer_Logger::writeDebug("Add Target : " . $p[2]);
+                    $tweetIds[] = $p[2];
                 }
             }
         }

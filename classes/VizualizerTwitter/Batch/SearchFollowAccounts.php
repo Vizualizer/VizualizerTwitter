@@ -75,6 +75,11 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
         $page = $this->page ++;
 
         foreach ($accounts as $account) {
+            // アンロックされている場合は強制的に処理を終了する。
+            if ($this->isUnlocked()) {
+                return;
+            }
+
             Vizualizer_Logger::writeInfo("Seach start : " . $account->screen_name);
             $setting = $account->followSetting();
             $follow = $loader->loadModel("Follow");
@@ -165,10 +170,10 @@ class VizualizerTwitter_Batch_SearchFollowAccounts extends Vizualizer_Plugin_Bat
 
             if(!empty($setting->follow_account)){
                 // フォローアカウントがURL形式だった場合にスクリーン名を取得
-                if (preg_match("/^https?:\\/\\/twitter.com\\/([^\\/]+)\\/?/", $setting->follow_account, $terms) > 0) {
+                if (preg_match("/^https?:\\/\\/twitter.com\\/([^\\/]+)\\/?/", trim($setting->follow_account), $terms) > 0) {
                     $screen_name = $terms[1];
                 }else{
-                    $screen_name = $setting->follow_account;
+                    $screen_name = trim($setting->follow_account);
                 }
 
                 // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
