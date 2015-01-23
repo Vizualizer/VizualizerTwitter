@@ -172,7 +172,20 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
                             $application = $account->application();
                             $application->suspended = "1";
                             $application->save();
-                            Vizualizer_Logger::writeInfo("Following is blocked from " . $this->user_id . " in " . $account->screen_name);
+                            Vizualizer_Logger::writeInfo("Following is blocked by not writable from " . $this->user_id . " in " . $account->screen_name);
+                            Vizualizer_Database_Factory::commit($connection);
+                        } catch (Exception $e) {
+                            Vizualizer_Database_Factory::rollback($connection);
+                            throw new Vizualizer_Exception_Database($e);
+                        }
+                    } elseif ($result->errors[0]->code == "32") {
+                        // アプリ自体が凍結中の場合は
+                        $connection = Vizualizer_Database_Factory::begin("twitter");
+                        try {
+                            $application = $account->application();
+                            $application->suspended = "2";
+                            $application->save();
+                            Vizualizer_Logger::writeInfo("Following is blocked by frozen from " . $this->user_id . " in " . $account->screen_name);
                             Vizualizer_Database_Factory::commit($connection);
                         } catch (Exception $e) {
                             Vizualizer_Database_Factory::rollback($connection);
