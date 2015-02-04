@@ -620,6 +620,8 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
      */
     private function followAccount($account)
     {
+        $status = $account->status();
+
         // フォロー可能状態で無い場合はスキップ
         if(!$account->isFollowable()){
             Vizualizer_Logger::writeInfo("Skip for not followable in ".$account->screen_name);
