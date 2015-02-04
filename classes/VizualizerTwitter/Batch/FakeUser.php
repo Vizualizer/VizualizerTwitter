@@ -223,6 +223,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         $loader = new Vizualizer_Plugin("Twitter");
         $model = $loader->loadModel("AccountStatus");
 
+        $status = $account->status();
         $tweetSetting = $account->tweetSetting();
 
         // 日中のみフラグの場合は夜間スキップ
@@ -251,8 +252,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         }
 
         // アカウントのステータスが有効のアカウントのみを対象とする。
-        if (
-            $account->status()->tweet_status != "1" && $account->status()->original_status != "1" && $account->status()->advertise_status != "1" && $account->status()->rakuten_status != "1") {
+        if ($status->tweet_status != "1" && $status->original_status != "1" && $status->advertise_status != "1" && $status->rakuten_status != "1") {
             Vizualizer_Logger::writeInfo($account->screen_name . " : Account BOT is not active.");
             return;
         }
@@ -351,10 +351,10 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                             }
                         } elseif ($result->errors[0]->code == "64") {
                             // アカウントのステータスを凍結中に変更
-                            $account->status()->updateStatus(VizualizerTwitter_Model_AccountStatus::ACCOUNT_SUSPENDED);
+                            $status->updateStatus(VizualizerTwitter_Model_AccountStatus::ACCOUNT_SUSPENDED);
                         }else{
                             // アカウント凍結中を解除
-                            $account->status()->updateStatus(VizualizerTwitter_Model_AccountStatus::ACCOUNT_OK);
+                            $status->updateStatus(VizualizerTwitter_Model_AccountStatus::ACCOUNT_OK);
                         }
                         Vizualizer_Logger::writeError("Failed to Tweet on " . $this->user_id . " in " . $account->screen_name . " by " . print_r($result->errors, true));
                     } elseif (!empty($result->id)) {
