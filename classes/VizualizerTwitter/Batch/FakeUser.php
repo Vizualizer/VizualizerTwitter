@@ -126,10 +126,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 if ($retweets->count() > 0 || $cancelRetweets->count() > 0) {
                     // リツイートを実行
                     $this->retweet($account, $retweets, $cancelRetweets);
-                } elseif ($accountStatus->follow_status > 0 && strtotime($accountStatus->next_follow_time) < time()) {
-                    // フォローを実行
-                    $this->followAccount($account);
-                } else {
+                } elseif (!($accountStatus->follow_status > 0 && strtotime($accountStatus->next_follow_time) < time()) || !$this->followAccount($account)) {
                     // フォロー対象を検索
                     $this->searchFollowAccount($account);
                 }
@@ -625,7 +622,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         // フォロー可能状態で無い場合はスキップ
         if(!$account->isFollowable()){
             Vizualizer_Logger::writeInfo("Skip for not followable in ".$account->screen_name);
-            return;
+            return false;
         }
 
         $loader = new Vizualizer_Plugin("Twitter");
@@ -639,7 +636,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         // アカウントのステータスが待機中か実行中のアカウントのみを対象とする。
         if ($status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY && $status->follow_status != VizualizerTwitter_Model_AccountStatus::FOLLOW_RUNNING && $status->follow_status != VizualizerTwitter_Model_AccountStatus::UNFOLLOW_RUNNING) {
             Vizualizer_Logger::writeInfo("Account is not ready in ".$account->screen_name);
-            return;
+            return false;
         }
 
         // フォロー設定を取得
@@ -654,7 +651,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         if ($setting->daily_follows <= $account->friend_count - $history->follow_count) {
             $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_FINISHED, Vizualizer::now()->strToTime("+1 day")->date("Y-m-d 00:00:00"), true);
             Vizualizer_Logger::writeInfo("Over daily follows for ".($account->friend_count - $history->follow_count)." to ".$setting->daily_follows." in ".$account->screen_name);
-            return;
+            return false;
         }
 
         // リストを取得する。
@@ -678,7 +675,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         if ($follows->count() == 0) {
             $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_NODATA);
             Vizualizer_Logger::writeInfo("No List in ".$account->screen_name);
-            return;
+            return false;
         }
 
         // ステータスを実行中に変更
@@ -696,5 +693,6 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 $status->updateFollow(VizualizerTwitter_Model_AccountStatus::FOLLOW_STANDBY, Vizualizer::now()->strToTime("+".$setting->follow_unit_interval." minute")->date("Y-m-d H:i:s"), true);
             }
         }
+        return true;
     }
 }
