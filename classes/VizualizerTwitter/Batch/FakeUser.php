@@ -35,7 +35,7 @@
 class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
 {
     // プロセス作成に対するインターバル
-    const PROCESS_CREATE_INTERVAL = 15;
+    const PROCESS_CREATE_INTERVAL = 5;
 
     // アカウントごとの処理状況の管理データ
     private static $statuses = array();
@@ -118,7 +118,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
 
             // アカウントがツイートを行う必要があるか調べる。
             $accountStatus = $account->status();
-            if ($accountStatus->tweet_status > 0 && strtotime($accountStatus->next_tweet_time) == time()) {
+            if ($accountStatus->tweet_status > 0 && strtotime($accountStatus->next_tweet_time) < time()) {
                 // ツイートを実行
                 $this->tweet($account);
             } else {
@@ -129,7 +129,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 if ($retweets->count() > 0 || $cancelRetweets->count() > 0) {
                     // リツイートを実行
                     $this->retweet($account, $retweets, $cancelRetweets);
-                } elseif ($accountStatus->follow_status > 0 && strtotime($accountStatus->next_follow_time) == time()) {
+                } elseif ($accountStatus->follow_status > 0 && strtotime($accountStatus->next_follow_time) < time()) {
                     // フォローを実行
                     $this->followAccount($account);
                 } else {
@@ -575,7 +575,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
             }
 
             // フォロー対象の検索処理は当日のターゲット追加数が一日のフォロー数上限の2倍以下の未満の場合のみ
-            Vizualizer_Logger::writeInfo("Seach target for follow account : " . $screen_name . "(" . $setting->daily_follows . ")");
+            Vizualizer_Logger::writeInfo("Search target for follow account : " . $screen_name . "(" . $setting->daily_follows . ")");
             if ($searched < $setting->daily_follows * 2) {
                 // ユーザーのフォロワーを取得
                 $followers = $account->getTwitter()->followers_ids(array("screen_name" => $screen_name, "count" => "5000"));
