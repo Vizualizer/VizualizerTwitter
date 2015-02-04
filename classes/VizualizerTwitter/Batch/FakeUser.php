@@ -180,6 +180,18 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 $refollowed = $account->follower_count;
                 $unfollowed = $follow->countBy(array("account_id" => $account->account_id, "back:friend_cancel_date" => $today));
                 $followHistory = $loader->loadModel("FollowHistory");
+                for ($i = 1; $i <= 3; $i ++) {
+                    $thisDay = date("Y-m-d", strtotime("-".$i." day"));
+                    $followHistory->findBy(array("account_id" => $account->account_id, "history_date" => $thisDay));
+                    if(!($followHistory->follow_history_id > 0)){
+                        $followHistory->account_id = $account->account_id;
+                        $followHistory->history_date = $thisDay;
+                        $followHistory->follow_count = $followed;
+                        $followHistory->followed_count = $refollowed;
+                        $followHistory->unfollow_count = $unfollowed;
+                        $followHistory->save();
+                    }
+                }
                 $followHistory->findBy(array("account_id" => $account->account_id, "history_date" => $today));
                 if(!($followHistory->follow_history_id > 0)){
                     $followHistory->account_id = $account->account_id;
