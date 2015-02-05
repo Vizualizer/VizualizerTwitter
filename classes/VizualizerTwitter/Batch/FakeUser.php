@@ -90,9 +90,9 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     Vizualizer_Logger::writeError("プロセスの作成に失敗しました。");
                     exit(1);
                 } elseif ($pid) {
-                    $pids[ $pid ] = TRUE;
-                    if ( count( $pids ) >= self::PROCESSES_MAX ) {
-                        unset( $pids[ pcntl_waitpid( -1, $status, WUNTRACED ) ] );
+                    $pids[$pid] = TRUE;
+                    if ( count($pids) >= self::PROCESSES_MAX ) {
+                        unset($pids[pcntl_wait($status)]);
                     }
                     // 次のアカウントの処理をする前に規定時間待機
                     sleep(self::PROCESS_CREATE_INTERVAL);
