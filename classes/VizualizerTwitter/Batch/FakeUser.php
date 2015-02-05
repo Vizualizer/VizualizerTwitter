@@ -34,6 +34,9 @@
  */
 class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
 {
+    // 作成する最大プロセス数
+    const PROCESSES_MAX = 6;
+
     // プロセス作成に対するインターバル
     const PROCESS_CREATE_INTERVAL = 5;
 
@@ -70,6 +73,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         $loader = new Vizualizer_Plugin("Twitter");
         $model = $loader->loadModel("Account");
         $accounts = $model->findAllBy(array());
+        $pids = array();
 
         foreach ($accounts as $account) {
             // アカウントIDが正しくない場合はスキップ
@@ -86,6 +90,10 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     Vizualizer_Logger::writeError("プロセスの作成に失敗しました。");
                     exit(1);
                 } else if ($pid) {
+                    $pids[ $pid ] = TRUE;
+                    if ( count( $pids ) >= self::PROCESSES_MAX ) {
+                        unset( $pids[ pcntl_waitpid( -1, $status, WUNTRACED ) ] );
+                    }
                     // 次のアカウントの処理をする前に規定時間待機
                     sleep(self::PROCESS_CREATE_INTERVAL);
                 } else {
