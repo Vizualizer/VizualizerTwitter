@@ -89,7 +89,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     // fork失敗
                     Vizualizer_Logger::writeError("プロセスの作成に失敗しました。");
                     exit(1);
-                } else if ($pid) {
+                } elseif ($pid) {
                     $pids[ $pid ] = TRUE;
                     if ( count( $pids ) >= self::PROCESSES_MAX ) {
                         unset( $pids[ pcntl_waitpid( -1, $status, WUNTRACED ) ] );
@@ -100,6 +100,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     // メイン処理の実行
                     Vizualizer_Logger::writeInfo("Start subprocess for account(".$account->account_id.")");
                     $this->process($account);
+                    Vizualizer_Logger::writeInfo("Finish subprocess for account(".$account->account_id.")");
                     exit(0);
                 }
             } else {
