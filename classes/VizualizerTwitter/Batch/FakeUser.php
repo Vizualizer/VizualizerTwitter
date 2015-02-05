@@ -352,10 +352,17 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     }
                 } elseif ($result->errors[0]->code == "226") {
                     // ツイート処理がスパム扱いされた場合は、次のツイートを翌日にする。
-                    Vizualizer_Logger::writeInfo("Tweet is blocked by spam-like from " . $this->user_id . " in " . $account->screen_name);
-                    $status->next_tweet_time = Vizualizer::now()->strToTime("+1 day")->date("Y-m-d H:i:s");
-                    Vizualizer_Logger::writeInfo($account->screen_name . " : Next tweet at : " . $status->next_tweet_time);
-                    $status->save();
+                    $connection = Vizualizer_Database_Factory::begin("twitter");
+                    try {
+                        Vizualizer_Logger::writeInfo("Tweet is blocked by spam-like from " . $this->user_id . " in " . $account->screen_name);
+                        $status->next_tweet_time = Vizualizer::now()->strToTime("+1 day")->date("Y-m-d H:i:s");
+                        Vizualizer_Logger::writeInfo($account->screen_name . " : Next tweet at : " . $status->next_tweet_time);
+                        $status->save();
+                        Vizualizer_Database_Factory::commit($connection);
+                    } catch (Exception $e) {
+                        Vizualizer_Database_Factory::rollback($connection);
+                        throw new Vizualizer_Exception_Database($e);
+                    }
                 } elseif ($result->errors[0]->code == "32") {
                     // アプリ自体が凍結中の場合は
                     $connection = Vizualizer_Database_Factory::begin("twitter");
