@@ -73,6 +73,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         $loader = new Vizualizer_Plugin("Twitter");
         $model = $loader->loadModel("Account");
         $accounts = $model->findAllBy(array());
+        $maxProcesses = (self::PROCESSES_MAX < $accounts->count())?self::PROCESSES_MAX:$accounts->count();
 
         foreach ($accounts as $account) {
             // アカウントIDが正しくない場合はスキップ
@@ -91,7 +92,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 } elseif ($pid) {
                     $this->pids[$pid] = TRUE;
                     while(pcntl_wait($status, WNOHANG));
-                    if ( count($this->pids) >= self::PROCESSES_MAX ) {
+                    if ( count($this->pids) >= $maxProcesses ) {
                         unset($this->pids[pcntl_wait($status)]);
                     }
                 } else {
