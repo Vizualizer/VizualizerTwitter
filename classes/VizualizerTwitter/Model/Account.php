@@ -277,6 +277,13 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * フレンドとしてユーザーを追加する。
      */
     public function addFriend($user){
+        $this->addFriendById($user->id);
+    }
+
+    /**
+     * フレンドとしてユーザーを追加する。
+     */
+    public function addFriendById($userId){
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
 
@@ -286,21 +293,21 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 
             // 対象がアカウントのフレンドであることを確認したとして最終確認日時を更新
             $follow = $loader->loadModel("AccountFriend");
-            $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+            $follow->findBy(array("account_id" => $this->account_id, "user_id" => $userId));
             $follow->account_id = $this->account_id;
-            $follow->user_id = $user->id;
+            $follow->user_id = $userId;
             $follow->checked_time = Vizualizer::now()->date("Y-m-d H:i:s");
             $follow->save();
 
             // フォローのデータを追加
             $follow = $loader->loadModel("Follow");
             // フレンドとして追加する場合はフォロー済みor相互フォローのレコードが無いことが条件
-            if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $user->id, "ne:friend_date" => null, "friend_cancel_date" => null)) == 0){
+            if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $userId, "ne:friend_date" => null, "friend_cancel_date" => null)) == 0){
                 // 更新対象を取得する場合はアンフォローのレコードを除外
-                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id, "friend_cancel_date" => null));
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $userId, "friend_cancel_date" => null));
                 if(!($follow->follow_id > 0)){
                     $follow->account_id = $this->account_id;
-                    $follow->user_id = $user->id;
+                    $follow->user_id = $userId;
                 }
                 $follow->friend_date = Vizualizer::now()->date("Y-m-d H:i:s");
                 $follow->save();
@@ -318,6 +325,13 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      * フォロワーを追加する。
      */
     public function addFollower($user){
+        $this->addFollowerById($user->id);
+    }
+
+    /**
+     * アカウントにフォロワーをIDベースで追加する。
+     */
+    public function addFollowerById($userId){
         // トランザクションの開始
         $connection = Vizualizer_Database_Factory::begin("twitter");
 
@@ -326,21 +340,21 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
 
             // 対象がアカウントのフォロワーであることを確認したとして、最終確認日時を更新
             $follow = $loader->loadModel("AccountFollower");
-            $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id));
+            $follow->findBy(array("account_id" => $this->account_id, "user_id" => $userId));
             $follow->account_id = $this->account_id;
-            $follow->user_id = $user->id;
+            $follow->user_id = $userId;
             $follow->checked_time = Vizualizer::now()->date("Y-m-d H:i:s");
             $follow->save();
 
             // フォローのデータを追加
             $follow = $loader->loadModel("Follow");
             // フォロワーとして追加する場合は被フォローor相互フォローのレコードが無いことが条件
-            if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $user->id, "ne:follow_date" => null)) == 0){
+            if($follow->countBy(array("account_id" => $this->account_id, "user_id" => $userId, "ne:follow_date" => null)) == 0){
                 // 更新対象を取得する場合はアンフォローのレコードを除外
-                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $user->id, "friend_cancel_date" => null));
+                $follow->findBy(array("account_id" => $this->account_id, "user_id" => $userId, "friend_cancel_date" => null));
                 if(!($follow->follow_id > 0)){
                     $follow->account_id = $this->account_id;
-                    $follow->user_id = $user->id;
+                    $follow->user_id = $userId;
                 }
                 $follow->follow_date = Vizualizer::now()->date("Y-m-d H:i:s");
                 $follow->save();
