@@ -91,7 +91,9 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     exit(1);
                 } elseif ($pid) {
                     $this->pids[$pid] = TRUE;
-                    while(pcntl_wait($status, WNOHANG));
+                    while(($pid = pcntl_wait($status, WNOHANG)) > 0){
+                        unset($this->pids[$pid]);
+                    }
                     if ( count($this->pids) >= $maxProcesses ) {
                         unset($this->pids[pcntl_wait($status)]);
                     }
