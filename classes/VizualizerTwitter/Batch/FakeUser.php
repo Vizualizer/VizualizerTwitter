@@ -37,9 +37,6 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
     // 作成する最大プロセス数
     const PROCESSES_MAX = 6;
 
-    // プロセス作成に対するインターバル
-    const PROCESS_CREATE_INTERVAL = 5;
-
     // アカウントごとの処理状況の管理データ
     private static $statuses = array();
 
@@ -97,8 +94,6 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     if ( count($this->pids) >= self::PROCESSES_MAX ) {
                         unset($this->pids[pcntl_wait($status)]);
                     }
-                    // 次のアカウントの処理をする前に規定時間待機
-                    sleep(self::PROCESS_CREATE_INTERVAL);
                 } else {
                     // メイン処理の実行
                     Vizualizer_Logger::writeInfo("Start subprocess for account(".$account->account_id.")");
