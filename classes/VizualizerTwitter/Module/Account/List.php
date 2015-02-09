@@ -44,7 +44,7 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
             }
             if(!in_array($attr[VizualizerAdmin::KEY]->role()->role_code, $adminRoles)){
                 $accountOperator = $loader->loadModel("AccountOperator");
-                $accountOperators = $accountOperator->findAllByOperatorId($attr[VizualizerAdmin::KEY]->operator_id);
+                $accountOperators = $accountOperator->findAllByCompanyOrOperatorId($attr[VizualizerAdmin::KEY]->company_id, $attr[VizualizerAdmin::KEY]->operator_id);
                 $search = $post["search"];
                 if(!is_array($search)){
                     $search = array();

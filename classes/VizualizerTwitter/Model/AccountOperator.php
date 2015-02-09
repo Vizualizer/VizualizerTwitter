@@ -76,6 +76,21 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
     }
 
     /**
+     * 法人IDかオペレータIDでデータを取得する。
+     * @param int $operator_id
+     */
+    public function findAllByCompanyOrOperatorId($company_id, $operator_id){
+        $select = new Vizualizer_Query_Select($this->access);
+        $select->distinct($this->distinct);
+        $select->addColumn($this->access->_W);
+        $select->addWhere($this->access->operator_id . " = ? OR ".$this->access->operator_id . " IS NULL AND " . $this->access->company_id . " = ?", array($opeartor_id, $company_id));
+        $sqlResult = $select->fetch();
+        $thisClass = get_class($this);
+        $result = new Vizualizer_Plugin_ModelIterator($thisClass, $sqlResult);
+        return $result;
+    }
+
+    /**
      * オペレータIDでデータを取得する。
      * @param int $operator_id
      */
