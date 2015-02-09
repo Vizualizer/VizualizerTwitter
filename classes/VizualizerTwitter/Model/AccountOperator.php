@@ -135,19 +135,37 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
     public function addAccountOperator($account_id, $operator_id, $index = 0){
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountOperator");
-        $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
-        if(!($model->account_operator_id > 0)){
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $model->account_id = $account_id;
-                $model->operator_id = $operator_id;
-                $model->operator_index = $index;
-                $model->save();
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+        if(substr($operator_id, 0, 1) == "*" && substr($operator_id, 1) > 0){
+            $model->findBy(array("account_id" => $account_id, "company_id" => substr($operator_id, 1)));
+            if(!($model->account_operator_id > 0)){
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $model->account_id = $account_id;
+                    $model->company_id = substr($operator_id, 1);
+                    $model->operator_index = $index;
+                    $model->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+            }
+        }else{
+            $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+            if(!($model->account_operator_id > 0)){
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $model->account_id = $account_id;
+                    $model->operator_id = $operator_id;
+                    $model->operator_index = $index;
+                    $model->save();
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
             }
         }
     }
