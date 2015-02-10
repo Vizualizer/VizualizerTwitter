@@ -144,7 +144,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
                     $model->account_id = $account_id;
                     $model->company_id = substr($operator_id, 1);
                     $model->operator_index = $index;
-                    $model->save();
+                    $model->save(true);
                     Vizualizer_Database_Factory::commit($connection);
                 } catch (Exception $e) {
                     Vizualizer_Database_Factory::rollback($connection);
@@ -179,7 +179,11 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
     public function removeAccountOperator($account_id, $operator_id){
         $loader = new Vizualizer_Plugin("twitter");
         $model = $loader->loadModel("AccountOperator");
-        $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+        if(substr($operator_id, 0, 1) == "*" && substr($operator_id, 1) > 0){
+            $model->findBy(array("account_id" => $account_id, "company_id" => substr($operator_id, 1)));
+        }else{
+            $model->findBy(array("account_id" => $account_id, "operator_id" => $operator_id));
+        }
         if($model->account_operator_id > 0){
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
