@@ -62,11 +62,26 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
         $search = $post["search"];
         $accountIds = $search["in:account_id"];
         if($post["operator_all"] > 0){
-            // 全グループを指定した場合は全てのアカウントを対象にする。
-            $accountIds = array();
+            if(!is_array($accountIds) || empty($accountIds)){
+                // 全グループを指定した場合は全てのアカウントを対象にする。
+                $accountIds = array();
+            }
         }elseif(!empty($operatorIds)){
-            $models = $model->findAllBy(array("in:operator_id" => $operatorIds));
+            $op = array("0");
+            $cp = array("0");
+            foreach($operatorIds as $operatorId){
+                if(substr($operatorId, 0, 1) == "*"){
+                    $cp[] = substr($operatorId, 1);
+                }else{
+                    $op = $operatorId;
+                }
+            }
             $newAccountIds = array();
+            $models = $model->findAllBy(array("in:operator_id" => $op));
+            foreach($models as $model){
+                $newAccountIds[$model->account_id] = $model->account_id;
+            }
+            $models = $model->findAllBy(array("in:company_id" => $cp));
             foreach($models as $model){
                 $newAccountIds[$model->account_id] = $model->account_id;
             }
@@ -74,9 +89,9 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
                 $accountIds = $newAccountIds;
             }else{
                 $accountIds = array_intersect($accountIds, $newAccountIds);
-                if(empty($accountIds)){
-                    $accountIds = array(0);
-                }
+            }
+            if(empty($accountIds)){
+                $accountIds = array(0);
             }
         }elseif(!$params->check("default_all_operators")){
             // グループ未指定の場合は対象を無しにする。
