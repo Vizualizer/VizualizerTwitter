@@ -36,15 +36,10 @@ class VizualizerTwitter_Module_Account_SaveOperators extends Vizualizer_Plugin_M
         $post = Vizualizer::request();
         if ($post["add"] || $post["save"]) {
             $loader = new Vizualizer_Plugin("Twitter");
-            $companyIds = array();
             $operatorIds = array();
             if(is_array($post["operator_id"])){
                 foreach($post["operator_id"] as $operatorId){
-                    if(substr($operatorId, 0, 1) == "*" && substr($operatorId, 1) > 0){
-                        $companyIds[] = substr($operatorId, 1);
-                    }elseif($operatorId > 0){
-                        $operatorIds[] = $operatorId;
-                    }
+                    $operatorIds[] = $operatorId;
                 }
             }
 
@@ -57,7 +52,7 @@ class VizualizerTwitter_Module_Account_SaveOperators extends Vizualizer_Plugin_M
 
                 // 登録から外れたグループを削除
                 foreach($operators as $operator){
-                    if(!in_array($operator->operator_id, $operatorIds) && !in_array($operator->company_id, $companyIds)){
+                    if(!in_array($operator->operator_id, $operatorIds) && !in_array("*".$operator->company_id, $operatorIds)){
                         $operator->delete();
                     }
                 }
