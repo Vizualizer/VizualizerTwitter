@@ -69,13 +69,13 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
             $cp = array();
             foreach($operatorIds as $operatorId){
                 if(substr($operatorId, 0, 1) == "*"){
-                    $cp[] = $operatorId;
+                    $cp[] = substr($operatorId, 1);
                 }else{
                     $op = $operatorId;
                 }
             }
-            $models = $model->findAllBy(array("in:operator_id" => $op));
             $newAccountIds = array();
+            $models = $model->findAllBy(array("in:operator_id" => $op));
             foreach($models as $model){
                 $newAccountIds[$model->account_id] = $model->account_id;
             }
