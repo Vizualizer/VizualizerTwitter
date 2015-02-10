@@ -123,9 +123,8 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
             }
             $model = $loader->loadModel("Company");
             $companys = $model->findAllBy(array());
-            $cachedOperators = array();
             foreach($companys as $company){
-                $cachedOperators["*" . $company->comapny_id] = $company;
+                $cachedOperators["*" . $company->company_id] = $company;
             }
             $cachedOperators = parent::cacheData(get_class($this)."::operators", $cachedOperators);
         }
