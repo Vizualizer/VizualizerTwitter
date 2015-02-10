@@ -39,7 +39,9 @@ class VizualizerTwitter_Module_Account_SaveOperators extends Vizualizer_Plugin_M
             $operatorIds = array();
             if(is_array($post["operator_id"])){
                 foreach($post["operator_id"] as $operatorId){
-                    $operatorIds[] = $operatorId;
+                    if(!empty($operatorId)){
+                        $operatorIds[] = $operatorId;
+                    }
                 }
             }
 
