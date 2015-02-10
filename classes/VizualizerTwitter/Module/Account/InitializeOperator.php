@@ -65,8 +65,8 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
             // 全グループを指定した場合は全てのアカウントを対象にする。
             $accountIds = array();
         }elseif(!empty($operatorIds)){
-            $op = array();
-            $cp = array();
+            $op = array("0");
+            $cp = array("0");
             foreach($operatorIds as $operatorId){
                 if(substr($operatorId, 0, 1) == "*"){
                     $cp[] = substr($operatorId, 1);
