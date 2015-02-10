@@ -65,8 +65,21 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
             // 全グループを指定した場合は全てのアカウントを対象にする。
             $accountIds = array();
         }elseif(!empty($operatorIds)){
-            $models = $model->findAllBy(array("in:operator_id" => $operatorIds));
+            $op = array();
+            $cp = array();
+            foreach($operatorIds as $operatorId){
+                if(substr($operatorId, 0, 1) == "*"){
+                    $cp[] = $operatorId;
+                }else{
+                    $op = $operatorId;
+                }
+            }
+            $models = $model->findAllBy(array("in:operator_id" => $op));
             $newAccountIds = array();
+            foreach($models as $model){
+                $newAccountIds[$model->account_id] = $model->account_id;
+            }
+            $models = $model->findAllBy(array("in:company_id" => $cp));
             foreach($models as $model){
                 $newAccountIds[$model->account_id] = $model->account_id;
             }
