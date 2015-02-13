@@ -105,12 +105,14 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
                 if($post["retweet_duration"] > 0){
                     $reservation->scheduled_cancel_retweet_time = $retweetTime->strToTime("+" . $post["retweet_delay"] . "minute")->date("Y-m-d H:i:s");
                 }
+                $reservation->save();
 
                 foreach($accountIds as $accountId){
                     if($accountId != $tweet->account_id){
                         $model = $loader->loadModel("Retweet");
                         $model->account_id = $accountId;
                         $model->tweet_id = $tweetId;
+                        $model->reservation_id = $reservation->reservation_id;
                         $model->scheduled_retweet_time = $reservation->scheduled_retweet_time;
                         $model->scheduled_cancel_retweet_time = $reservation->scheduled_cancel_retweet_time;
                         $model->save();
