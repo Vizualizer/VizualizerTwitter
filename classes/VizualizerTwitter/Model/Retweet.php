@@ -64,6 +64,17 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
     }
 
     /**
+     * リツイート予約IDでデータを取得する。
+     *
+     * @param $reservation_id リツイート予約ID
+     * @return リツイートのリスト
+     */
+    public function findAllByReservationId($reservation_id, $sort = "", $reverse = false)
+    {
+        return $this->findAllBy(array("reservation_id" => $reservation_id), $sort, $reverse);
+    }
+
+    /**
      * 設定に紐づいたアカウントを取得する
      *
      * @return アカウント
@@ -84,5 +95,15 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
         $tweet = $loader->loadModel("TweetLog");
         $tweet->findByTwitterId($this->tweet_id);
         return $tweet;
+    }
+
+    /**
+     * リツイート予約を取得する。
+     */
+    public function reservation(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $reservation = $loader->loadModel("RetweetReservation");
+        $reservation->findByPrimaryKey($this->reservation_id);
+        return $reservation;
     }
 }

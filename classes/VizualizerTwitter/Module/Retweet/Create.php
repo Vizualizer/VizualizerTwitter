@@ -87,19 +87,32 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
             // トランザクションの開始
             $connection = Vizualizer_Database_Factory::begin("twitter");
             try {
+                // RT予約を登録
+                $reservation = $loader->loadModel("RetweetReservation");
+                if($tweet->tweet_log_id > 0){
+                    $reservation->retweet_url = "https://twitter.com/".$tweet->account()->screen_name."/status/".$tweetId;
+                }else{
+                    $reservation->retweet_url = $post["retweet_target"];
+                }
+                $reservation->retweet_group = $post["target_group_id"];
+                $reservation->max_accounts = $post["max_accounts"];
+                if($post["retweet_delay"] > 0){
+                    $retweetTime = Vizualizer::now()->strToTime("+" . $post["retweet_delay"] . "minute");
+                }else{
+                    $retweetTime = Vizualizer::now();
+                }
+                $reservation->scheduled_retweet_time = $retweetTime->date("Y-m-d H:i:s");
+                if($post["retweet_duration"] > 0){
+                    $reservation->scheduled_cancel_retweet_time = $retweetTime->strToTime("+" . $post["retweet_delay"] . "minute")->date("Y-m-d H:i:s");
+                }
+
                 foreach($accountIds as $accountId){
                     if($accountId != $tweet->account_id){
                         $model = $loader->loadModel("Retweet");
                         $model->account_id = $accountId;
                         $model->tweet_id = $tweetId;
-                        if($post["retweet_delay"] > 0){
-                            $model->scheduled_retweet_time = Vizualizer::now()->strToTime("+" . $post["retweet_delay"] . "minute")->date("Y-m-d H:i:s");
-                        }else{
-                            $model->scheduled_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
-                        }
-                        if($post["retweet_duration"] > 0){
-                            $model->scheduled_cancel_retweet_time = Vizualizer::now()->strToTime("+" . $post["retweet_duration"] . "hour")->date("Y-m-d H:i:s");
-                        }
+                        $model->scheduled_retweet_time = $reservation->scheduled_retweet_time;
+                        $model->scheduled_cancel_retweet_time = $reservation->scheduled_cancel_retweet_time;
                         $model->save();
                     }
                 }
