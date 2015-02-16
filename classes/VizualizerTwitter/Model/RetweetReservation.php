@@ -64,6 +64,16 @@ class VizualizerTwitter_Model_RetweetReservation extends Vizualizer_Plugin_Model
     }
 
     /**
+     * リツイートしたグループを取得する。
+     */
+    public function group(){
+        $loader = new Vizualizer_Plugin("twitter");
+        $group = $loader->loadModel("Group");
+        $group->findByPrimaryKey($this->group_id);
+        return $group;
+    }
+
+    /**
      * リツイートした元のツイートを取得する。
      */
     public function retweets(){
