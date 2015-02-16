@@ -33,6 +33,9 @@ class VizualizerTwitter_Module_RetweetReservation_Page extends Vizualizer_Plugin
 
     function execute($params)
     {
+        if($params->get("ignore_finished", "0") == "1"){
+            $post["ngt:scheduled_cancel_retweet_time"] = Vizualizer::now()->date("Y-m-d H:i:s");
+        }
         $this->executeImpl($params, "Twitter", "RetweetReservation", $params->get("result", "retweetReservations"));
     }
 }
