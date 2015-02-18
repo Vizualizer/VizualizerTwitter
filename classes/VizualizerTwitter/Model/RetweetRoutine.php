@@ -51,4 +51,17 @@ class VizualizerTwitter_Model_RetweetRoutine extends Vizualizer_Plugin_Model
     {
         $this->findBy(array("routine_id" => $routine_id));
     }
+
+    /**
+     * 紐づいたグループを取得する
+     *
+     * @return グループ
+     */
+    public function group()
+    {
+        $loader = new Vizualizer_Plugin("twitter");
+        $group = $loader->loadModel("Group");
+        $group->findByPrimaryKey($this->retweet_group);
+        return $group;
+    }
 }
