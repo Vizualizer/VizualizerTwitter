@@ -69,7 +69,7 @@ class VizualizerTwitter_Model_RetweetReservation extends Vizualizer_Plugin_Model
     public function group(){
         $loader = new Vizualizer_Plugin("twitter");
         $group = $loader->loadModel("Group");
-        $group->findByPrimaryKey($this->group_id);
+        $group->findByPrimaryKey($this->retweet_group);
         return $group;
     }
 
