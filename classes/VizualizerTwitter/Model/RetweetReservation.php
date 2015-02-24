@@ -23,12 +23,12 @@
  */
 
 /**
- * リツイートのモデルです。
+ * リツイート予約のモデルです。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
+class VizualizerTwitter_Model_RetweetReservation extends Vizualizer_Plugin_Model
 {
 
     /**
@@ -39,7 +39,7 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
     public function __construct($values = array())
     {
         $loader = new Vizualizer_Plugin("twitter");
-        parent::__construct($loader->loadTable("Retweets"), $values);
+        parent::__construct($loader->loadTable("RetweetReservations"), $values);
     }
 
     /**
@@ -47,44 +47,20 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
      *
      * @param $retweet_id ツイートID
      */
-    public function findByPrimaryKey($retweet_id)
+    public function findByPrimaryKey($reservation_id)
     {
-        $this->findBy(array("retweet_id" => $retweet_id));
+        $this->findBy(array("reservation_id" => $reservation_id));
     }
 
     /**
-     * アカウントIDでデータを取得する。
+     * オペレータIDでデータを取得する。
      *
      * @param $account_id アカウントID
-     * @return 設定のリスト
+     * @return RT予約のリスト
      */
-    public function findAllByAccountId($account_id, $sort = "", $reverse = false)
+    public function findAllByOperatorId($operator_id, $sort = "", $reverse = false)
     {
-        return $this->findAllBy(array("account_id" => $account_id), $sort, $reverse);
-    }
-
-    /**
-     * リツイート予約IDでデータを取得する。
-     *
-     * @param $reservation_id リツイート予約ID
-     * @return リツイートのリスト
-     */
-    public function findAllByReservationId($reservation_id, $sort = "", $reverse = false)
-    {
-        return $this->findAllBy(array("reservation_id" => $reservation_id), $sort, $reverse);
-    }
-
-    /**
-     * 設定に紐づいたアカウントを取得する
-     *
-     * @return アカウント
-     */
-    public function account()
-    {
-        $loader = new Vizualizer_Plugin("twitter");
-        $account = $loader->loadModel("Account");
-        $account->findByPrimaryKey($this->account_id);
-        return $account;
+        return $this->findAllBy(array("operator_id" => $operator_id), $sort, $reverse);
     }
 
     /**
@@ -93,27 +69,17 @@ class VizualizerTwitter_Model_Retweet extends Vizualizer_Plugin_Model
     public function group(){
         $loader = new Vizualizer_Plugin("twitter");
         $group = $loader->loadModel("Group");
-        $group->findByPrimaryKey($this->group_id);
+        $group->findByPrimaryKey($this->retweet_group);
         return $group;
     }
 
     /**
      * リツイートした元のツイートを取得する。
      */
-    public function tweet(){
+    public function retweets(){
         $loader = new Vizualizer_Plugin("twitter");
-        $tweet = $loader->loadModel("TweetLog");
-        $tweet->findByTwitterId($this->tweet_id);
+        $tweet = $loader->loadModel("Retweet");
+        $tweet->findByReservationId($this->reservation_id);
         return $tweet;
-    }
-
-    /**
-     * リツイート予約を取得する。
-     */
-    public function reservation(){
-        $loader = new Vizualizer_Plugin("twitter");
-        $reservation = $loader->loadModel("RetweetReservation");
-        $reservation->findByPrimaryKey($this->reservation_id);
-        return $reservation;
     }
 }

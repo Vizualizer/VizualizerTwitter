@@ -28,7 +28,7 @@
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_Retweet_List extends Vizualizer_Plugin_Module_List
+class VizualizerTwitter_Module_RetweetReservation_Page extends Vizualizer_Plugin_Module_Page
 {
 
     function execute($params)
@@ -36,6 +36,6 @@ class VizualizerTwitter_Module_Retweet_List extends Vizualizer_Plugin_Module_Lis
         if($params->get("ignore_finished", "0") == "1"){
             $post["ngt:scheduled_cancel_retweet_time"] = Vizualizer::now()->date("Y-m-d H:i:s");
         }
-        $this->executeImpl($params, "Twitter", "Retweet", $params->get("result", "retweets"));
+        $this->executeImpl($params, "Twitter", "RetweetReservation", $params->get("result", "retweetReservations"));
     }
 }
