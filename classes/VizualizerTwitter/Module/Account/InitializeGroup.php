@@ -37,7 +37,8 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
         $post = Vizualizer::request();
         $search = $post["search"];
         $groupIds = array();
-        if(!is_array($search["group_id"])){
+        if(!is_array($search) || !array_key_exists("group_id", $search)){
+        }elseif(!is_array($search["group_id"])){
             if(!empty($search["group_id"])){
                 $groupIds = array($search["group_id"]);
             }
