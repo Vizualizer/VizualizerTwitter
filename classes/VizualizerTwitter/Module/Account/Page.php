@@ -62,10 +62,11 @@ class VizualizerTwitter_Module_Account_Page extends Vizualizer_Plugin_Module_Pag
             }
         }
         // account_attributeで検索する処理を追加
+        $orgSearch = $search = $post["search"];
+        unset($search["operator_id"]);
         if(!empty($post["account_attribute"])){
             $setting = $loader->loadModel("Setting");
             $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
-            $search = $post["search"];
             if(!is_array($search)){
                 $search = array();
             }
@@ -78,9 +79,10 @@ class VizualizerTwitter_Module_Account_Page extends Vizualizer_Plugin_Module_Pag
             }else{
                 $search["in:account_id"] = $accountIds;
             }
-            $post->set("search", $search);
         }
+        $post->set("search", $search);
         $this->executeImpl($params, "Twitter", "Account", $params->get("result", "accounts"));
+        $post->set("search", $orgSearch);
         // 結果に属性一覧を追加する。
         $account = $loader->loadModel("Account");
         $attr["account_attributes"] = $account->attributes();
