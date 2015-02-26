@@ -50,10 +50,14 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
         }
         if($post["add_group_id"] > 0){
             $groupIds[$post["add_group_id"]] = $post["add_group_id"];
+            $search["group_id"] = $groupIds;
+            $post->set("search", $search);
             $post->remove("add_group_id");
         }
         if($post["del_group_id"] > 0){
             unset($groupIds[$post["del_group_id"]]);
+            $search["group_id"] = $groupIds;
+            $post->set("search", $search);
             $post->remove("del_group_id");
         }
 
