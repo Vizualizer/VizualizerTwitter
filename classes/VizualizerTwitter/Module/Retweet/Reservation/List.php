@@ -23,16 +23,19 @@
  */
 
 /**
- * リツイートのデータを削除する。
+ * リツイートのリストを取得する。
  *
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_RetweetReservation_Delete extends Vizualizer_Plugin_Module_Delete
+class VizualizerTwitter_Module_Retweet_Reservation_List extends Vizualizer_Plugin_Module_List
 {
 
     function execute($params)
     {
-        $this->executeImpl("Twitter", "RetweetReservation", "reservation_id");
+        if($params->get("ignore_finished", "0") == "1"){
+            $post["ngt:scheduled_cancel_retweet_time"] = Vizualizer::now()->date("Y-m-d H:i:s");
+        }
+        $this->executeImpl($params, "Twitter", "RetweetReservation", $params->get("result", "retweetReservations"));
     }
 }

@@ -28,7 +28,7 @@
  * @package VizualizerTwitter
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
-class VizualizerTwitter_Module_RetweetReservation_Page extends Vizualizer_Plugin_Module_Page
+class VizualizerTwitter_Module_Retweet_Reservation_Page extends Vizualizer_Plugin_Module_Page
 {
 
     function execute($params)
