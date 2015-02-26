@@ -37,7 +37,8 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
         $post = Vizualizer::request();
         $search = $post["search"];
         $operatorIds = array();
-        if(!is_array($search["operator_id"])){
+        if(!is_array($search) || !array_key_exists("group_id", $search)){
+        }elseif(!is_array($search["operator_id"])){
             if(!empty($search["operator_id"])){
                 $operatorIds = array($search["operator_id"]);
             }
