@@ -63,7 +63,9 @@ class VizualizerTwitter_Module_Account_List extends Vizualizer_Plugin_Module_Lis
         }
         // account_attributeで検索する処理を追加
         $orgSearch = $search = $post["search"];
-        unset($search["operator_id"]);
+        if(is_array($search) && array_key_exists("operator_id", $search)){
+            unset($search["operator_id"]);
+        }
         if(!empty($post["account_attribute"])){
             $setting = $loader->loadModel("Setting");
             $settings = $setting->findAllBy(array("account_attribute" => $post["account_attribute"]));
