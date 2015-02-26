@@ -80,50 +80,79 @@ class VizualizerTwitter_Module_Retweet_Create extends Vizualizer_Plugin_Module
         }
 
         // リツイートのデータを登録
-        foreach($tweetIds as $tweetId){
-            $tweet = $loader->loadModel("TweetLog");
-            $tweet->findBy(array("twitter_id" => $tweetId));
+        if (count($accountIds) > 0) {
+            foreach($tweetIds as $tweetId){
+                $tweet = $loader->loadModel("TweetLog");
+                $tweet->findBy(array("twitter_id" => $tweetId));
 
-            // トランザクションの開始
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                // RT予約を登録
-                $reservation = $loader->loadModel("RetweetReservation");
-                if($tweet->tweet_log_id > 0){
-                    $reservation->retweet_url = "https://twitter.com/".$tweet->account()->screen_name."/status/".$tweetId;
-                }else{
-                    $reservation->retweet_url = $post["retweet_target"];
-                }
-                $reservation->retweet_group = $post["target_group_id"];
-                $reservation->max_accounts = $post["max_accounts"];
-                if($post["retweet_delay"] > 0){
-                    $retweetTime = Vizualizer::now()->strToTime("+" . $post["retweet_delay"] . "minute");
-                }else{
-                    $retweetTime = Vizualizer::now();
-                }
-                $reservation->scheduled_retweet_time = $retweetTime->date("Y-m-d H:i:s");
-                if($post["retweet_duration"] > 0){
-                    $reservation->scheduled_cancel_retweet_time = $retweetTime->strToTime("+" . $post["retweet_delay"] . "minute")->date("Y-m-d H:i:s");
-                }
-                $reservation->save();
-
-                foreach($accountIds as $accountId){
-                    if($accountId != $tweet->account_id){
-                        $model = $loader->loadModel("Retweet");
-                        $model->account_id = $accountId;
-                        $model->tweet_id = $tweetId;
-                        $model->reservation_id = $reservation->reservation_id;
-                        $model->scheduled_retweet_time = $reservation->scheduled_retweet_time;
-                        $model->scheduled_cancel_retweet_time = $reservation->scheduled_cancel_retweet_time;
-                        $model->save();
+                // トランザクションの開始
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    if (!($tweet->tweet_id > 0)) {
+                        // ツイートが未登録の場合は自動でツイートを登録
+                        $account = $loader->loadModel("Account");
+                        $accountIdArray = array_values($accountIds);
+                        $account->findByPrimaryKey($accountIdArray[0]);
+                        $tweetData = $account->getTwitter()->statuses_show_ID(array("id" => $tweetId));
+                        $tweet->twitter_id = $tweetData->id_str;
+                        $tweet->screen_name = $tweetData->user->screen_name;
+                        $tweet->tweet_time = Vizualizer::now()->strToTime($tweetData->created_at)->date("Y-m-d H:i:s");
+                        $tweet->tweet_type = 4;
+                        if(is_array($tweetData->entities->media)){
+                            foreach($tweetData->entities->media as $media){
+                                if($media->type == "photo"){
+                                    $tweet->media_link = $media->media_url;
+                                    $tweet->media_url = $media->url;
+                                    $tweetData->text = str_replace($media->url, "", $tweetData->text);
+                                    break;
+                                }
+                            }
+                        }
+                        $tweet->tweet_text = $tweetData->text;
+                        $tweet->retweet_count = $tweetData->retweet_count;
+                        $tweet->favorite_count = $tweetData->favorite_count;
+                        Vizualizer_Logger::writeInfo("Update Tweet for ".$tweet->twitter_id);
+                        $tweet->save();
                     }
-                }
 
-                // エラーが無かった場合、処理をコミットする。
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+                    // RT予約を登録
+                    $reservation = $loader->loadModel("RetweetReservation");
+                    if($tweet->tweet_log_id > 0){
+                        $reservation->retweet_url = "https://twitter.com/".$tweet->account()->screen_name."/status/".$tweetId;
+                    }else{
+                        $reservation->retweet_url = $post["retweet_target"];
+                    }
+                    $reservation->retweet_group = $post["target_group_id"];
+                    $reservation->max_accounts = $post["max_accounts"];
+                    if($post["retweet_delay"] > 0){
+                        $retweetTime = Vizualizer::now()->strToTime("+" . $post["retweet_delay"] . "minute");
+                    }else{
+                        $retweetTime = Vizualizer::now();
+                    }
+                    $reservation->scheduled_retweet_time = $retweetTime->date("Y-m-d H:i:s");
+                    if($post["retweet_duration"] > 0){
+                        $reservation->scheduled_cancel_retweet_time = $retweetTime->strToTime("+" . $post["retweet_duration"] . " hour")->date("Y-m-d H:i:s");
+                    }
+                    $reservation->save();
+
+                    foreach($accountIds as $accountId){
+                        if($accountId != $tweet->account_id){
+                            $model = $loader->loadModel("Retweet");
+                            $model->account_id = $accountId;
+                            $model->tweet_id = $tweetId;
+                            $model->reservation_id = $reservation->reservation_id;
+                            $model->scheduled_retweet_time = $reservation->scheduled_retweet_time;
+                            $model->scheduled_cancel_retweet_time = $reservation->scheduled_cancel_retweet_time;
+                            $model->save();
+                        }
+                    }
+
+                    // エラーが無かった場合、処理をコミットする。
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
             }
         }
     }

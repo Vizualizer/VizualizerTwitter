@@ -123,6 +123,7 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
             // トランザクションの開始
             $tweetLog = $loader->loadModel("TweetLog");
             $tweetLog->account_id = $account->account_id;
+            $tweetLog->screen_name = $account->screen_name;
             $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
 
             $application = $account->application();
