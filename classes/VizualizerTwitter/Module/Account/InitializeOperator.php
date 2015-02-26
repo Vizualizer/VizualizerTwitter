@@ -35,13 +35,14 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
     {
         // 取得対象のグループIDを調整
         $post = Vizualizer::request();
-        if(!is_array($post["operator_id"])){
-            $operatorId = $post["operator_id"];
-            $post->set("operator_id", array());
-        }
-        $operatorIds = $post["operator_id"];
-        if(!empty($operatorId)){
-            $operatorIds[$operatorId] = $operatorId;
+        $search = $post["search"];
+        $operatorIds = array();
+        if(!is_array($search["operator_id"])){
+            if(!empty($search["operator_id"])){
+                $operatorIds = array($search["operator_id"]);
+            }
+        }else{
+            $operatorIds = $search["operator_id"];
         }
         if(!($post["operator_all"] > 0)){
             $post->remove("operator_all");
@@ -54,7 +55,6 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
             unset($operatorIds[$post["del_operator_id"]]);
             $post->remove("del_operator_id");
         }
-        $post->set("operator_id", $operatorIds);
 
         // グループIDの対象となるアカウントのリストを取得
         $loader = new Vizualizer_Plugin("Twitter");
@@ -73,7 +73,7 @@ class VizualizerTwitter_Module_Account_InitializeOperator extends Vizualizer_Plu
                 if(substr($operatorId, 0, 1) == "*"){
                     $cp[] = substr($operatorId, 1);
                 }else{
-                    $op = $operatorId;
+                    $op[] = $operatorId;
                 }
             }
             $newAccountIds = array();

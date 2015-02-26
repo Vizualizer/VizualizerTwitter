@@ -35,13 +35,14 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
     {
         // 取得対象のグループIDを調整
         $post = Vizualizer::request();
-        if(!is_array($post["group_id"])){
-            $groupId = $post["group_id"];
-            $post->set("group_id", array());
-        }
-        $groupIds = $post["group_id"];
-        if(!empty($groupId)){
-            $groupIds[$groupId] = $groupId;
+        $search = $post["search"];
+        $groupIds = array();
+        if(!is_array($search["group_id"])){
+            if(!empty($search["group_id"])){
+                $groupIds = array($search["group_id"]);
+            }
+        }else{
+            $groupIds = $search["group_id"];
         }
         if(!($post["group_all"] > 0)){
             $post->remove("group_all");
@@ -54,7 +55,6 @@ class VizualizerTwitter_Module_Account_InitializeGroup extends Vizualizer_Plugin
             unset($groupIds[$post["del_group_id"]]);
             $post->remove("del_group_id");
         }
-        $post->set("group_id", $groupIds);
 
         // グループIDの対象となるアカウントのリストを取得
         $loader = new Vizualizer_Plugin("Twitter");
