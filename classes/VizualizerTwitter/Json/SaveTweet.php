@@ -47,6 +47,7 @@ class VizualizerTwitter_Json_SaveTweet
                         $account = $tweet->account();
                         $tweetLog = $loader->loadModel("TweetLog");
                         $tweetLog->account_id = $tweet->account_id;
+                        $tweetLog->screen_name = $tweet->account()->screen_name;
                         $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
                         $tweetLog->tweet_text = $tweet->tweet_text;
                         $tweetLog->media_url = $tweet->media_url;

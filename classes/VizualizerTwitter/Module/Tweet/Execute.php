@@ -45,6 +45,7 @@ class VizualizerTwitter_Module_Tweet_Execute extends Vizualizer_Plugin_Module_De
                     $loader = new Vizualizer_Plugin("Twitter");
                     $tweetLog = $loader->loadModel("TweetLog");
                     $tweetLog->account_id = $tweet->account_id;
+                    $tweetLog->screen_name = $account->account()->screen_name;
                     $tweetLog->tweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
                     $tweetLog->tweet_text = $tweet->tweet_text;
                     $tweetLog->media_url = $tweet->media_url;
