@@ -245,37 +245,42 @@ class VizualizerTwitter_Model_Follow extends Vizualizer_Plugin_Model
         // アンフォローを実行するには、フォロー済みのレコードでないといけない。
         if($this->friend_date != null && $this->follow_date == null && $this->friend_cancel_date == null){
             $account = $this->account();
+            $application = $account->application();
+            if ($application->suspended == 0) {
 
-            // アンフォロー処理を実行する。
-            $result = $account->getTwitter()->friendships_destroy(array("user_id" => $this->user_id));
+                // アンフォロー処理を実行する。
+                $result = $account->getTwitter()->friendships_destroy(array("user_id" => $this->user_id));
 
-            if (isset($result->errors)) {
-                if ($result->errors[0]->code == "161" || $result->errors[0]->code == "162") {
-                    $account->status()->updateFollow(VizualizerTwitter_Model_AccountStatus::UNFOLLOW_FINISHED, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
-                } elseif ($result->errors[0]->code == "108" || $result->errors[0]->code == "34") {
+                if (isset($result->errors)) {
+                    if ($result->errors[0]->code == "161" || $result->errors[0]->code == "162") {
+                        $account->status()->updateFollow(VizualizerTwitter_Model_AccountStatus::UNFOLLOW_FINISHED, Vizualizer::now()->strTotime("+1 hour")->date("Y-m-d 00:00:00"), true);
+                    } elseif ($result->errors[0]->code == "108" || $result->errors[0]->code == "34") {
+                        try {
+                            $this->delete();
+                            // エラーが無かった場合、処理をコミットする。
+                            Vizualizer_Database_Factory::commit($connection);
+                        } catch (Exception $e) {
+                            Vizualizer_Database_Factory::rollback($connection);
+                            throw new Vizualizer_Exception_Database($e);
+                        }
+                    }
+                    Vizualizer_Logger::writeError("Failed to Unfollow on " . $follow->user_id . " in " . $this->screen_name . " by " . print_r($result->errors, true));
+                    return false;
+                } else {
                     try {
-                        $this->delete();
+                        $this->friend_cancel_date = Vizualizer::now()->date("Y-m-d H:i:s");
+                        $this->save();
+                        Vizualizer_Logger::writeInfo("Unfollowed to " . $this->user_id . " in " . $account->screen_name);
                         // エラーが無かった場合、処理をコミットする。
                         Vizualizer_Database_Factory::commit($connection);
                     } catch (Exception $e) {
                         Vizualizer_Database_Factory::rollback($connection);
                         throw new Vizualizer_Exception_Database($e);
                     }
+                    return true;
                 }
-                Vizualizer_Logger::writeError("Failed to Unfollow on " . $follow->user_id . " in " . $this->screen_name . " by " . print_r($result->errors, true));
-                return false;
-            } else {
-                try {
-                    $this->friend_cancel_date = Vizualizer::now()->date("Y-m-d H:i:s");
-                    $this->save();
-                    Vizualizer_Logger::writeInfo("Unfollowed to " . $this->user_id . " in " . $account->screen_name);
-                    // エラーが無かった場合、処理をコミットする。
-                    Vizualizer_Database_Factory::commit($connection);
-                } catch (Exception $e) {
-                    Vizualizer_Database_Factory::rollback($connection);
-                    throw new Vizualizer_Exception_Database($e);
-                }
-                return true;
+            }else{
+                Vizualizer_Logger::writeInfo("Skipped Unfollow to " . $this->user_id . " for suspended in " . $account->screen_name);
             }
         }
         return false;
