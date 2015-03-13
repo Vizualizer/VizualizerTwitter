@@ -107,13 +107,12 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     public function followLimit()
     {
         $setting = $this->followSetting();
-        if($setting->follow_ratio > 110){
-            $limit =  floor($setting->follow_ratio * $this->follower_count / 100);
-            if($limit < $setting->daily_follows){
-                return $setting->daily_follows;
-            }
-        }else{
-            $limit = 110;
+        if(!($setting->follow_ratio > 110)){
+            $setting->follow_ratio = ($this->follower_count < 2000)?(2110 - $this->follower_count):110;
+        }
+        $limit =  floor($setting->follow_ratio * $this->follower_count / 100);
+        if($limit < $setting->daily_follows){
+            return $setting->daily_follows;
         }
         return $limit;
     }
