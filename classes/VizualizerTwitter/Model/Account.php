@@ -422,7 +422,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function setting($useDefault = false)
+    public function setting($useDefault = true)
     {
         $loader = new Vizualizer_Plugin("twitter");
         if ($this->account_id > 0) {
@@ -451,7 +451,7 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
                         if ($key == "setting_id" || $key == "account_id") {
                             continue;
                         }
-                        if (empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$baseOperator.":0"]->$key)) {
+                        if ($useDefault && empty($settings[$this->operator_id.":".$this->account_id]->$key) && !empty($settings[$baseOperator.":0"]->$key)) {
                             $settings[$this->operator_id.":".$this->account_id]->$key = $settings[$baseOperator.":0"]->$key;
                         }
                     }
@@ -517,9 +517,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function followSetting()
+    public function followSetting($useDefault = true)
     {
-        $setting = $this->setting();
+        $setting = $this->setting($useDefault);
         $setting->follow_ratio = $setting->follow_ratio_1;
         $setting->daily_follows = $setting->daily_follows_1;
         $setting->daily_unfollows = $setting->daily_unfollows_1;
@@ -542,9 +542,9 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
      *
      * @return 詳細設定のリスト
      */
-    public function tweetSetting()
+    public function tweetSetting($useDefault = true)
     {
-        return $this->setting();
+        return $this->setting($useDefault);
     }
 
     /**
