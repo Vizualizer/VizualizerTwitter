@@ -71,7 +71,7 @@ class VizualizerTwitter_Batch_RoutineRetweet extends Vizualizer_Plugin_Batch
                 Vizualizer_Logger::writeInfo("Check Reservaton for " . $routine->routine_id . " in " . $reserveTime->date("Y-m-d"));
                 // 同日に同じルーティンのIDの予約が存在するかチェック
                 $reservation = $loader->loadModel("RetweetReservation");
-                $reservation->findBy(array("routine_id" => $routine->routine_id, "for:scheduled_retweet_time" => $reserveTime->date("Y-m-d")));
+                $reservation->findBy(array("routine_id" => $routine->routine_id, "back:scheduled_retweet_time" => $reserveTime->date("Y-m-d")));
                 if (!($reservation->reservation_id > 0)) {
                     // 同日に同じルーティンが予約されていない場合は登録を実行
                     $accountIds = array();
