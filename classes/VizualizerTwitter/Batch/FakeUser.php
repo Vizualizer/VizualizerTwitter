@@ -460,45 +460,52 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
     {
         $loader = new Vizualizer_Plugin("Twitter");
 
-        foreach ($retweets as $retweet) {
-            $account = $retweet->account();
+        $checkRetweet = $loader->loadModel("Retweet");
+        $checkCount = $checkRetweet->countBy(array("ge:retweet_time" => Vizualizer::now()->strToTime("-2 minute")->date("Y-m-d H:i:s")));
+        if($checkCount < mt_rand(2, 4)){
+            foreach ($retweets as $retweet) {
+                $account = $retweet->account();
 
-            // リツイートを実施
-            $twitter = $account->getTwitter();
-            $result = $twitter->statuses_retweet_ID(array("id" => $retweet->tweet_id));
-            Vizualizer_Logger::writeInfo("Retweeted for : " . $retweet->tweet_id . " with " . print_r($result, true));
+                // リツイートを実施
+                $twitter = $account->getTwitter();
+                $result = $twitter->statuses_retweet_ID(array("id" => $retweet->tweet_id));
+                Vizualizer_Logger::writeInfo("Retweeted for : " . $retweet->tweet_id . " with " . print_r($result, true));
 
-            // リツイートを更新
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $retweet->retweet_tweet_id = $result->id_str;
-                $retweet->retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
-                $retweet->save();
+                // リツイートを更新
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $retweet->retweet_tweet_id = $result->id_str;
+                    $retweet->retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                    $retweet->save();
 
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
             }
         }
 
         // キャンセルの本体の処理を実行
-        foreach ($cancelRetweets as $retweet) {
-            // リツイートを実施
-            $twitter = $account->getTwitter();
-            $result = $twitter->statuses_destroy_ID(array("id" => $retweet->retweet_tweet_id));
-            Vizualizer_Logger::writeInfo("Deleted Retweet for : " . $retweet->retweet_tweet_id . " with " . print_r($result, true));
+        $checkCount = $checkRetweet->countBy(array("ge:cancel_retweet_time" => Vizualizer::now()->strToTime("-2 minute")->date("Y-m-d H:i:s")));
+        if($checkCount < mt_rand(2, 4)){
+            foreach ($cancelRetweets as $retweet) {
+                // リツイートを実施
+                $twitter = $account->getTwitter();
+                $result = $twitter->statuses_destroy_ID(array("id" => $retweet->retweet_tweet_id));
+                Vizualizer_Logger::writeInfo("Deleted Retweet for : " . $retweet->retweet_tweet_id . " with " . print_r($result, true));
 
-            // リツイートを更新
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $retweet->cancel_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
-                $retweet->save();
+                // リツイートを更新
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $retweet->cancel_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                    $retweet->save();
 
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+                    Vizualizer_Database_Factory::commit($connection);
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
             }
         }
     }
