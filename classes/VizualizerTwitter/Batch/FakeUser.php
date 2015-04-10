@@ -101,7 +101,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                     // メイン処理の実行
                     Vizualizer_Logger::writeInfo("Start subprocess for account(".$account->account_id.")");
                     // 本番処理の前に最大30秒待機
-                    sleep(mt_rand(1, 30));
+                    sleep(mt_rand(1, 15));
                     $this->process($account);
                     Vizualizer_Logger::writeInfo("Finish subprocess for account(".$account->account_id.")");
                     exit(0);
