@@ -466,19 +466,41 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
             // リツイートを実施
             $twitter = $account->getTwitter();
             $result = $twitter->statuses_retweet_ID(array("id" => $retweet->tweet_id));
-            Vizualizer_Logger::writeInfo("Retweeted for : " . $retweet->tweet_id . " with " . print_r($result, true));
+                    if (isset($result->errors)) {
+                if ($result->errors[0]->code == "327") {
+                    // すでにRTされている場合はすべてのステータスをRT済みにする。
+                    $connection = Vizualizer_Database_Factory::begin("twitter");
+                    try {
+                        $targets = $retweet->findAllBy(array("account_id" => $account->account_id, "tweet_id" => $reweet->tweet_id, "retweet_time" => "0000-00-00 00:00:00"));
+                        foreach ($targets as $target){
+                            $target->retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                            $target->save();
+                        }
+                        Vizualizer_Database_Factory::commit($connection);
+                    } catch (Exception $e) {
+                        Vizualizer_Database_Factory::rollback($connection);
+                        throw new Vizualizer_Exception_Database($e);
+                    }
+                }
+                break;
+                Vizualizer_Logger::writeError("Failed to Retweet on " . $retweet->tweet_id . " in " . $account->screen_name . " by " . print_r($result->errors, true));
+            } elseif (!empty($result->id)) {
+                // リツイートを更新
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $retweet->retweet_tweet_id = $result->id_str;
+                    $retweet->retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                    $retweet->save();
 
-            // リツイートを更新
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $retweet->retweet_tweet_id = $result->id_str;
-                $retweet->retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
-                $retweet->save();
+                    Vizualizer_Database_Factory::commit($connection);
 
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+                    Vizualizer_Logger::writeInfo("Retweeted for : " . $retweet->tweet_id . " in " . $account->screen_name . " with " . print_r($result, true));
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+            } else {
+                Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
             }
         }
 
@@ -487,18 +509,36 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
             // リツイートを実施
             $twitter = $account->getTwitter();
             $result = $twitter->statuses_destroy_ID(array("id" => $retweet->retweet_tweet_id));
-            Vizualizer_Logger::writeInfo("Deleted Retweet for : " . $retweet->retweet_tweet_id . " with " . print_r($result, true));
+                    if (isset($result->errors)) {
+                if ($result->errors[0]->code == "144") {
+                    // すでに削除されている場合はキャンセル済みフラグを立てる。
+                    $connection = Vizualizer_Database_Factory::begin("twitter");
+                    try {
+                        $retweet->cancel_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                        $retweet->save();
+                        Vizualizer_Database_Factory::commit($connection);
+                    } catch (Exception $e) {
+                        Vizualizer_Database_Factory::rollback($connection);
+                        throw new Vizualizer_Exception_Database($e);
+                    }
+                }
+                Vizualizer_Logger::writeError("Failed to cancel retweet on " . $retweet->retweet_tweet_id . " in " . $account->screen_name . " by " . print_r($result->errors, true));
+            } elseif (!empty($result->id)) {
+                // リツイートを更新
+                $connection = Vizualizer_Database_Factory::begin("twitter");
+                try {
+                    $retweet->cancel_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
+                    $retweet->save();
 
-            // リツイートを更新
-            $connection = Vizualizer_Database_Factory::begin("twitter");
-            try {
-                $retweet->cancel_retweet_time = Vizualizer::now()->date("Y-m-d H:i:s");
-                $retweet->save();
+                    Vizualizer_Database_Factory::commit($connection);
 
-                Vizualizer_Database_Factory::commit($connection);
-            } catch (Exception $e) {
-                Vizualizer_Database_Factory::rollback($connection);
-                throw new Vizualizer_Exception_Database($e);
+                    Vizualizer_Logger::writeInfo("Deleted Retweet for : " . $retweet->retweet_tweet_id . " with " . print_r($result, true));
+                } catch (Exception $e) {
+                    Vizualizer_Database_Factory::rollback($connection);
+                    throw new Vizualizer_Exception_Database($e);
+                }
+            } else {
+                Vizualizer_Logger::writeInfo($account->screen_name . " : error in delete tweet : " . $tweetLog->tweet_text);
             }
         }
     }
