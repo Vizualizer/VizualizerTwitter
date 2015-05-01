@@ -449,6 +449,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
 
                 Vizualizer_Database_Factory::commit($connection);
             } else {
+                Vizualizer_Logger::writeDebug(print_r($result, true));
                 Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
             }
         } catch (Exception $e) {
@@ -509,6 +510,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                         throw new Vizualizer_Exception_Database($e);
                     }
                 } else {
+                    Vizualizer_Logger::writeDebug(print_r($result, true));
                     Vizualizer_Logger::writeInfo($account->screen_name . " : error in Post tweet : " . $tweetLog->tweet_text);
                 }
             }
