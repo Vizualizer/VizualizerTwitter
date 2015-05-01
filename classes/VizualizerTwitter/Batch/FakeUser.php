@@ -163,6 +163,7 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
 
         // ユーザー情報を取得
         $user = $twitter->users_show(array("user_id" => $account->twitter_id));
+        Vizualizer_Logger::writeDebug(print_r($user));
 
         if (isset($user->id) && !empty($user->id)) {
             // TwitterのIDが取得できた場合のみ更新
