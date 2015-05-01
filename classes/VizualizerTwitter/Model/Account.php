@@ -681,13 +681,18 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
     /**
      * ツイッターAPI用のオブジェクトを取得
      */
-    public function getTwitter()
+    public function getTwitter($reset = false)
     {
+        if($reset){
+            unset($this->twitter);
+        }
         if (!$this->twitter) {
             $application = $this->application();
             \Codebird\Codebird::setConsumerKey($application->api_key, $application->api_secret);
             $this->twitter = \Codebird\Codebird::getInstance();
             $this->twitter->setToken($this->access_token, $this->access_token_secret);
+            $proxy = VizualizerTwitter_Proxy::getProxy();
+            $this->twitter->setProxy($proxy->getHost(), $proxy->getPort());
         }
         return $this->twitter;
     }
