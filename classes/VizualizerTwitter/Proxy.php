@@ -76,9 +76,9 @@ class VizualizerTwitter_Proxy{
     );
 
     public static function getProxy(){
-        $index = mt_rand(0, count(self::$proxy));
-        if($index < count(self::$proxy)){
-            return new VizualizerTwitter_ProxyData(self::$proxy[$index][0], self::$proxy[$index][1]);
+        $index = mt_rand(0, count(self::$proxys));
+        if($index < count(self::$proxys)){
+            return new VizualizerTwitter_ProxyData(self::$proxys[$index][0], self::$proxys[$index][1]);
         }
         return new VizualizerTwitter_ProxyData();
     }
