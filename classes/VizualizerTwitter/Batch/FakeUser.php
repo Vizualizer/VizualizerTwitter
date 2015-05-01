@@ -81,6 +81,9 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 continue;
             }
 
+            // Twitterのプロキシをリセット
+            $account->getTwitter(true);
+
             // プロセスをフォークできるかどうか確認
             if (function_exists("pcntl_fork")) {
                 //子プロセス生成
