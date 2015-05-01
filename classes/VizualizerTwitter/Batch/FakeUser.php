@@ -671,31 +671,30 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
                 // ユーザーのフォロワーを取得
                 $followers = $account->getTwitter()->followers_ids(array("screen_name" => $screen_name, "count" => "5000"));
 
-                if (!isset($followers->ids) || !is_array($followers->ids)) {
-                    continue;
-                }
+                if (isset($followers->ids) && is_array($followers->ids)) {
 
-                if(count($followers->ids) > 100){
-                    shuffle($followers->ids);
-                    $followers->ids = array_splice($followers->ids, 0, 100);
-                }
+                    if(count($followers->ids) > 100){
+                        shuffle($followers->ids);
+                        $followers->ids = array_splice($followers->ids, 0, 100);
+                    }
 
-                $followedCount = 0;
-                $followerIds = implode(",", $followers->ids);
-                // ユーザーのフォロワーを取得
-                $followers = $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
+                    $followedCount = 0;
+                    $followerIds = implode(",", $followers->ids);
+                    // ユーザーのフォロワーを取得
+                    $followers = $account->getTwitter()->users_lookup(array("user_id" => $followerIds));
 
-                foreach($followers as $follower){
-                    if(is_object($follower) && property_exists($follower, "status") && property_exists($follower->status, "created_at")){
-                        if(isset($follower->id) && $follower->id > 0){
-                            if($account->checkAddUser($follower)){
-                                $account->addUser($follower);
-                                $searched ++;
+                    foreach($followers as $follower){
+                        if(is_object($follower) && property_exists($follower, "status") && property_exists($follower->status, "created_at")){
+                            if(isset($follower->id) && $follower->id > 0){
+                                if($account->checkAddUser($follower)){
+                                    $account->addUser($follower);
+                                    $searched ++;
+                                }
                             }
                         }
-                    }
-                    if ($searched > $setting->daily_follows * 2) {
-                        break;
+                        if ($searched > $setting->daily_follows * 2) {
+                            break;
+                        }
                     }
                 }
             }
