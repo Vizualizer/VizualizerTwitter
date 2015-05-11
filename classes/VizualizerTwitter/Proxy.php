@@ -51,12 +51,6 @@ class VizualizerTwitter_ProxyData{
  * @author Naohisa Minagawa <info@vizualizer.jp>
  */
 class VizualizerTwitter_Proxy{
-    private static $proxys = array(
-        array("192.168.122.96", "8888"),
-        array("192.168.151.96", "8888"),
-        array("219.94.254.202", "31280")
-    );
-
     public static function getProxy(){
         $proxys = array();
         if($_SERVER["SERVER_NAME"] == "twt-system.com"){
@@ -66,6 +60,9 @@ class VizualizerTwitter_Proxy{
             $proxys[] = array("192.168.151.96", "8888");
         }
         $proxys[] = array("219.94.254.202", "31280");
+        $proxys[] = array("49.212.156.215", "31280");
+        $proxys[] = array("49.212.131.155", "31280");
+        $proxys[] = array("49.212.184.42", "31280");
         $index = mt_rand(0, count($proxys));
         if($index < count($proxys)){
             return new VizualizerTwitter_ProxyData($proxys[$index][0], $proxys[$index][1]);
