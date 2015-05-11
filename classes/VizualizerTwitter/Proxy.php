@@ -52,16 +52,23 @@ class VizualizerTwitter_ProxyData{
  */
 class VizualizerTwitter_Proxy{
     private static $proxys = array(
-        array("180.19.232.29", "80"),
-        array("106.187.96.159", "8089"),
-        array("114.141.47.173", "80"),
-        array("125.143.136.21", "8080")
+        array("192.168.122.96", "8888"),
+        array("192.168.151.96", "8888"),
+        array("219.94.254.202", "31280")
     );
 
     public static function getProxy(){
-        $index = mt_rand(0, count(self::$proxys));
-        if($index < count(self::$proxys)){
-            return new VizualizerTwitter_ProxyData(self::$proxys[$index][0], self::$proxys[$index][1]);
+        $proxys = array();
+        if($_SERVER["SERVER_NAME"] == "twt-system.com"){
+            $proxys[] = array("192.168.122.96", "8888");
+        }
+        if($_SERVER["SERVER_NAME"] == "medinethub.com"){
+            $proxys[] = array("192.168.151.96", "8888");
+        }
+        $proxys[] = array("219.94.254.202", "31280");
+        $index = mt_rand(0, count($proxys));
+        if($index < count($proxys)){
+            return new VizualizerTwitter_ProxyData($proxys[$index][0], $proxys[$index][1]);
         }
         return new VizualizerTwitter_ProxyData();
     }
