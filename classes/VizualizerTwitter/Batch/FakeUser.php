@@ -160,10 +160,11 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
 
         // Twitterへのアクセスを初期化
         $twitter = $account->getTwitter();
+        Vizualizer_Logger::writeDebug(print_r($twitter, true));
 
         // ユーザー情報を取得
         $user = $twitter->users_show(array("user_id" => $account->twitter_id));
-        Vizualizer_Logger::writeDebug(print_r($user));
+        Vizualizer_Logger::writeDebug(print_r($user, true));
 
         if (isset($user->id) && !empty($user->id)) {
             // TwitterのIDが取得できた場合のみ更新
