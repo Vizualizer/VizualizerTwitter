@@ -219,7 +219,11 @@ class VizualizerTwitter_Model_Account extends Vizualizer_Plugin_Model
         }else{
             $setting = $followSetting;
         }
-        if ($setting->japanese_flg == "1" && $user->lang != "ja") {
+        if (Vizualizer_Configure::get("accept_languages") === null) {
+            Vizualizer_Configure::set("accept_languages", array("ja"));
+        }
+        $acceptLanguages = Vizualizer_Configure::get("accept_languages");
+        if ($setting->japanese_flg == "1" && !in_array($user->lang, $acceptLanguages)) {
             Vizualizer_Logger::writeInfo("Skipped invalid not Japanese : ".$user->screen_name);
             return false;
         }
