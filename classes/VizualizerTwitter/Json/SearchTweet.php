@@ -24,7 +24,16 @@ class VizualizerTwitter_Json_SearchTweet
 
             // ツイートを検索
             $twitter = $account->getTwitter();
-            $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
+            if (Vizualizer_Configure::get("accept_languages") === null) {
+                Vizualizer_Configure::set("accept_languages", array("ja"));
+            }
+            $acceptLanguages = Vizualizer_Configure::get("accept_languages");
+            $maxIds = array();
+            foreach($acceptLanguages as $index => $acceptLanguage){
+                $maxIds[$index] = 0;
+            }
+            $tweets = array();
+            $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => $acceptLanguages, "locale" => "ja", "count" => 100, "result_type" => "mixed"));
             $tweets = $tweetsTemp->statuses;
 
             $tweetData = array();

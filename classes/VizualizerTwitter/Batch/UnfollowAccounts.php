@@ -45,6 +45,11 @@ class VizualizerTwitter_Batch_UnfollowAccounts extends Vizualizer_Plugin_Batch
         return array("unfollowAccounts");
     }
 
+    public function getDaemonInterval()
+    {
+        return 300;
+    }
+
     /**
      * 検索対象のアカウントを取得する。
      *

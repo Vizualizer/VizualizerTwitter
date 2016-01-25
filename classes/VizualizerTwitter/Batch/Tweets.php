@@ -46,6 +46,11 @@ class VizualizerTwitter_Batch_Tweets extends Vizualizer_Plugin_Batch
         return array("postTweets");
     }
 
+    public function getDaemonInterval()
+    {
+        return 60;
+    }
+
     /**
      * ツイートを投稿する。
      *

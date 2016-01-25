@@ -44,6 +44,11 @@ class VizualizerTwitter_Batch_FollowAccounts extends Vizualizer_Plugin_Batch
         return array("followAccounts");
     }
 
+    public function getDaemonInterval()
+    {
+        return 300;
+    }
+
     /**
      * 検索対象のアカウントを取得する。
      *

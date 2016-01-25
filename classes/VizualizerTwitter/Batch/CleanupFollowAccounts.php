@@ -41,6 +41,11 @@ class VizualizerTwitter_Batch_CleanupFollowAccounts extends Vizualizer_Plugin_Ba
         return array("getCleanupFollows");
     }
 
+    public function getDaemonInterval()
+    {
+        return 3600;
+    }
+
     /**
      * フォロー状態を整理する。
      *
