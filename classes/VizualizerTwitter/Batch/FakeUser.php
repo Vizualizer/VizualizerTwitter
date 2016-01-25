@@ -61,6 +61,11 @@ class VizualizerTwitter_Batch_FakeUser extends Vizualizer_Plugin_Batch
         return array("fakeUser");
     }
 
+    public function getDaemonInterval()
+    {
+        return 300;
+    }
+
     /**
      * ユーザー擬態処理のメイン
      *

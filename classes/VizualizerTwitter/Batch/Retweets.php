@@ -46,6 +46,11 @@ class VizualizerTwitter_Batch_Retweets extends Vizualizer_Plugin_Batch
         return array("postRetweets");
     }
 
+    public function getDaemonInterval()
+    {
+        return 60;
+    }
+
     /**
      * ツイートを投稿する。
      *

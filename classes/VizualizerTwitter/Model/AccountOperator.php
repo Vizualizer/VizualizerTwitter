@@ -136,6 +136,13 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
     }
 
     /**
+     * 登録オペレータを設定する内部処理です。
+     * このテーブルではオペレータIDの自動保存を行わないため、処理を上書きします。
+     */
+    protected function updateOperatorInfo() {
+    }
+
+    /**
      * アカウントオペレータのレコードを追加する。
      * @param int $account_id
      * @param int $operator_id
@@ -153,7 +160,7 @@ class VizualizerTwitter_Model_AccountOperator extends Vizualizer_Plugin_Model
                     $model->account_id = $account_id;
                     $model->company_id = substr($operator_id, 1);
                     $model->operator_index = $index;
-                    $model->save(true);
+                    $model->save();
                     Vizualizer_Database_Factory::commit($connection);
                 } catch (Exception $e) {
                     Vizualizer_Database_Factory::rollback($connection);

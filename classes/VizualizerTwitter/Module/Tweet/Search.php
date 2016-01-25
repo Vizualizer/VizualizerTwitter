@@ -60,13 +60,23 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
             }
             if(!empty($post["keyword"])){
                 // ツイートを検索
-                $maxId = 0;
                 $tweets = array();
+                if (Vizualizer_Configure::get("accept_languages") === null) {
+                    Vizualizer_Configure::set("accept_languages", array("ja"));
+                }
+                $acceptLanguages = Vizualizer_Configure::get("accept_languages");
+                $maxIds = array();
+                foreach($acceptLanguages as $index => $acceptLanguage){
+                    $maxIds[$index] = 0;
+                }
                 for($i = 0; $i < 10; $i ++){
+                    $index = $i % count($acceptLanguages);
+                    $acceptLanguage = $acceptLanguages[$index];
+                    $maxId = $maxIds[$index];
                     if($maxId > 0){
-                        $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed", "max_id" => $maxId));
+                        $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => $acceptLanguage, "locale" => "ja", "count" => 100, "result_type" => "mixed", "max_id" => $maxId));
                     }else{
-                        $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => "ja", "locale" => "ja", "count" => 100, "result_type" => "mixed"));
+                        $tweetsTemp = $twitter->search_tweets(array("q" => $post["keyword"]." -RT ", "lang" => $acceptLanguage, "locale" => "ja", "count" => 100, "result_type" => "mixed"));
                     }
                     foreach($tweetsTemp->statuses as $status){
                         if(!isset($status->retweeted_status)){
@@ -76,7 +86,7 @@ class VizualizerTwitter_Module_Tweet_Search extends Vizualizer_Plugin_Module_Lis
                     if(!isset($tweetsTemp->search_metadata->next_results) || preg_match("/max_id=([0-9]+)/", $tweetsTemp->search_metadata->next_results, $p) == 0){
                         break;
                     }
-                    $maxId = $p[1];
+                    $maxIds[$index] = $p[1];
                 }
                 $tweets = array_values($tweets);
                 if($post["sort"] == "retweet"){
